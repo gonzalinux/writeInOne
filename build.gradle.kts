@@ -1,8 +1,7 @@
 plugins {
     kotlin("jvm") version "2.3.10"
     kotlin("plugin.spring") version "2.3.10"
-    kotlin("plugin.jpa") version "2.3.10"
-    id("org.springframework.boot") version "3.4.3"
+id("org.springframework.boot") version "3.4.3"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -23,16 +22,17 @@ extra["testcontainersVersion"] = "1.20.4"
 
 dependencies {
     // Spring Boot Core
-    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-
     // Kotlin
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-
-    // Database
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    // Source: https://mvnrepository.com/artifact/io.projectreactor.kotlin/reactor-kotlin-extensions
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.3.0")
+    // Database - R2DBC (reactive) + JDBC (Flyway only)
+    implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
+    implementation("org.postgresql:r2dbc-postgresql")
     runtimeOnly("org.postgresql:postgresql")
 
     // Flyway migrations
@@ -49,7 +49,7 @@ dependencies {
     implementation("com.vladsch.flexmark:flexmark-all:0.64.8")
 
     // OpenAPI / Swagger
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4")
+    implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.4")
 
     // Dev tools
     developmentOnly("org.springframework.boot:spring-boot-devtools")

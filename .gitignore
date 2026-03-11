@@ -1,5 +1,7 @@
 .gradle
 build/
+postgres_data/
+application-local.yml
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
