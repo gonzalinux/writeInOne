@@ -1,6 +1,6 @@
 spring:
   r2dbc:
-    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:writeinone}
+    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:writeinone}
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:secret}
 
@@ -11,3 +11,8 @@ spring:
 
   flyway:
     enabled: true
+
+jwt:
+  secret: ${JWT_SECRET:local-dev-secret-change-this-in-production-min-32-chars}
+  access-token-expiry-minutes: 15
+  refresh-token-expiry-days: 30

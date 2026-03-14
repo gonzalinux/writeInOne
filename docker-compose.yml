@@ -5,7 +5,7 @@ services:
       - "8080:8080"
     environment:
       DB_HOST: db
-      DB_PORT: 5432
+      DB_PORT: 5433
       DB_NAME: writeinone
       DB_USER: postgres
       DB_PASSWORD: secret
@@ -20,6 +20,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
     ports:
-      - "5432:5432"
+      - "5433:5433"
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
+    command: -p 5433
