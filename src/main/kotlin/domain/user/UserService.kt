@@ -1,16 +1,14 @@
 package com.gonzalinux.domain.user
 
 import com.gonzalinux.common.ApiException
+import com.gonzalinux.common.UnauthorizedException
+import com.gonzalinux.common.UserAlreadyExistsException
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.switchIfEmpty
 
-class UserAlreadyExistsException(email: String) : ApiException(
-    status = HttpStatus.CONFLICT,
-    error = "USER_ALREADY_EXISTS",
-    details = "A user with email $email already exists"
-)
 
 @Service
 class UserService(
@@ -29,6 +27,19 @@ class UserService(
                     passwordHash = encoder.encode(password)!!
                 ).flatMap { user -> issueTokens(user) }
             )
+    }
+
+    fun login(email: String, password: String): Mono<AuthTokens> {
+        return repo.findByEmail(email)
+            .switchIfEmpty {
+                encoder.encode("Just to prevent timing attacks")
+                Mono.empty()
+            }
+            .filter { encoder.matches(password, it.passwordHash) }
+            .flatMap { issueTokens(it) }
+            .switchIfEmpty {
+                Mono.error(UnauthorizedException())
+            }
     }
 
     private fun issueTokens(user: User): Mono<AuthTokens> {

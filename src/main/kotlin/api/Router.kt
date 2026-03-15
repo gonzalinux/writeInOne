@@ -14,8 +14,10 @@ class Router(private val authHandler: AuthHandler) {
     @Bean
     fun routes(): RouterFunction<ServerResponse> = route()
         .POST("/auth/register", authHandler::register)
+
         .build()
 
+        // will filter paths that need authentication
     private fun authenticated(handler: HandlerFunction<ServerResponse>): HandlerFunction<ServerResponse> =
         HandlerFunction { request ->
             request.principal()

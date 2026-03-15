@@ -1,11 +1,10 @@
 package com.gonzalinux.api
 
 import com.gonzalinux.api.data.RegisterRequest
-import com.gonzalinux.api.data.RegisterResponse
+import com.gonzalinux.api.data.AuthResponse
+import com.gonzalinux.api.data.LoginRequest
 import com.gonzalinux.common.RequestValidator
-import com.gonzalinux.domain.user.AuthTokens
 import com.gonzalinux.domain.user.UserService
-import org.springframework.boot.web.server.Cookie
 import org.springframework.http.ResponseCookie
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
@@ -24,8 +23,18 @@ class AuthHandler(private val service: UserService, private val validator: Reque
                 ServerResponse.ok()
                     .cookie(accessTokenCookie(tokens.accessToken.value))
                     .cookie(refreshTokenCookie(tokens.refreshToken.value))
-                    .bodyValue(RegisterResponse(message = "SUCCESS"))
+                    .bodyValue(AuthResponse(message = "SUCCESS"))
             }
+    }
+
+    fun login(request: ServerRequest): Mono<ServerResponse> {
+        return request.bodyToMono<LoginRequest>()
+            .map { validator.validate(it) }
+            .flatMap { service.login(it.email, it.password) }
+            .flatMap {  ServerResponse.ok()
+                .cookie(accessTokenCookie(it.accessToken.value))
+                .cookie(refreshTokenCookie(it.refreshToken.value))
+                .bodyValue(AuthResponse(message = "SUCCESS")) }
     }
 
     private fun accessTokenCookie(value: String): ResponseCookie =
