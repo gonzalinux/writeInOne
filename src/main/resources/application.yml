@@ -4,13 +4,10 @@ spring:
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:secret}
 
-  datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:writeinone}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:secret}
-
   flyway:
-    enabled: true
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:writeinone}
+    user: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:secret}
 
 jwt:
   secret: ${JWT_SECRET:local-dev-secret-change-this-in-production-min-32-chars}

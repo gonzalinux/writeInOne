@@ -1,30 +1,20 @@
 package com.gonzalinux.config
 
+import at.favre.lib.crypto.bcrypt.BCrypt
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
-import org.springframework.security.config.web.server.SecurityWebFiltersOrder
-import org.springframework.security.config.web.server.ServerHttpSecurity
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.web.server.SecurityWebFilterChain
 
 @Configuration
-@EnableWebFluxSecurity
 class SecurityConfig {
 
     @Bean
-    fun passwordEncoder() = BCryptPasswordEncoder()
+    fun passwordEncoder(): PasswordEncoder = PasswordEncoder()
+}
 
-    @Bean
-    fun securityFilterChain(http: ServerHttpSecurity, jwtAuthFilter: JwtAuthFilter): SecurityWebFilterChain {
-        return http
-            .csrf { it.disable() }
-            .httpBasic { it.disable() }
-            .formLogin { it.disable() }
-            .authorizeExchange { auth ->
-                auth.anyExchange().permitAll()
-            }
-            .addFilterAt(jwtAuthFilter, SecurityWebFiltersOrder.AUTHENTICATION)
-            .build()
-    }
+class PasswordEncoder {
+    fun encode(password: String): String =
+        BCrypt.withDefaults().hashToString(12, password.toCharArray())
+
+    fun matches(password: String, hash: String): Boolean =
+        BCrypt.verifyer().verify(password.toCharArray(), hash).verified
 }

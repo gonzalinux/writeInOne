@@ -39,11 +39,13 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
 
-    // Security + JWT
-    implementation("org.springframework.boot:spring-boot-starter-security")
+    // JWT
     implementation("io.jsonwebtoken:jjwt-api:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
+
+    // BCrypt
+    implementation("at.favre.lib:bcrypt:0.10.2")
 
     // Markdown rendering
     implementation("com.vladsch.flexmark:flexmark-all:0.64.8")
@@ -51,12 +53,15 @@ dependencies {
     // OpenAPI / Swagger
     implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.4")
 
+    // Logging
+    implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
+    implementation("io.micrometer:context-propagation")
+
     // Dev tools
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("io.mockk:mockk:1.13.14")
 

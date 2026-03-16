@@ -12,6 +12,8 @@
 - [x] Spring Security (disabled form login/basic auth, permit all — auth enforced at router level)
 - [x] JWT auth filter (reads `access_token` cookie, populates security context)
 - [x] Router with `authenticated {}` wrapper for protected routes
+- [x] Jackson configured with Kotlin module, JavaTimeModule, ISO-8601 dates
+- [x] `bindNullable` extension for clean R2DBC null bindings
 - [ ] Rate limiting on auth endpoints
 - [ ] GitHub Actions CI
 
@@ -25,24 +27,27 @@
 ## Auth
 - [x] `POST /auth/register` — hash password, create user, issue tokens, set cookies
 - [x] `POST /auth/login` — verify credentials, issue tokens, set cookies
+- [x] `POST /auth/refresh` — rotate refresh token, issue new access token
+- [x] `POST /auth/logout` — delete refresh token, clear cookies
 - [x] `TokenService` — JWT generation (HS256), refresh token generation, SHA-256 hashing
-- [ ] `POST /auth/refresh` — rotate refresh token, issue new access token
-- [ ] `POST /auth/logout` — delete refresh token, clear cookies
 
 ## Sites
-- [ ] `POST /sites` — create site
-- [ ] `PUT /sites/{id}` — update site
-- [ ] `DELETE /sites/{id}` — delete site (cascades to posts)
+- [x] `POST /sites` — create site
+- [x] `GET /sites` — list user's sites
+- [x] `PUT /sites/{id}` — update site
+- [x] `DELETE /sites/{id}` — delete site (cascades to posts)
 - [ ] Route by `Host` header → match domain
 
 ## Posts
-- [ ] `POST /sites/{id}/posts` — create post
-- [ ] `PUT /sites/{id}/posts/{postId}` — update post
-- [ ] `DELETE /sites/{id}/posts/{postId}` — delete post
-- [ ] `POST /sites/{id}/posts/{postId}/publish` — publish immediately
-- [ ] `POST /sites/{id}/posts/{postId}/schedule` — schedule for future date
+- [x] `POST /sites/{siteId}/posts` — create post
+- [x] `GET /sites/{siteId}/posts` — list posts
+- [x] `GET /sites/{siteId}/posts/{postId}` — get post with translations
+- [x] `PUT /sites/{siteId}/posts/{postId}` — update post
+- [x] `DELETE /sites/{siteId}/posts/{postId}` — delete post
+- [x] `POST /sites/{siteId}/posts/{postId}/publish` — publish immediately
+- [x] `POST /sites/{siteId}/posts/{postId}/schedule` — schedule for future date
+- [x] Slug auto-generation from title
 - [ ] Scheduled job to publish pending posts
-- [ ] Slug auto-generation from title
 
 ## Tags
 - [ ] Created implicitly when assigned to a post

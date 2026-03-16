@@ -1,6 +1,6 @@
 package com.gonzalinux.domain.post
 
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 enum class PostStatus { DRAFT, PUBLISHED, ARCHIVED }
 
@@ -10,10 +10,10 @@ data class Post(
     val status: PostStatus,
     val coverUrl: String?,
     val viewCount: Long,
-    val publishedAt: LocalDateTime?,
-    val scheduledAt: LocalDateTime?,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime
+    val publishedAt: OffsetDateTime?,
+    val scheduledAt: OffsetDateTime?,
+    val createdAt: OffsetDateTime,
+    val updatedAt: OffsetDateTime
 )
 
 data class PostTranslation(
@@ -25,6 +25,6 @@ data class PostTranslation(
     val slug: String,
     val body: String,
     val excerpt: String?,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime
+    val createdAt: OffsetDateTime,
+    val updatedAt: OffsetDateTime
 )

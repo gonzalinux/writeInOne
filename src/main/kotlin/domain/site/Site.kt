@@ -1,7 +1,7 @@
 package com.gonzalinux.domain.site
 
 import com.gonzalinux.domain.Languages
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 data class Site(
     val id: Long,
@@ -12,6 +12,6 @@ data class Site(
     val stylesUrl: String?,
     val languages: List<Languages>,
     val config: SiteConfig,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime
+    val createdAt: OffsetDateTime,
+    val updatedAt: OffsetDateTime
 )

@@ -1,19 +1,19 @@
 package com.gonzalinux.domain.user
 
-import com.gonzalinux.common.ApiException
 import com.gonzalinux.common.UnauthorizedException
 import com.gonzalinux.common.UserAlreadyExistsException
-import org.springframework.http.HttpStatus
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import com.gonzalinux.config.PasswordEncoder
+import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.switchIfEmpty
 
+private val logger = KotlinLogging.logger {}
 
 @Service
 class UserService(
     private val repo: UserRepository,
-    private val encoder: BCryptPasswordEncoder,
+    private val encoder: PasswordEncoder,
     private val tokenService: TokenService
 ) {
 
@@ -24,8 +24,11 @@ class UserService(
                 repo.create(
                     email = email,
                     displayName = displayName,
-                    passwordHash = encoder.encode(password)!!
-                ).flatMap { user -> issueTokens(user) }
+                    passwordHash = encoder.encode(password)
+                ).flatMap { user ->
+                    logger.info { "User registered [userId=${user.id}, email=$email]" }
+                    issueTokens(user.id)
+                }
             )
     }
 
@@ -36,18 +39,41 @@ class UserService(
                 Mono.empty()
             }
             .filter { encoder.matches(password, it.passwordHash) }
-            .flatMap { issueTokens(it) }
+            .flatMap { user ->
+                logger.info { "User logged in [userId=${user.id}]" }
+                issueTokens(user.id)
+            }
             .switchIfEmpty {
+                logger.warn { "Failed login attempt [email=$email]" }
                 Mono.error(UnauthorizedException())
             }
     }
 
-    private fun issueTokens(user: User): Mono<AuthTokens> {
-        val accessToken = tokenService.generateAccessToken(user)
+    fun logout(refreshToken: String): Mono<Void> {
+        val tokenHash = tokenService.hashToken(refreshToken)
+        return repo.deleteRefreshToken(tokenHash)
+            .doOnSuccess { logger.info { "User logged out" } }
+    }
+
+    fun refreshToken(refreshToken: String): Mono<AuthTokens> {
+        val hashedToken = tokenService.hashToken(refreshToken)
+        return repo.findRefreshToken(hashedToken)
+            .switchIfEmpty {
+                Mono.error(UnauthorizedException())
+            }
+            .flatMap { stored ->
+                repo.deleteRefreshToken(stored.tokenHash)
+                    .then(issueTokens(stored.userId))
+                    .doOnSuccess { logger.debug { "Token refreshed [userId=${stored.userId}]" } }
+            }
+    }
+
+    private fun issueTokens(userId: Long): Mono<AuthTokens> {
+        val accessToken = tokenService.generateAccessToken(userId)
         val refreshToken = tokenService.generateRefreshToken()
         val tokenHash = tokenService.hashToken(refreshToken.value)
 
-        return repo.saveRefreshToken(user.id, tokenHash, refreshToken.expiresAt)
+        return repo.saveRefreshToken(userId, tokenHash, refreshToken.expiresAt)
             .thenReturn(AuthTokens(accessToken, refreshToken))
     }
 }

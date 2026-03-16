@@ -1,12 +1,12 @@
 package com.gonzalinux.domain.user
 
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 data class User(
     val id: Long,
     val email: String,
     val passwordHash: String,
     val displayName: String,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime
+    val createdAt: OffsetDateTime,
+    val updatedAt: OffsetDateTime
 )

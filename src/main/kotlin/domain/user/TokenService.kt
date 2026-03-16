@@ -5,7 +5,8 @@ import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.*
 
 @Service
@@ -15,11 +16,11 @@ class TokenService(jwtProperties: JwtProperties) {
     private val accessTokenExpiryMs = jwtProperties.accessTokenExpiryMinutes * 60 * 1000
     private val refreshTokenExpiryDays = jwtProperties.refreshTokenExpiryDays
 
-    fun generateAccessToken(user: User): AccessToken {
+    fun generateAccessToken(userId: Long): AccessToken {
         val now = Date()
 
         val token = Jwts.builder()
-            .subject(user.id.toString())
+            .subject(userId.toString())
             .issuedAt(now)
             .expiration(Date(now.time + accessTokenExpiryMs))
             .signWith(signingKey)
@@ -30,7 +31,7 @@ class TokenService(jwtProperties: JwtProperties) {
 
     fun generateRefreshToken(): RefreshToken {
         val value = UUID.randomUUID().toString() + UUID.randomUUID().toString()
-        val expiresAt = LocalDateTime.now().plusDays(refreshTokenExpiryDays)
+        val expiresAt = OffsetDateTime.now(ZoneOffset.UTC).plusDays(refreshTokenExpiryDays)
         return RefreshToken(value, expiresAt)
     }
 
