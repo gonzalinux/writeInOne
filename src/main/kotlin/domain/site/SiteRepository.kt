@@ -76,6 +76,12 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             .bind("userId", userId)
             .then()
 
+    fun findByDomain(domain: String): Mono<Site> =
+        client.sql("SELECT * FROM sites WHERE domain = :domain")
+            .bind("domain", domain)
+            .fetch().first()
+            .map { mapToSite(it) }
+
     fun existsByDomain(domain: String): Mono<Boolean> =
         client.sql("SELECT 1 FROM sites WHERE domain = :domain LIMIT 1")
             .bind("domain", domain)

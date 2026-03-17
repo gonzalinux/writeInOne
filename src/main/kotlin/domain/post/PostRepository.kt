@@ -54,6 +54,14 @@ class PostRepository(private val client: DatabaseClient) {
             .fetch().first()
             .map { mapToPost(it) }
 
+    fun publishScheduled(): Mono<Int> =
+        client.sql("""
+            UPDATE posts SET status = 'published', published_at = now(), updated_at = now()
+            WHERE status = 'scheduled' AND scheduled_at <= now()
+        """)
+            .fetch().rowsUpdated()
+            .map { it.toInt() }
+
     fun delete(id: Long, siteId: Long): Mono<Void> =
         client.sql("DELETE FROM posts WHERE id = :id AND site_id = :siteId")
             .bind("id", id)

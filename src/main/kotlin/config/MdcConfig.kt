@@ -28,7 +28,7 @@ class RequestContextMdcAccessor : ThreadLocalAccessor<RequestContext> {
         MDC.put("userId", value.userId.toString())
     }
 
-    override fun reset() {
+    override fun restore() {
         MDC.remove("requestId")
         MDC.remove("userId")
     }

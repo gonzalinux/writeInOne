@@ -37,7 +37,7 @@ class UserServiceTest {
         every { repo.findByEmail("test@test.com") } returns Mono.empty()
         every { encoder.encode("password") } returns "hashed"
         every { repo.create("test@test.com", "Test User", "hashed") } returns Mono.just(user)
-        every { tokenService.generateAccessToken(user) } returns accessToken
+        every { tokenService.generateAccessToken(user.id) } returns accessToken
         every { tokenService.generateRefreshToken() } returns refreshToken
         every { tokenService.hashToken("refresh-value") } returns "hashed-refresh"
         every { repo.saveRefreshToken(1L, "hashed-refresh", refreshToken.expiresAt) } returns Mono.empty()
@@ -60,7 +60,7 @@ class UserServiceTest {
     fun `login returns tokens with correct credentials`() {
         every { repo.findByEmail("test@test.com") } returns Mono.just(user)
         every { encoder.matches("password", "hashed") } returns true
-        every { tokenService.generateAccessToken(user) } returns accessToken
+        every { tokenService.generateAccessToken(user.id) } returns accessToken
         every { tokenService.generateRefreshToken() } returns refreshToken
         every { tokenService.hashToken("refresh-value") } returns "hashed-refresh"
         every { repo.saveRefreshToken(1L, "hashed-refresh", refreshToken.expiresAt) } returns Mono.empty()
@@ -96,7 +96,7 @@ class UserServiceTest {
         every { repo.findByEmail("test@test.com") } returns Mono.empty()
         every { encoder.encode("password") } returns "hashed"
         every { repo.create("test@test.com", "Test User", "hashed") } returns Mono.just(user)
-        every { tokenService.generateAccessToken(user) } returns accessToken
+        every { tokenService.generateAccessToken(user.id) } returns accessToken
         every { tokenService.generateRefreshToken() } returns refreshToken
         every { tokenService.hashToken("refresh-value") } returns "hashed-refresh"
         every { repo.saveRefreshToken(1L, "hashed-refresh", refreshToken.expiresAt) } returns Mono.empty()

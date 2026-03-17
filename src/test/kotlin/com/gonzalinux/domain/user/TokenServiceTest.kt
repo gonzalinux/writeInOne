@@ -26,7 +26,7 @@ class TokenServiceTest {
 
     @Test
     fun `generateAccessToken produces valid JWT with correct userId`() {
-        val token = tokenService.generateAccessToken(user)
+        val token = tokenService.generateAccessToken(user.id)
 
         assertFalse(token.value.isBlank())
         assertEquals(user.id, tokenService.getUserIdFromToken(token.value))
@@ -34,7 +34,7 @@ class TokenServiceTest {
 
     @Test
     fun `getUserIdFromToken fails on tampered token`() {
-        val token = tokenService.generateAccessToken(user)
+        val token = tokenService.generateAccessToken(user.id)
         val tampered = token.value + "tampered"
 
         assertThrows(Exception::class.java) {

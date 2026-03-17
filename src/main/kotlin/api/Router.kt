@@ -1,5 +1,6 @@
 package com.gonzalinux.api
 
+import com.gonzalinux.config.HostFilter
 import com.gonzalinux.config.JwtAuthFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -12,11 +13,13 @@ class Router(
     private val authHandler: AuthHandler,
     private val siteHandler: SiteHandler,
     private val postHandler: PostHandler,
-    private val jwtAuthFilter: JwtAuthFilter
+    private val blogsHandler: BlogsHandler,
+    private val jwtAuthFilter: JwtAuthFilter,
+    private val hostFilter: HostFilter
 ) {
 
     @Bean
-    fun routes(): RouterFunction<ServerResponse> = publicRoutes().and(protectedRoutes())
+    fun routes(): RouterFunction<ServerResponse> = publicRoutes().and(protectedRoutes()).and(blogRoutes())
 
     private fun publicRoutes(): RouterFunction<ServerResponse> = route()
         .POST("/auth/register", authHandler::register)
@@ -48,4 +51,12 @@ class Router(
 
         .build()
         .filter(jwtAuthFilter)
+
+    private fun blogRoutes(): RouterFunction<ServerResponse> = route()
+        .GET("/", blogsHandler::index)
+        .GET("/{lang}", blogsHandler::postList)
+        .GET("/{lang}/{slug}", blogsHandler::post)
+        .GET("/{lang}/posts", blogsHandler::postListJson)
+        .build()
+        .filter(hostFilter)
 }

@@ -9,11 +9,15 @@
 - [x] Global exception handler (`ApiException` → HTTP response)
 - [x] Request validator (annotation-based, throws `ValidationException`)
 - [x] JWT config via `@ConfigurationProperties`
-- [x] Spring Security (disabled form login/basic auth, permit all — auth enforced at router level)
-- [x] JWT auth filter (reads `access_token` cookie, populates security context)
-- [x] Router with `authenticated {}` wrapper for protected routes
+- [x] Custom router-based auth (no Spring Security)
+- [x] JWT auth filter as `HandlerFilterFunction` on protected routes
+- [x] Two-pipeline router: public auth routes + protected routes with JWT filter
 - [x] Jackson configured with Kotlin module, JavaTimeModule, ISO-8601 dates
 - [x] `bindNullable` extension for clean R2DBC null bindings
+- [x] Reactor context propagation (`RequestContext` with userId + requestId)
+- [x] MDC integration via `ThreadLocalAccessor` (requestId + userId in all logs)
+- [x] Structured logging with `kotlin-logging`
+- [x] `@ConfigurationPropertiesScan` for auto-discovery of config properties
 - [ ] Rate limiting on auth endpoints
 - [ ] GitHub Actions CI
 
@@ -36,7 +40,7 @@
 - [x] `GET /sites` — list user's sites
 - [x] `PUT /sites/{id}` — update site
 - [x] `DELETE /sites/{id}` — delete site (cascades to posts)
-- [ ] Route by `Host` header → match domain
+- [x] `findByDomain` — site lookup for Host header resolution
 
 ## Posts
 - [x] `POST /sites/{siteId}/posts` — create post
@@ -47,18 +51,30 @@
 - [x] `POST /sites/{siteId}/posts/{postId}/publish` — publish immediately
 - [x] `POST /sites/{siteId}/posts/{postId}/schedule` — schedule for future date
 - [x] Slug auto-generation from title
-- [ ] Scheduled job to publish pending posts
+- [x] `publishScheduled` repo query — bulk update due scheduled posts
+
+## Schedulers
+- [x] `SchedulerBase` — abstract coroutine-based scheduler with configurable interval
+- [x] `ExpiredTokenScheduler` — deletes expired refresh tokens on a schedule
+- [x] `PublishPostsScheduler` — publishes scheduled posts when their time is due
 
 ## Tags
 - [ ] Created implicitly when assigned to a post
 - [ ] Delete tag (removes from posts, not posts themselves)
 
 ## Public API
-- [ ] `GET /{lang}` — post list (published only, paginated, sorted by date/views)
-- [ ] `GET /{lang}/{slug}` — single post rendered as HTML
+- [x] `HostFilter` — resolves site from `Host` header, writes to Reactor context
+- [x] `SiteContextHolder` — Reactor context holder for the resolved site
+- [x] Blog routes pipeline with `HostFilter` applied
+- [ ] `GET /` — redirect or language picker
+- [ ] `GET /{lang}` — Thymeleaf rendered page with nav/footer from SiteConfig
+- [ ] `GET /{lang}/posts` — JSON list of published posts (paginated)
+- [ ] `GET /{lang}/{slug}` — single post rendered as HTML via flexmark
 - [ ] `GET /tags` — tags with post counts
-- [ ] Route incoming requests by `Host` header
 
 ## Frontend (Thymeleaf)
-- [ ] Public blog templates
+- [ ] Add `spring-boot-starter-thymeleaf` dependency
+- [ ] Base layout template with nav/footer from SiteConfig
+- [ ] Post list template
+- [ ] Single post template
 - [ ] Admin UI with Markdown preview

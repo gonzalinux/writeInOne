@@ -2,10 +2,12 @@ package com.gonzalinux.api
 
 import com.gonzalinux.api.AuthHandler.Companion.ACCESS_TOKEN_COOKIE
 import com.gonzalinux.api.AuthHandler.Companion.REFRESH_TOKEN_COOKIE
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.test.context.ActiveProfiles
@@ -15,11 +17,18 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @ActiveProfiles("test")
 class AuthIntegrationTest {
 
-    @Autowired
+    @LocalServerPort
+    var port: Int = 0
+
     lateinit var webTestClient: WebTestClient
 
     @Autowired
     lateinit var db: DatabaseClient
+
+    @BeforeEach
+    fun setup() {
+        webTestClient = WebTestClient.bindToServer().baseUrl("http://localhost:$port").build()
+    }
 
     @AfterEach
     fun cleanup() {
