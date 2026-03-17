@@ -12,12 +12,14 @@ data class TranslationInput(
 
 data class CreatePostRequest(
     val coverUrl: String? = null,
-    val translations: Map<String, TranslationInput> = emptyMap()
+    val translations: Map<String, TranslationInput> = emptyMap(),
+    val tags: List<String> = emptyList()
 )
 
 data class UpdatePostRequest(
     val coverUrl: String? = null,
-    val translations: Map<String, TranslationInput>? = null
+    val translations: Map<String, TranslationInput>? = null,
+    val tags: List<String>? = null
 )
 
 data class SchedulePostRequest(

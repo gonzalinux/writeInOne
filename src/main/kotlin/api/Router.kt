@@ -13,6 +13,7 @@ class Router(
     private val authHandler: AuthHandler,
     private val siteHandler: SiteHandler,
     private val postHandler: PostHandler,
+    private val tagHandler: TagHandler,
     private val blogsHandler: BlogsHandler,
     private val jwtAuthFilter: JwtAuthFilter,
     private val hostFilter: HostFilter
@@ -45,6 +46,11 @@ class Router(
                         .DELETE("/{postId}", postHandler::delete)
                         .POST("/{postId}/publish", postHandler::publish)
                         .POST("/{postId}/schedule", postHandler::schedule)
+                }
+                .path("/{siteId}/tags") { tags ->
+                    tags
+                        .GET("/", tagHandler::list)
+                        .DELETE("/{tagId}", tagHandler::delete)
                 }
 
         }

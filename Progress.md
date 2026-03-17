@@ -59,8 +59,9 @@
 - [x] `PublishPostsScheduler` — publishes scheduled posts when their time is due
 
 ## Tags
-- [ ] Created implicitly when assigned to a post
-- [ ] Delete tag (removes from posts, not posts themselves)
+- [x] Created implicitly when assigned to a post
+- [x] `GET /sites/{siteId}/tags` — list tags for a site
+- [x] `DELETE /sites/{siteId}/tags/{tagId}` — delete tag (removes from posts, not posts themselves)
 
 ## Public API
 - [x] `HostFilter` — resolves site from `Host` header, writes to Reactor context

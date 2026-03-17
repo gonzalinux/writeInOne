@@ -5,6 +5,8 @@ import com.gonzalinux.api.data.UpdatePostRequest
 import com.gonzalinux.common.PostNotFoundException
 import com.gonzalinux.common.SiteNotFoundException
 import com.gonzalinux.domain.site.SiteRepository
+import com.gonzalinux.domain.tag.Tag
+import com.gonzalinux.domain.tag.TagRepository
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
@@ -13,10 +15,10 @@ import java.time.OffsetDateTime
 
 private val logger = KotlinLogging.logger {}
 
-data class PostWithTranslations(val post: Post, val translations: List<PostTranslation>)
+data class PostWithTranslations(val post: Post, val translations: List<PostTranslation>, val tags: List<Tag> = emptyList())
 
 @Service
-class PostService(private val postRepo: PostRepository, private val siteRepo: SiteRepository) {
+class PostService(private val postRepo: PostRepository, private val siteRepo: SiteRepository, private val tagRepo: TagRepository) {
 
     fun create(siteId: Long, userId: Long, request: CreatePostRequest): Mono<PostWithTranslations> =
         siteRepo.findById(siteId, userId)
@@ -27,9 +29,18 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
                     val slug = input.slug ?: generateSlug(input.title)
                     postRepo.createTranslation(post.id, siteId, lang, input.title, slug, input.body, input.excerpt)
                 }
-                Flux.merge(saveTranslations)
-                    .collectList()
-                    .map { PostWithTranslations(post, it) }
+                val saveTags: Mono<List<Tag>> = if (request.tags.isEmpty()) {
+                    Mono.just(emptyList())
+                } else {
+                    Flux.merge(request.tags.map { tagRepo.findOrCreate(siteId, it) }).collectList()
+                }
+                Flux.merge(saveTranslations).collectList()
+                    .zipWith(saveTags)
+                    .flatMap { (translations, tags) ->
+                        Flux.merge(tags.map { tagRepo.assignToPost(post.id, it.id) }).then(
+                            Mono.just(PostWithTranslations(post, translations, tags))
+                        )
+                    }
                     .doOnSuccess { logger.info { "Post created [postId=${post.id}, siteId=$siteId]" } }
             }
 
@@ -38,21 +49,13 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
             .switchIfEmpty(Mono.error(SiteNotFoundException(siteId)))
             .flatMap { postRepo.findById(id, siteId) }
             .switchIfEmpty(Mono.error(PostNotFoundException(id)))
-            .flatMap { post ->
-                postRepo.findTranslationsByPostId(post.id)
-                    .collectList()
-                    .map { PostWithTranslations(post, it) }
-            }
+            .flatMap { post -> postWithTranslationsAndTags(post) }
 
     fun list(siteId: Long, userId: Long): Flux<PostWithTranslations> =
         siteRepo.findById(siteId, userId)
             .switchIfEmpty(Mono.error(SiteNotFoundException(siteId)))
             .flatMapMany { postRepo.findAllBySiteId(siteId) }
-            .flatMap { post ->
-                postRepo.findTranslationsByPostId(post.id)
-                    .collectList()
-                    .map { PostWithTranslations(post, it) }
-            }
+            .flatMap { post -> postWithTranslationsAndTags(post) }
 
     fun update(id: Long, siteId: Long, userId: Long, request: UpdatePostRequest): Mono<PostWithTranslations> =
         siteRepo.findById(siteId, userId)
@@ -66,10 +69,19 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
                             val slug = input.slug ?: generateSlug(input.title)
                             postRepo.updateTranslation(post.id, lang, input.title, slug, input.body, input.excerpt)
                         } ?: emptyList()
-                        Flux.merge(updateTranslations)
-                            .collectList()
+                        val tagsStep: Mono<List<Tag>> = if (request.tags != null) {
+                            Flux.fromIterable(request.tags).flatMap { tagRepo.findOrCreate(siteId, it) }
+                                .collectList()
+                                .flatMap { tags ->
+                                    tagRepo.replacePostTags(post.id, tags.map { it.id }).thenReturn(tags)
+                                }
+                        } else {
+                            tagRepo.findByPostId(post.id).collectList()
+                        }
+                        Flux.merge(updateTranslations).collectList()
                             .flatMap { postRepo.findTranslationsByPostId(updated.id).collectList() }
-                            .map { PostWithTranslations(updated, it) }
+                            .zipWith(tagsStep)
+                            .map { (translations, tags) -> PostWithTranslations(updated, translations, tags) }
                     }
             }
 
@@ -95,6 +107,11 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
             .switchIfEmpty(Mono.error(PostNotFoundException(id)))
             .flatMap { postRepo.update(id, siteId, null, PostStatus.DRAFT, null, scheduledAt) }
             .doOnSuccess { logger.info { "Post scheduled [postId=$id, siteId=$siteId, scheduledAt=$scheduledAt]" } }
+
+    private fun postWithTranslationsAndTags(post: Post): Mono<PostWithTranslations> =
+        postRepo.findTranslationsByPostId(post.id).collectList()
+            .zipWith(tagRepo.findByPostId(post.id).collectList())
+            .map { (translations, tags) -> PostWithTranslations(post, translations, tags) }
 
     private fun generateSlug(title: String): String =
         title.lowercase()
