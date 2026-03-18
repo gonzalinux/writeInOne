@@ -27,8 +27,7 @@ class Router(
     @Bean
     fun routes(): RouterFunction<ServerResponse> =
         publicRoutes()
-            .and(adminPublicRoutes())
-            .and(adminProtectedRoutes())
+            .and(adminRoutes())
             .and(protectedRoutes())
             .and(blogUiRoutes())
             .and(blogApiRoutes())
@@ -44,8 +43,9 @@ class Router(
 
         .path("/sites") { sites ->
             sites
-                .POST("/sites", siteHandler::create)
+                .POST("/", siteHandler::create)
                 .GET("/", siteHandler::list)
+                .GET("/{id}", siteHandler::get)
                 .PUT("/{id}", siteHandler::update)
                 .DELETE("/{id}", siteHandler::delete)
                 .path("/{siteId}/posts") { posts->
@@ -69,36 +69,23 @@ class Router(
         .build()
         .filter(jwtAuthFilter)
 
-    private fun adminPublicRoutes(): RouterFunction<ServerResponse> = route()
-        .GET("/admin/login", adminHandler::loginPage)
-        .POST("/admin/login", adminHandler::loginSubmit)
-        .GET("/admin/register", adminHandler::registerPage)
-        .POST("/admin/register", adminHandler::registerSubmit)
+    private fun adminRoutes(): RouterFunction<ServerResponse> = route()
         .GET("/admin/logout", adminHandler::logout)
+        .GET("/admin", adminHandler::serve)
+        .GET("/admin/**", adminHandler::serve)
         .build()
-        .filter(adminExceptionFilter)
-
-    private fun adminProtectedRoutes(): RouterFunction<ServerResponse> = route()
-        .GET("/admin", adminHandler::dashboard)
-        .GET("/admin/sites/new", adminHandler::newSitePage)
-        .POST("/admin/sites", adminHandler::createSite)
-        .GET("/admin/sites/{siteId}/posts", adminHandler::postListPage)
-        .GET("/admin/sites/{siteId}/posts/new", adminHandler::newPostPage)
-        .POST("/admin/sites/{siteId}/posts", adminHandler::createPost)
-        .build()
-        .filter(jwtAuthFilter)
         .filter(adminExceptionFilter)
 
     private fun blogUiRoutes(): RouterFunction<ServerResponse> = route()
         .GET("/", blogsHandler::index)
-        .GET("/{lang}", blogsHandler::postList)
-        .GET("/{lang}/{slug}", blogsHandler::post)
+        .GET("/{lang:es|en}", blogsHandler::postList)
+        .GET("/{lang:es|en}/{slug}", blogsHandler::post)
         .build()
         .filter(hostFilter)
         .filter(blogExceptionFilter)
 
     private fun blogApiRoutes(): RouterFunction<ServerResponse> = route()
-        .GET("/{lang}/posts", blogsHandler::postListJson)
+        .GET("/{lang:es|en}/posts", blogsHandler::postListJson)
         .build()
         .filter(hostFilter)
 }

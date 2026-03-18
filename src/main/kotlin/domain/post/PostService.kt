@@ -17,7 +17,6 @@ import java.time.OffsetDateTime
 
 private val logger = KotlinLogging.logger {}
 
-data class PostWithTranslations(val post: Post, val translations: List<PostTranslation>, val tags: List<Tag> = emptyList())
 
 @Service
 class PostService(private val postRepo: PostRepository, private val siteRepo: SiteRepository, private val tagRepo: TagRepository) {

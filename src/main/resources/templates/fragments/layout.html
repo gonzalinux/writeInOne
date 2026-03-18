@@ -6,74 +6,10 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title th:text="${title}">Blog</title>
-    <link rel="icon" th:if="${site.stylesUrl != null}" th:href="${site.config.faviconUrl}"/>
-    <!-- Default minimal styles -->
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: Georgia, 'Times New Roman', serif;
-            font-size: 18px;
-            line-height: 1.7;
-            color: #1a1a1a;
-            background: #fff;
-        }
-
-        a { color: inherit; }
-        a:hover { text-decoration: none; }
-
-        .container {
-            max-width: 720px;
-            margin: 0 auto;
-            padding: 0 1.5rem;
-        }
-
-        /* Nav */
-        header {
-            border-bottom: 1px solid #e5e5e5;
-            padding: 1.25rem 0;
-            margin-bottom: 3rem;
-        }
-
-        nav {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .site-name {
-            font-size: 1.1rem;
-            font-weight: bold;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 1.5rem;
-            list-style: none;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            font-size: 0.95rem;
-            color: #555;
-        }
-
-        .nav-links a:hover { color: #1a1a1a; }
-
-        /* Footer */
-        footer {
-            border-top: 1px solid #e5e5e5;
-            margin-top: 4rem;
-            padding: 2rem 0;
-            font-size: 0.875rem;
-            color: #888;
-            text-align: center;
-        }
-    </style>
-    <!-- Site custom stylesheet -->
+    <link rel="icon" th:if="${site.config.faviconUrl != null}" th:href="${site.config.faviconUrl}"/>
+    <!-- Default blog stylesheet — all classes are overridable by the site's custom stylesheet -->
+    <link rel="stylesheet" href="/css/blog.css"/>
+    <!-- Site custom stylesheet loaded after defaults so it can override any class -->
     <link th:if="${site.stylesUrl != null}" rel="stylesheet" th:href="${site.stylesUrl}"/>
 </th:block>
 

@@ -9,7 +9,7 @@ data class CreateSiteRequest(
     @field:NotBlank val name: String,
     @field:NotBlank @field:Pattern(
         regexp = "^[a-z0-9][a-z0-9.-]+[a-z0-9]$",
-        message = "must be a valid domain (e.g. blog.gonzalo.com)"
+        message = "must be a valid domain (e.g. blog.site.com)"
     ) val domain: String,
     val description: String? = null,
     val stylesUrl: String? = null,

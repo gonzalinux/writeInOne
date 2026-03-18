@@ -6,11 +6,15 @@ ifneq (,$(wildcard $(ENV_FILE)))
   export $(shell sed 's/=.*//' $(ENV_FILE))
 endif
 
-.PHONY: run db test docker-test prod down
+.PHONY: run watch db test docker-test prod down
 
-## run: Start the app locally with bootRun
+## run: Start the app locally with bootRun (pair with `make watch` for auto-reload)
 run:
 	./gradlew bootRun
+
+## watch: Continuously recompile Kotlin and copy resources on file changes (DevTools will restart the app)
+watch:
+	./gradlew -t compileKotlin processResources
 
 ## db: Start only the database via Docker Compose
 db:

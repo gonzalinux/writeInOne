@@ -1,0 +1,314 @@
+/* ============================================================
+   WriteInOne Blog — default stylesheet
+   All classes here are intentionally overridable by the site's
+   custom stylesheet (configured via stylesUrl in site settings).
+   ============================================================ */
+
+/* ── Reset ── */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* ── Base ── */
+body {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 18px;
+    line-height: 1.7;
+    color: #1a1a1a;
+    background: #fff;
+}
+
+a {
+    color: inherit;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+/* ── Layout container ── */
+.container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* ── Header / Nav ── */
+header {
+    border-bottom: 1px solid #e5e5e5;
+    padding: 1.25rem 0;
+    margin-bottom: 3rem;
+}
+
+nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.site-name {
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.nav-links {
+    display: flex;
+    gap: 1.5rem;
+    list-style: none;
+}
+
+.nav-links a {
+    text-decoration: none;
+    font-size: 0.95rem;
+    color: #555;
+}
+
+.nav-links a:hover {
+    color: #1a1a1a;
+}
+
+/* ── Footer ── */
+footer {
+    border-top: 1px solid #e5e5e5;
+    margin-top: 4rem;
+    padding: 2rem 0;
+    font-size: 0.875rem;
+    color: #888;
+    text-align: center;
+}
+
+/* ── Post list page ── */
+.site-hero {
+    margin-bottom: 3rem;
+}
+
+.site-hero h1 {
+    font-size: 2rem;
+}
+
+.site-description {
+    color: #555;
+    font-size: 1rem;
+    margin-top: 0.25rem;
+}
+
+.post-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+}
+
+/* Individual post card in the listing */
+.post-card {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.post-card__cover {
+    width: 100%;
+    aspect-ratio: 16 / 7;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.post-card__meta {
+    font-size: 0.85rem;
+    color: #888;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.post-card__title {
+    font-size: 1.4rem;
+    line-height: 1.3;
+}
+
+.post-card__title a {
+    text-decoration: none;
+}
+
+.post-card__title a:hover {
+    text-decoration: underline;
+}
+
+.post-card__excerpt {
+    color: #444;
+    font-size: 0.95rem;
+}
+
+.post-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+/* ── Tag pill — used on both post list and post detail ── */
+.tag {
+    font-size: 0.78rem;
+    padding: 0.2rem 0.55rem;
+    background: #f0f0f0;
+    border-radius: 999px;
+    color: #555;
+    text-decoration: none;
+}
+
+/* ── Empty state ── */
+.empty-state {
+    color: #888;
+    font-style: italic;
+    margin-top: 2rem;
+}
+
+/* ── Post detail page ── */
+.post-header {
+    margin-bottom: 2.5rem;
+}
+
+.post-header__back {
+    display: inline-block;
+    font-size: 0.875rem;
+    color: #888;
+    text-decoration: none;
+    margin-bottom: 1.5rem;
+}
+
+.post-header__back:hover {
+    color: #1a1a1a;
+}
+
+.post-header__meta {
+    font-size: 0.875rem;
+    color: #888;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.post-header__title {
+    font-size: 2.2rem;
+    line-height: 1.25;
+    margin-bottom: 0.75rem;
+}
+
+.post-header__excerpt {
+    font-size: 1.1rem;
+    color: #555;
+    font-style: italic;
+    margin-bottom: 1.25rem;
+}
+
+.post-header__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+}
+
+.post-header__cover {
+    width: 100%;
+    aspect-ratio: 16 / 7;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-top: 1.5rem;
+}
+
+/* ── Post body — rendered Markdown ── */
+.post-body {
+    margin-top: 2.5rem;
+}
+
+.post-body h1,
+.post-body h2,
+.post-body h3,
+.post-body h4 {
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.3;
+}
+
+.post-body p {
+    margin-bottom: 1.25rem;
+}
+
+.post-body ul,
+.post-body ol {
+    margin-bottom: 1.25rem;
+    padding-left: 1.5rem;
+}
+
+.post-body li {
+    margin-bottom: 0.25rem;
+}
+
+.post-body blockquote {
+    border-left: 3px solid #ddd;
+    padding-left: 1rem;
+    color: #666;
+    margin: 1.5rem 0;
+}
+
+.post-body pre {
+    background: #f6f6f6;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 0.875rem;
+    margin-bottom: 1.25rem;
+}
+
+.post-body code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.875em;
+    background: #f0f0f0;
+    padding: 0.15em 0.35em;
+    border-radius: 3px;
+}
+
+.post-body pre code {
+    background: none;
+    padding: 0;
+}
+
+.post-body img {
+    max-width: 100%;
+    border-radius: 4px;
+}
+
+.post-body a {
+    text-decoration: underline;
+    color: #1a1a1a;
+}
+
+.post-body hr {
+    border: none;
+    border-top: 1px solid #e5e5e5;
+    margin: 2rem 0;
+}
+
+.post-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.25rem;
+    font-size: 0.9rem;
+}
+
+.post-body th,
+.post-body td {
+    border: 1px solid #e5e5e5;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+}
+
+.post-body th {
+    background: #f6f6f6;
+}

@@ -1,4 +1,7 @@
 spring:
+  thymeleaf:
+    cache: false
+
   r2dbc:
     url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:writeinone}
     username: ${DB_USER:postgres}

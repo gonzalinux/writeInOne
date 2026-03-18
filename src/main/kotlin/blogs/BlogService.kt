@@ -1,6 +1,7 @@
 package com.gonzalinux.blogs
 
 import com.gonzalinux.common.PostNotFoundException
+import com.gonzalinux.domain.Languages
 import com.gonzalinux.domain.post.Post
 import com.gonzalinux.domain.post.PostRepository
 import com.gonzalinux.domain.post.PostTranslation
@@ -13,18 +14,6 @@ import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
-data class BlogPostSummary(
-    val post: Post,
-    val translation: PostTranslation,
-    val tags: List<Tag>
-)
-
-data class BlogPostDetail(
-    val post: Post,
-    val translation: PostTranslation,
-    val tags: List<Tag>,
-    val renderedBody: String
-)
 
 @Service
 class BlogService(

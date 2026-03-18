@@ -4,96 +4,58 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Posts — WriteInOne</title>
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Georgia, 'Times New Roman', serif; background: #f9f9f9; color: #1a1a1a; }
-        header {
-            background: #fff;
-            border-bottom: 1px solid #e5e5e5;
-            padding: 1rem 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .brand { font-weight: bold; font-size: 1rem; }
-        header a { font-size: 0.875rem; color: #888; text-decoration: none; }
-        header a:hover { color: #1a1a1a; }
-        main { max-width: 860px; margin: 2.5rem auto; padding: 0 2rem; }
-        .page-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 2rem;
-        }
-        h1 { font-size: 1.5rem; }
-        .btn {
-            display: inline-block;
-            padding: 0.55rem 1.25rem;
-            background: #1a1a1a;
-            color: #fff;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 0.875rem;
-        }
-        .btn:hover { background: #333; }
-        table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; overflow: hidden; }
-        th, td { padding: 0.85rem 1.25rem; text-align: left; font-size: 0.9rem; }
-        th { background: #f6f6f6; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; border-bottom: 1px solid #e5e5e5; }
-        td { border-bottom: 1px solid #f0f0f0; }
-        tr:last-child td { border-bottom: none; }
-        .status {
-            display: inline-block;
-            padding: 0.15rem 0.5rem;
-            border-radius: 999px;
-            font-size: 0.75rem;
-            text-transform: lowercase;
-        }
-        .status--published { background: #d4f7d4; color: #1a6b1a; }
-        .status--draft { background: #f0f0f0; color: #888; }
-        .status--archived { background: #fdebd0; color: #884400; }
-        .empty { text-align: center; padding: 4rem 0; color: #888; }
-        .empty p { margin-bottom: 1.5rem; font-style: italic; }
-    </style>
+    <link rel="stylesheet" href="/css/admin.css"/>
 </head>
 <body>
-    <header>
-        <span class="brand">WriteInOne</span>
-        <a href="/admin">← Dashboard</a>
-    </header>
+<header>
+    <span class="brand">WriteInOne</span>
+    <a href="/admin">← Dashboard</a>
+</header>
 
-    <main>
-        <div class="page-header">
-            <h1>Posts</h1>
-            <a class="btn" th:href="'/admin/sites/' + ${siteId} + '/posts/new'">+ New post</a>
-        </div>
+<main>
+    <div class="page-header">
+        <h1>Posts</h1>
+        <a class="btn" th:href="'/admin/sites/' + ${siteId} + '/posts/new'">+ New post</a>
+    </div>
 
-        <table th:if="${!posts.isEmpty()}">
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Languages</th>
-                    <th>Status</th>
-                    <th>Published</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="item : ${posts}">
-                    <td th:text="${item.translations.isEmpty() ? '(no translation)' : item.translations[0].title}">Title</td>
-                    <td th:text="${item.translations.![lang].join(', ')}">en</td>
-                    <td>
-                        <span class="status"
-                              th:classappend="'status--' + ${item.post.status.name().toLowerCase()}"
-                              th:text="${item.post.status.name().toLowerCase()}">draft</span>
-                    </td>
-                    <td th:text="${item.post.publishedAt != null ? #temporals.format(item.post.publishedAt, 'MMM d, yyyy') : '—'}">—</td>
-                </tr>
-            </tbody>
-        </table>
+    <!--/*@thymesVar id="posts" type="java.util.List<com.gonzalinux.domain.post.PostWithTranslations>"*/-->
+    <table th:if="${!posts.isEmpty()}">
+        <thead>
+        <tr>
+            <th>Title</th>
+            <th>Languages</th>
+            <th>Status</th>
+            <th>Published</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${posts}">
+            <!--/*@thymesVar id="item" type="com.gonzalinux.domain.post.PostWithTranslations"*/-->
+            <td th:text="${item.translations[0].title}">Title</td>
+            <td><span th:each="transla : ${item.translations}" th:text="${transla.lang + ' '}"></span></td>
+            <td>
+                <span class="status"
+                      th:classappend="'status--' + ${item.post.status.name().toLowerCase()}"
+                      th:text="${item.post.status.name().toLowerCase()}">draft</span>
+            </td>
+            <td th:text="${item.post.publishedAt != null ? #temporals.format(item.post.publishedAt, 'MMM d, yyyy') : '—'}">—</td>
+            <td class="td-actions">
+                <a class="action-link" th:href="'/admin/sites/' + ${siteId} + '/posts/' + ${item.post.id} + '/edit'">Edit</a>
+                <button th:if="${item.post.status.name() != 'PUBLISHED'}"
+                        class="action-btn"
+                        th:data-site-id="${siteId}"
+                        th:data-publish-post="${item.post.id}">Publish</button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
 
-        <div class="empty" th:if="${posts.isEmpty()}">
-            <p>No posts yet.</p>
-            <a class="btn" th:href="'/admin/sites/' + ${siteId} + '/posts/new'">Write your first post</a>
-        </div>
-    </main>
+    <div class="empty" th:if="${posts.isEmpty()}">
+        <p>No posts yet.</p>
+        <a class="btn" th:href="'/admin/sites/' + ${siteId} + '/posts/new'">Write your first post</a>
+    </div>
+</main>
+<script src="/js/post-list.js" defer></script>
 </body>
 </html>

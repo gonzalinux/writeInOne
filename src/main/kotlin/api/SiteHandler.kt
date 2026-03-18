@@ -39,6 +39,14 @@ class SiteHandler(private val service: SiteService, private val validator: Reque
         }
     }
 
+    fun get(request: ServerRequest): Mono<ServerResponse> {
+        val id = request.pathVariable("id").toLong()
+        return Mono.deferContextual { ctx ->
+            service.findById(id, ctx.getRequestContext()!!.userId)
+                .flatMap { ServerResponse.ok().bodyValue(it) }
+        }
+    }
+
     fun delete(request: ServerRequest): Mono<ServerResponse> {
         val id = request.pathVariable("id").toLong()
         return Mono.deferContextual { ctx ->

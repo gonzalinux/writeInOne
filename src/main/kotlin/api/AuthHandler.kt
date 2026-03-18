@@ -81,7 +81,7 @@ class AuthHandler(private val service: UserService, private val validator: Reque
     }
 
     private fun clearCookie(name: String): ResponseCookie =
-        ResponseCookie.from(name).value("").maxAge(0).httpOnly(true).sameSite("Strict").build()
+        ResponseCookie.from(name).value("").maxAge(0).httpOnly(true).sameSite("Strict").path("/").build()
 
     private fun accessTokenCookie(value: String, secure: Boolean): ResponseCookie =
         ResponseCookie.from(ACCESS_TOKEN_COOKIE)
@@ -89,6 +89,7 @@ class AuthHandler(private val service: UserService, private val validator: Reque
             .httpOnly(true)
             .secure(secure)
             .sameSite("Strict")
+            .path("/")
             .build()
 
     private fun refreshTokenCookie(value: String, secure: Boolean): ResponseCookie =

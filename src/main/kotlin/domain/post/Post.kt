@@ -1,5 +1,6 @@
 package com.gonzalinux.domain.post
 
+import com.gonzalinux.domain.tag.Tag
 import java.time.OffsetDateTime
 
 enum class PostStatus { DRAFT, PUBLISHED, ARCHIVED }
@@ -28,3 +29,10 @@ data class PostTranslation(
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime
 )
+
+data class PostWithTranslations(
+    val post: Post,
+    val translations: List<PostTranslation>,
+    val tags: List<Tag> = emptyList()
+)
+

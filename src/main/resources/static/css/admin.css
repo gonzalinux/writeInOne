@@ -1,0 +1,474 @@
+/* ============================================================
+   WriteInOne Admin — shared stylesheet
+   ============================================================ */
+
+/* ── Reset ── */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* ── Base ── */
+body {
+    font-family: Georgia, 'Times New Roman', serif;
+    background: #f9f9f9;
+    color: #1a1a1a;
+}
+
+/* Auth pages (login, register) center the card vertically */
+body.auth-layout {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+/* ── Header ── */
+header {
+    background: #fff;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.brand {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+/* Muted brand used inside auth cards */
+.brand--muted {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #888;
+    margin-bottom: 2rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+header a,
+.header-actions a {
+    font-size: 0.875rem;
+    color: #888;
+    text-decoration: none;
+}
+
+header a:hover,
+.header-actions a:hover {
+    color: #1a1a1a;
+}
+
+/* ── Main content area ── */
+main {
+    max-width: 860px;
+    margin: 2.5rem auto;
+    padding: 0 2rem;
+}
+
+/* Narrower layout for the post editor */
+main.main--narrow {
+    max-width: 760px;
+    padding-bottom: 4rem;
+}
+
+/* Compact layout for simple forms (e.g. site creation) */
+main.main--compact {
+    max-width: 580px;
+}
+
+/* ── Page header (title + action button row) ── */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+
+h1 {
+    font-size: 1.5rem;
+}
+
+/* ── Buttons ── */
+.btn {
+    display: inline-block;
+    padding: 0.6rem 1.25rem;
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background: #333;
+}
+
+/* Full-width variant used on auth forms */
+.btn--full {
+    width: 100%;
+    padding: 0.7rem;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+}
+
+/* Ghost (outlined) variant */
+.btn-ghost {
+    background: none;
+    border: 1px solid #ddd;
+    color: #555;
+}
+
+.btn-ghost:hover {
+    border-color: #aaa;
+    color: #1a1a1a;
+}
+
+/* Publish / success variant */
+.btn-publish {
+    background: #1a6b1a;
+}
+
+.btn-publish:hover {
+    background: #155015;
+}
+
+/* ── Forms ── */
+.field {
+    margin-bottom: 1.25rem;
+}
+
+/* Two-column field row */
+.field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+label {
+    display: block;
+    font-size: 0.875rem;
+    margin-bottom: 0.4rem;
+    color: #555;
+}
+
+.hint {
+    font-size: 0.78rem;
+    color: #aaa;
+    margin-top: 0.3rem;
+}
+
+input,
+textarea,
+select {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-family: inherit;
+    background: #fff;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: #1a1a1a;
+}
+
+textarea {
+    resize: vertical;
+}
+
+/* Monospace body editor textarea */
+.body-editor {
+    min-height: 360px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+/* Row of action buttons at the bottom of a form */
+.actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    align-items: center;
+}
+
+/* ── Auth card (login / register) ── */
+.card {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 400px;
+}
+
+.footer-link {
+    margin-top: 1.5rem;
+    font-size: 0.875rem;
+    color: #888;
+    text-align: center;
+}
+
+.footer-link a {
+    color: #1a1a1a;
+}
+
+/* ── Dashboard site cards ── */
+.site-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.site-card {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.site-card__name {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 0.2rem;
+}
+
+.site-card__domain {
+    font-size: 0.875rem;
+    color: #888;
+}
+
+.site-card__actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+/* ── Post list table ── */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+th,
+td {
+    padding: 0.85rem 1.25rem;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+th {
+    background: #f6f6f6;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+td {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+/* No-wrap cell used for action columns */
+.td-actions {
+    white-space: nowrap;
+}
+
+/* ── Status badge ── */
+.status {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    text-transform: lowercase;
+}
+
+.status--published {
+    background: #d4f7d4;
+    color: #1a6b1a;
+}
+
+.status--draft {
+    background: #f0f0f0;
+    color: #888;
+}
+
+.status--archived {
+    background: #fdebd0;
+    color: #884400;
+}
+
+/* ── Inline row actions (edit link, publish button) ── */
+.action-link {
+    font-size: 0.8rem;
+    color: #555;
+    text-decoration: none;
+    margin-right: 0.75rem;
+}
+
+.action-link:hover {
+    color: #1a1a1a;
+}
+
+.action-btn {
+    font-size: 0.8rem;
+    background: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.2rem 0.6rem;
+    cursor: pointer;
+    color: #555;
+    font-family: inherit;
+}
+
+.action-btn:hover {
+    border-color: #1a1a1a;
+    color: #1a1a1a;
+}
+
+/* ── Section titles inside forms ── */
+.section-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #aaa;
+    margin: 2rem 0 1rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid #eee;
+}
+
+/* ── Checkbox group ── */
+.checkbox-group {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    color: #1a1a1a;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
+/* ── Language blocks ── */
+.lang-block {
+    margin-bottom: 0.5rem;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.lang-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 1.25rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: bold;
+    color: #1a1a1a;
+    background: #fafafa;
+    margin: 0;
+    user-select: none;
+}
+
+.lang-toggle:hover {
+    background: #f3f3f3;
+}
+
+.lang-toggle input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
+.lang-config {
+    padding: 1.25rem 1.25rem 0.25rem;
+    border-top: 1px solid #e5e5e5;
+}
+
+/* ── Nav link rows ── */
+.nav-link-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.nav-link-row input {
+    flex: 1;
+}
+
+.btn-icon {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #888;
+    font-family: inherit;
+}
+
+.btn-icon:hover {
+    border-color: #c00;
+    color: #c00;
+}
+
+/* Small button variant */
+.btn--small {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+
+/* ── Empty state ── */
+.empty {
+    text-align: center;
+    padding: 4rem 0;
+    color: #888;
+}
+
+.empty p {
+    margin-bottom: 1.5rem;
+    font-style: italic;
+}
