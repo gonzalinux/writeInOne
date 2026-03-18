@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${status + ' ' + reason}">Error</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: Georgia, 'Times New Roman', serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: #fff;
+            color: #1a1a1a;
+        }
+        .error {
+            text-align: center;
+            padding: 2rem;
+        }
+        .error__code {
+            font-size: 5rem;
+            font-weight: bold;
+            color: #ddd;
+            line-height: 1;
+        }
+        .error__reason {
+            font-size: 1.25rem;
+            margin: 0.5rem 0 1rem;
+        }
+        .error__message {
+            color: #888;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+        .error__back {
+            font-size: 0.9rem;
+            color: #555;
+        }
+        .error__back a { color: inherit; }
+        .error__back a:hover { text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="error">
+        <div class="error__code" th:text="${status}">404</div>
+        <p class="error__reason" th:text="${reason}">Not Found</p>
+        <p class="error__message" th:if="${message != null}" th:text="${message}">Details</p>
+        <p class="error__back"><a href="/">← Go home</a></p>
+    </div>
+</body>
+</html>

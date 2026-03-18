@@ -53,6 +53,9 @@ dependencies {
     // Markdown rendering
     implementation("com.vladsch.flexmark:flexmark-all:0.64.8")
 
+    // Thymeleaf (reactive)
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+
     // OpenAPI / Swagger
     implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.4")
 
@@ -72,7 +75,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
-// Source: https://mvnrepository.com/artifact/io.projectreactor/reactor-test
+    // Source: https://mvnrepository.com/artifact/io.projectreactor/reactor-test
     testImplementation("io.projectreactor:reactor-test:3.8.4")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

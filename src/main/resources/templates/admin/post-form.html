@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>New post — WriteInOne</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Georgia, 'Times New Roman', serif; background: #f9f9f9; color: #1a1a1a; }
+        header {
+            background: #fff;
+            border-bottom: 1px solid #e5e5e5;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand { font-weight: bold; font-size: 1rem; }
+        header a { font-size: 0.875rem; color: #888; text-decoration: none; }
+        header a:hover { color: #1a1a1a; }
+        main { max-width: 760px; margin: 2.5rem auto; padding: 0 2rem 4rem; }
+        h1 { font-size: 1.5rem; margin-bottom: 2rem; }
+        .field { margin-bottom: 1.25rem; }
+        .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+        label { display: block; font-size: 0.875rem; margin-bottom: 0.4rem; color: #555; }
+        .hint { font-size: 0.78rem; color: #aaa; margin-top: 0.3rem; }
+        input, textarea, select {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-family: inherit;
+            background: #fff;
+        }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #1a1a1a; }
+        textarea { resize: vertical; }
+        #body { min-height: 360px; font-family: 'Courier New', monospace; font-size: 0.9rem; line-height: 1.6; }
+        .actions { display: flex; gap: 1rem; margin-top: 2rem; }
+        .btn {
+            padding: 0.65rem 1.5rem;
+            background: #1a1a1a;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-family: inherit;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn:hover { background: #333; }
+        .btn-ghost {
+            background: none;
+            border: 1px solid #ddd;
+            color: #555;
+        }
+        .btn-ghost:hover { border-color: #aaa; color: #1a1a1a; }
+    </style>
+</head>
+<body>
+    <header>
+        <span class="brand">WriteInOne</span>
+        <a th:href="'/admin/sites/' + ${siteId} + '/posts'">← Posts</a>
+    </header>
+
+    <main>
+        <h1>New post</h1>
+        <form method="post" th:action="'/admin/sites/' + ${siteId} + '/posts'">
+            <div class="field-row">
+                <div>
+                    <label for="lang">Language</label>
+                    <select id="lang" name="lang">
+                        <option th:each="l : ${languages}"
+                                th:value="${l.value}"
+                                th:text="${l.name()}">English</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="slug">Slug <span style="color:#aaa">(optional)</span></label>
+                    <input id="slug" name="slug" type="text" placeholder="auto-generated from title"/>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="title">Title</label>
+                <input id="title" name="title" type="text" required placeholder="Post title"/>
+            </div>
+
+            <div class="field">
+                <label for="excerpt">Excerpt <span style="color:#aaa">(optional)</span></label>
+                <textarea id="excerpt" name="excerpt" rows="2" placeholder="A short summary shown in post listings"></textarea>
+            </div>
+
+            <div class="field">
+                <label for="body">Body <span style="color:#aaa">(Markdown)</span></label>
+                <textarea id="body" name="body" required placeholder="Write your post in Markdown..."></textarea>
+            </div>
+
+            <div class="field-row">
+                <div>
+                    <label for="tags">Tags <span style="color:#aaa">(optional)</span></label>
+                    <input id="tags" name="tags" type="text" placeholder="kotlin, spring, webflux"/>
+                    <p class="hint">Comma-separated</p>
+                </div>
+                <div>
+                    <label for="coverUrl">Cover image URL <span style="color:#aaa">(optional)</span></label>
+                    <input id="coverUrl" name="coverUrl" type="url" placeholder="https://..."/>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn" type="submit">Save draft</button>
+                <a class="btn btn-ghost" th:href="'/admin/sites/' + ${siteId} + '/posts'">Cancel</a>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

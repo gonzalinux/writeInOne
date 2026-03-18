@@ -3,7 +3,6 @@ package com.gonzalinux.config
 import com.gonzalinux.common.SiteContextHolder.withSite
 import com.gonzalinux.domain.site.SiteRepository
 import mu.KotlinLogging
-import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.HandlerFilterFunction
 import org.springframework.web.reactive.function.server.HandlerFunction
@@ -28,8 +27,8 @@ class HostFilter(private val siteRepository: SiteRepository) : HandlerFilterFunc
             }
             .switchIfEmpty(
                 Mono.defer {
-                    logger.warn { "No site found for domain: $domain" }
-                    ServerResponse.status(HttpStatus.NOT_FOUND).build()
+                    logger.debug { "No site found for domain: $domain, showing landing page" }
+                    ServerResponse.ok().render("landing")
                 }
             )
     }

@@ -56,8 +56,8 @@ class PostRepository(private val client: DatabaseClient) {
 
     fun publishScheduled(): Mono<Int> =
         client.sql("""
-            UPDATE posts SET status = 'published', published_at = now(), updated_at = now()
-            WHERE status = 'scheduled' AND scheduled_at <= now()
+            UPDATE posts SET status = 'published', published_at = now(), scheduled_at = null, updated_at = now()
+            WHERE status = 'draft' AND scheduled_at IS NOT NULL AND scheduled_at <= now()
         """)
             .fetch().rowsUpdated()
             .map { it.toInt() }
@@ -110,6 +110,61 @@ class PostRepository(private val client: DatabaseClient) {
             .fetch().all()
             .map { mapToTranslation(it) }
 
+    fun findPublishedBySiteAndLang(siteId: Long, lang: String): Flux<Pair<Post, PostTranslation>> =
+        client.sql("""
+            SELECT
+                p.id, p.site_id, p.status, p.cover_url, p.view_count,
+                p.published_at, p.scheduled_at, p.created_at, p.updated_at,
+                pt.id         AS pt_id,
+                pt.post_id    AS pt_post_id,
+                pt.site_id    AS pt_site_id,
+                pt.lang       AS pt_lang,
+                pt.title      AS pt_title,
+                pt.slug       AS pt_slug,
+                pt.body       AS pt_body,
+                pt.excerpt    AS pt_excerpt,
+                pt.created_at AS pt_created_at,
+                pt.updated_at AS pt_updated_at
+            FROM posts p
+            JOIN post_translations pt ON pt.post_id = p.id AND pt.lang = :lang AND pt.site_id = :siteId
+            WHERE p.site_id = :siteId AND p.status = 'published'
+            ORDER BY p.published_at DESC
+        """)
+            .bind("siteId", siteId)
+            .bind("lang", lang)
+            .fetch().all()
+            .map { mapToPostAndTranslation(it) }
+
+    fun findPublishedBySlug(siteId: Long, lang: String, slug: String): Mono<Pair<Post, PostTranslation>> =
+        client.sql("""
+            SELECT
+                p.id, p.site_id, p.status, p.cover_url, p.view_count,
+                p.published_at, p.scheduled_at, p.created_at, p.updated_at,
+                pt.id         AS pt_id,
+                pt.post_id    AS pt_post_id,
+                pt.site_id    AS pt_site_id,
+                pt.lang       AS pt_lang,
+                pt.title      AS pt_title,
+                pt.slug       AS pt_slug,
+                pt.body       AS pt_body,
+                pt.excerpt    AS pt_excerpt,
+                pt.created_at AS pt_created_at,
+                pt.updated_at AS pt_updated_at
+            FROM posts p
+            JOIN post_translations pt ON pt.post_id = p.id AND pt.lang = :lang AND pt.site_id = :siteId
+            WHERE p.site_id = :siteId AND p.status = 'published' AND pt.slug = :slug
+        """)
+            .bind("siteId", siteId)
+            .bind("lang", lang)
+            .bind("slug", slug)
+            .fetch().first()
+            .map { mapToPostAndTranslation(it) }
+
+    fun incrementViewCount(postId: Long): Mono<Void> =
+        client.sql("UPDATE posts SET view_count = view_count + 1 WHERE id = :id")
+            .bind("id", postId)
+            .then()
+
     private fun mapToPost(row: Map<String, Any>): Post = Post(
         id = row["id"] as Long,
         siteId = row["site_id"] as Long,
@@ -134,4 +189,28 @@ class PostRepository(private val client: DatabaseClient) {
         createdAt = row["created_at"] as OffsetDateTime,
         updatedAt = row["updated_at"] as OffsetDateTime
     )
+
+    private fun mapToPostAndTranslation(row: Map<String, Any>): Pair<Post, PostTranslation> =
+        Post(
+            id = row["id"] as Long,
+            siteId = row["site_id"] as Long,
+            status = PostStatus.valueOf((row["status"] as String).uppercase()),
+            coverUrl = row["cover_url"] as? String,
+            viewCount = row["view_count"] as Long,
+            publishedAt = row["published_at"] as? OffsetDateTime,
+            scheduledAt = row["scheduled_at"] as? OffsetDateTime,
+            createdAt = row["created_at"] as OffsetDateTime,
+            updatedAt = row["updated_at"] as OffsetDateTime
+        ) to PostTranslation(
+            id = row["pt_id"] as Long,
+            postId = row["pt_post_id"] as Long,
+            siteId = row["pt_site_id"] as Long,
+            lang = row["pt_lang"] as String,
+            title = row["pt_title"] as String,
+            slug = row["pt_slug"] as String,
+            body = row["pt_body"] as String,
+            excerpt = row["pt_excerpt"] as? String,
+            createdAt = row["pt_created_at"] as OffsetDateTime,
+            updatedAt = row["pt_updated_at"] as OffsetDateTime
+        )
 }

@@ -22,5 +22,5 @@ services:
     ports:
       - "5433:5433"
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data:z
     command: -p 5433

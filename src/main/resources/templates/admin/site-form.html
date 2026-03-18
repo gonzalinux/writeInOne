@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>New site — WriteInOne</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Georgia, 'Times New Roman', serif; background: #f9f9f9; color: #1a1a1a; }
+        header {
+            background: #fff;
+            border-bottom: 1px solid #e5e5e5;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand { font-weight: bold; font-size: 1rem; }
+        header a { font-size: 0.875rem; color: #888; text-decoration: none; }
+        header a:hover { color: #1a1a1a; }
+        main { max-width: 580px; margin: 2.5rem auto; padding: 0 2rem; }
+        h1 { font-size: 1.5rem; margin-bottom: 2rem; }
+        .field { margin-bottom: 1.25rem; }
+        label { display: block; font-size: 0.875rem; margin-bottom: 0.4rem; color: #555; }
+        .hint { font-size: 0.78rem; color: #aaa; margin-top: 0.3rem; }
+        input, textarea {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus { outline: none; border-color: #1a1a1a; }
+        textarea { resize: vertical; min-height: 80px; }
+        .actions { display: flex; gap: 1rem; margin-top: 2rem; }
+        .btn {
+            padding: 0.65rem 1.5rem;
+            background: #1a1a1a;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-family: inherit;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn:hover { background: #333; }
+        .btn-ghost {
+            background: none;
+            border: 1px solid #ddd;
+            color: #555;
+        }
+        .btn-ghost:hover { border-color: #aaa; color: #1a1a1a; }
+    </style>
+</head>
+<body>
+    <header>
+        <span class="brand">WriteInOne</span>
+        <a href="/admin">← Dashboard</a>
+    </header>
+
+    <main>
+        <h1>New site</h1>
+        <form method="post" action="/admin/sites">
+            <div class="field">
+                <label for="name">Site name</label>
+                <input id="name" name="name" type="text" required placeholder="My Blog"/>
+            </div>
+            <div class="field">
+                <label for="domain">Domain</label>
+                <input id="domain" name="domain" type="text" required placeholder="blog.example.com"/>
+                <p class="hint">The domain where your blog will be served (e.g. blog.example.com)</p>
+            </div>
+            <div class="field">
+                <label for="description">Description <span style="color:#aaa">(optional)</span></label>
+                <textarea id="description" name="description" placeholder="A short description of your blog"></textarea>
+            </div>
+            <div class="actions">
+                <button class="btn" type="submit">Create site</button>
+                <a class="btn btn-ghost" href="/admin">Cancel</a>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

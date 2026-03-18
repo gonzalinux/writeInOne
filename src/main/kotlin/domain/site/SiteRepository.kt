@@ -3,6 +3,7 @@ package com.gonzalinux.domain.site
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.gonzalinux.common.bindNullable
 import com.gonzalinux.domain.Languages
+import io.r2dbc.postgresql.codec.Json
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Repository
 import reactor.core.publisher.Flux
@@ -93,7 +94,12 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
     private fun mapToSite(row: Map<String, Any>): Site {
         val languages = (row["languages"] as Array<String>)
             .mapNotNull { v -> Languages.entries.find { it.value == v } }
-        val config = objectMapper.readValue(row["config"].toString(), SiteConfig::class.java)
+        val config = when (val raw = row["config"]) {
+            is String -> objectMapper.readValue(raw, SiteConfig::class.java)
+            is ByteArray -> objectMapper.readValue(raw, SiteConfig::class.java)
+            is Json -> objectMapper.readValue(raw.asArray(), SiteConfig::class.java)
+            else -> throw IllegalStateException("Unexpected config type: ${raw?.javaClass}")
+        }
 
         return Site(
             id = row["id"] as Long,

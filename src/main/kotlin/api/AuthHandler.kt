@@ -5,6 +5,7 @@ import com.gonzalinux.api.data.AuthResponse
 import com.gonzalinux.api.data.LoginRequest
 import com.gonzalinux.common.RequestValidator
 import com.gonzalinux.common.UnauthorizedException
+import com.gonzalinux.common.isSecureContext
 import com.gonzalinux.domain.user.UserService
 import org.springframework.http.ResponseCookie
 import org.springframework.stereotype.Component
@@ -24,25 +25,29 @@ class AuthHandler(private val service: UserService, private val validator: Reque
     }
 
     fun register(request: ServerRequest): Mono<ServerResponse> {
+        val secure = request.isSecureContext()
         return request.bodyToMono<RegisterRequest>()
             .map { validator.validate(it) }
             .flatMap { service.register(it.email, it.displayName, it.password) }
             .flatMap { tokens ->
                 ServerResponse.ok()
-                    .cookie(accessTokenCookie(tokens.accessToken.value))
-                    .cookie(refreshTokenCookie(tokens.refreshToken.value))
+                    .cookie(accessTokenCookie(tokens.accessToken.value, secure))
+                    .cookie(refreshTokenCookie(tokens.refreshToken.value, secure))
                     .bodyValue(AuthResponse(message = "SUCCESS"))
             }
     }
 
     fun login(request: ServerRequest): Mono<ServerResponse> {
+        val secure = request.isSecureContext()
         return request.bodyToMono<LoginRequest>()
             .map { validator.validate(it) }
             .flatMap { service.login(it.email, it.password) }
-            .flatMap {  ServerResponse.ok()
-                .cookie(accessTokenCookie(it.accessToken.value))
-                .cookie(refreshTokenCookie(it.refreshToken.value))
-                .bodyValue(AuthResponse(message = "SUCCESS")) }
+            .flatMap {
+                ServerResponse.ok()
+                    .cookie(accessTokenCookie(it.accessToken.value, secure))
+                    .cookie(refreshTokenCookie(it.refreshToken.value, secure))
+                    .bodyValue(AuthResponse(message = "SUCCESS"))
+            }
     }
 
     fun logout(request: ServerRequest): Mono<ServerResponse> {
@@ -57,6 +62,7 @@ class AuthHandler(private val service: UserService, private val validator: Reque
     }
 
     fun refresh(request: ServerRequest): Mono<ServerResponse> {
+        val secure = request.isSecureContext()
         return request.cookies().toMono()
             .flatMap {
                 val token = it[REFRESH_TOKEN_COOKIE]?.firstOrNull()
@@ -66,28 +72,30 @@ class AuthHandler(private val service: UserService, private val validator: Reque
                     service.refreshToken(token.value)
                 }
             }
-            .flatMap { ServerResponse.ok()
-                .cookie(accessTokenCookie(it.accessToken.value))
-                .cookie(refreshTokenCookie(it.refreshToken.value))
-                .bodyValue(AuthResponse(message = "SUCCESS")) }
+            .flatMap {
+                ServerResponse.ok()
+                    .cookie(accessTokenCookie(it.accessToken.value, secure))
+                    .cookie(refreshTokenCookie(it.refreshToken.value, secure))
+                    .bodyValue(AuthResponse(message = "SUCCESS"))
+            }
     }
 
     private fun clearCookie(name: String): ResponseCookie =
-        ResponseCookie.from(name).value("").maxAge(0).httpOnly(true).secure(true).sameSite("Strict").build()
+        ResponseCookie.from(name).value("").maxAge(0).httpOnly(true).sameSite("Strict").build()
 
-    private fun accessTokenCookie(value: String): ResponseCookie =
+    private fun accessTokenCookie(value: String, secure: Boolean): ResponseCookie =
         ResponseCookie.from(ACCESS_TOKEN_COOKIE)
             .value(value)
             .httpOnly(true)
-            .secure(true)
+            .secure(secure)
             .sameSite("Strict")
             .build()
 
-    private fun refreshTokenCookie(value: String): ResponseCookie =
+    private fun refreshTokenCookie(value: String, secure: Boolean): ResponseCookie =
         ResponseCookie.from(REFRESH_TOKEN_COOKIE)
             .value(value)
             .httpOnly(true)
-            .secure(true)
+            .secure(secure)
             .sameSite("Strict")
             .path("/auth/refresh")
             .build()
