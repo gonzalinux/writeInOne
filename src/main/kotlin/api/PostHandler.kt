@@ -69,6 +69,15 @@ class PostHandler(private val service: PostService) {
         }
     }
 
+    fun unpublish(request: ServerRequest): Mono<ServerResponse> {
+        val siteId = request.pathVariable("siteId").toLong()
+        val postId = request.pathVariable("postId").toLong()
+        return Mono.deferContextual { ctx ->
+            service.unpublish(postId, siteId, ctx.getRequestContext()!!.userId)
+                .flatMap { ServerResponse.ok().bodyValue(it) }
+        }
+    }
+
     fun schedule(request: ServerRequest): Mono<ServerResponse> {
         val siteId = request.pathVariable("siteId").toLong()
         val postId = request.pathVariable("postId").toLong()

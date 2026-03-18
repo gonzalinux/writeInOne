@@ -1,25 +1,33 @@
 package com.gonzalinux.scheduler
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
+import reactor.core.Disposable
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
+import java.time.Duration
 
 private val logger = KotlinLogging.logger {}
 
-abstract class SchedulerBase(private val intervalMs: Long) : ApplicationRunner {
-    abstract suspend fun start()
+abstract class SchedulerBase(private val intervalMs: Long) : ApplicationRunner, AutoCloseable {
+    private var subscription: Disposable? = null
+
+    abstract fun execute(): Mono<*>
 
     override fun run(args: ApplicationArguments) {
-        CoroutineScope(Dispatchers.Default).launch {
-            while (true) {
-                delay(intervalMs)
-                runCatching { start() }
-                    .onFailure { logger.error(it) { "${this@SchedulerBase::class.simpleName} failed" } }
+        subscription = Flux.interval(Duration.ofMillis(intervalMs))
+            .concatMap {
+                execute()
+                    .onErrorResume { e ->
+                        logger.error(e) { "${this::class.simpleName} failed" }
+                        Mono.empty()
+                    }
             }
-        }
+            .subscribe()
+    }
+
+    override fun close() {
+        subscription?.dispose()
     }
 }

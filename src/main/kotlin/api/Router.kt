@@ -56,6 +56,7 @@ class Router(
                         .PUT("/{postId}", postHandler::update)
                         .DELETE("/{postId}", postHandler::delete)
                         .POST("/{postId}/publish", postHandler::publish)
+                        .POST("/{postId}/unpublish", postHandler::unpublish)
                         .POST("/{postId}/schedule", postHandler::schedule)
                 }
                 .path("/{siteId}/tags") { tags ->

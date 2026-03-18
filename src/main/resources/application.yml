@@ -6,6 +6,9 @@ spring:
     url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:writeinone}
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:secret}
+    pool:
+      validation-query: SELECT 1
+      max-idle-time: 10m
 
   flyway:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:writeinone}

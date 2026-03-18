@@ -130,6 +130,7 @@ h1 {
 }
 
 .btn-ghost:hover {
+    background: #f5f5f5;
     border-color: #aaa;
     color: #1a1a1a;
 }
@@ -301,6 +302,10 @@ tr:last-child td {
 /* No-wrap cell used for action columns */
 .td-actions {
     white-space: nowrap;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
 }
 
 /* ── Status badge ── */
@@ -327,18 +332,32 @@ tr:last-child td {
     color: #884400;
 }
 
+.status--scheduled {
+    background: #e8f0fe;
+    color: #1a4fc4;
+}
+
+/* ── Schedule section (post form) ── */
+.schedule-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    background: #fafafa;
+}
+
+.schedule-row input[type="datetime-local"] {
+    font-family: inherit;
+    font-size: 0.875rem;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
 /* ── Inline row actions (edit link, publish button) ── */
-.action-link {
-    font-size: 0.8rem;
-    color: #555;
-    text-decoration: none;
-    margin-right: 0.75rem;
-}
-
-.action-link:hover {
-    color: #1a1a1a;
-}
-
 .action-btn {
     font-size: 0.8rem;
     background: none;
@@ -348,12 +367,20 @@ tr:last-child td {
     cursor: pointer;
     color: #555;
     font-family: inherit;
+    text-decoration: none;
+    display: inline-block;
 }
 
-.action-btn:hover {
-    border-color: #1a1a1a;
-    color: #1a1a1a;
-}
+.action-btn:hover { border-color: #1a1a1a; color: #1a1a1a; }
+
+.action-btn--edit  { color: #1a6fc4; border-color: #aac8e8; }
+.action-btn--edit:hover  { color: #0f4a8a; border-color: #1a6fc4; }
+
+.action-btn--view  { color: #1a8a6c; border-color: #a0d4c4; }
+.action-btn--view:hover  { color: #0f5c48; border-color: #1a8a6c; }
+
+.action-btn--danger { color: #c00; border-color: #e0b0b0; }
+.action-btn--danger:hover { color: #900; border-color: #c00; }
 
 /* ── Section titles inside forms ── */
 .section-title {
@@ -421,6 +448,47 @@ tr:last-child td {
     padding: 1.25rem 1.25rem 0.25rem;
     border-top: 1px solid #e5e5e5;
 }
+
+/* ── Language tabs (post form) ── */
+.lang-tabs {
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 2px solid #e5e5e5;
+    margin-bottom: 1.5rem;
+}
+
+.lang-tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.lang-tab:hover { color: #1a1a1a; }
+
+.lang-tab--active {
+    color: #1a1a1a;
+    border-bottom-color: #1a1a1a;
+}
+
+.lang-tab__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #1a6fc4;
+    display: none;
+}
+
+.lang-tab__dot--filled { display: inline-block; }
 
 /* ── Nav link rows ── */
 .nav-link-row {

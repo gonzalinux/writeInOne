@@ -3,7 +3,7 @@ package com.gonzalinux.domain.post
 import com.gonzalinux.domain.tag.Tag
 import java.time.OffsetDateTime
 
-enum class PostStatus { DRAFT, PUBLISHED, ARCHIVED }
+enum class PostStatus { DRAFT, SCHEDULED, PUBLISHED, ARCHIVED }
 
 data class Post(
     val id: Long,

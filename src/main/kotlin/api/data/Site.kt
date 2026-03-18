@@ -2,6 +2,7 @@ package com.gonzalinux.api.data
 
 import com.gonzalinux.domain.Languages
 import com.gonzalinux.domain.site.SiteConfig
+import com.gonzalinux.domain.site.Theme
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 
@@ -13,6 +14,7 @@ data class CreateSiteRequest(
     ) val domain: String,
     val description: String? = null,
     val stylesUrl: String? = null,
+    val availableThemes: List<Theme> = listOf(Theme.LIGHT),
     val languages: List<Languages> = listOf(Languages.ENGLISH),
     val config: SiteConfig = SiteConfig()
 )
@@ -21,6 +23,7 @@ data class UpdateSiteRequest(
     val name: String? = null,
     val description: String? = null,
     val stylesUrl: String? = null,
+    val availableThemes: List<Theme>? = null,
     val languages: List<Languages>? = null,
     val config: SiteConfig? = null
 )

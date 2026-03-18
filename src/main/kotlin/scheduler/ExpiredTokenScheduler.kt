@@ -2,8 +2,8 @@ package com.gonzalinux.scheduler
 
 import com.gonzalinux.config.TokenCleanerProperties
 import com.gonzalinux.domain.user.UserRepository
-import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Mono
 
 @Component
 class ExpiredTokenScheduler(
@@ -11,8 +11,6 @@ class ExpiredTokenScheduler(
     private val userRepository: UserRepository
 ) : SchedulerBase(tokenCleanerProperties.intervalMin * 60 * 1000) {
 
-    override suspend fun start() {
+    override fun execute(): Mono<*> =
         userRepository.deleteExpiredTokens(tokenCleanerProperties.limitDeleted)
-            .awaitSingleOrNull()
-    }
 }

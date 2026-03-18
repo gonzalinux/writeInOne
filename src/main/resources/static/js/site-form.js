@@ -7,8 +7,10 @@ const pageTitle     = document.getElementById('pageTitle');
 const submitBtn     = document.getElementById('submitBtn');
 const nameInput     = document.getElementById('name');
 const descInput     = document.getElementById('description');
-const stylesInput   = document.getElementById('stylesUrl');
-const faviconInput  = document.getElementById('faviconUrl');
+const stylesInput       = document.getElementById('stylesUrl');
+const defaultThemeSelect = document.getElementById('defaultTheme');
+const enableSwitcherCb  = document.getElementById('enableSwitcher');
+const faviconInput      = document.getElementById('faviconUrl');
 const domainField   = document.getElementById('domainField');
 const domainReadonly = document.getElementById('domainReadonly');
 const domainDisplay = document.getElementById('domainDisplay');
@@ -81,6 +83,9 @@ async function loadSite() {
   nameInput.value    = site.name        || '';
   descInput.value    = site.description || '';
   stylesInput.value  = site.stylesUrl   || '';
+  const themes = site.availableThemes || ['LIGHT'];
+  defaultThemeSelect.value = themes[0].toLowerCase();
+  enableSwitcherCb.checked = themes.length > 1;
   faviconInput.value = site.config?.faviconUrl || '';
 
   domainField.style.display    = 'none';
@@ -118,10 +123,15 @@ form.addEventListener('submit', async e => {
 
   const languages = ['ENGLISH', 'SPANISH'].filter(lang => document.getElementById(`lang-${lang}`)?.checked);
 
+  const defaultT = defaultThemeSelect.value.toUpperCase();
+  const otherT   = defaultT === 'LIGHT' ? 'DARK' : 'LIGHT';
+  const availableThemes = enableSwitcherCb.checked ? [defaultT, otherT] : [defaultT];
+
   const body = {
     name:        nameInput.value.trim(),
     description: descInput.value.trim() || null,
     stylesUrl:   stylesInput.value.trim() || null,
+    availableThemes,
     languages,
     config: {
       faviconUrl: faviconInput.value.trim() || null,

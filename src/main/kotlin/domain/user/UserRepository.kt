@@ -53,7 +53,7 @@ class UserRepository(private val client: DatabaseClient) {
             .then()
 
     fun deleteExpiredTokens(limit: Int): Mono<Void> =
-        client.sql("DELETE FROM refresh_tokens WHERE expires_at < now() LIMIT :limit")
+        client.sql("DELETE FROM refresh_tokens WHERE ctid IN (SELECT ctid FROM refresh_tokens WHERE expires_at < now() LIMIT :limit)")
             .bind("limit", limit)
             .then()
 

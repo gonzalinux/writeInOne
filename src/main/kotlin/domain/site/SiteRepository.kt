@@ -28,12 +28,12 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
 
     fun create(
         userId: Long, name: String, domain: String,
-        description: String?, stylesUrl: String?,
+        description: String?, stylesUrl: String?, availableThemes: List<Theme>,
         languages: List<Languages>, config: SiteConfig
     ): Mono<Site> =
         client.sql("""
-            INSERT INTO sites (user_id, name, domain, description, styles_url, languages, config)
-            VALUES (:userId, :name, :domain, :description, :stylesUrl, :languages, :config::jsonb)
+            INSERT INTO sites (user_id, name, domain, description, styles_url, available_themes, languages, config)
+            VALUES (:userId, :name, :domain, :description, :stylesUrl, :availableThemes, :languages, :config::jsonb)
             RETURNING *
         """)
             .bind("userId", userId)
@@ -41,6 +41,7 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             .bind("domain", domain)
             .bindNullable<String>("description", description)
             .bindNullable<String>("stylesUrl", stylesUrl)
+            .bind("availableThemes", availableThemes.map { it.value }.toTypedArray())
             .bind("languages", languages.map { it.value }.toTypedArray())
             .bind("config", objectMapper.writeValueAsString(config))
             .fetch().first()
@@ -48,16 +49,18 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
 
     fun update(
         id: Long, userId: Long, name: String?, description: String?,
-        stylesUrl: String?, languages: List<Languages>?, config: SiteConfig?
+        stylesUrl: String?, availableThemes: List<Theme>?,
+        languages: List<Languages>?, config: SiteConfig?
     ): Mono<Site> =
         client.sql("""
             UPDATE sites SET
-                name        = COALESCE(:name, name),
-                description = COALESCE(:description, description),
-                styles_url  = COALESCE(:stylesUrl, styles_url),
-                languages   = COALESCE(:languages, languages),
-                config      = COALESCE(:config::jsonb, config),
-                updated_at  = now()
+                name             = COALESCE(:name, name),
+                description      = COALESCE(:description, description),
+                styles_url       = COALESCE(:stylesUrl, styles_url),
+                available_themes = COALESCE(:availableThemes, available_themes),
+                languages        = COALESCE(:languages, languages),
+                config           = COALESCE(:config::jsonb, config),
+                updated_at       = now()
             WHERE id = :id AND user_id = :userId
             RETURNING *
         """)
@@ -66,6 +69,7 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             .bindNullable<String>("name", name)
             .bindNullable<String>("description", description)
             .bindNullable<String>("stylesUrl", stylesUrl)
+            .bindNullable<Array<String>>("availableThemes", availableThemes?.map { it.value }?.toTypedArray())
             .bindNullable<Array<String>>("languages", languages?.map { it.value }?.toTypedArray())
             .bindNullable<String>("config", config?.let { objectMapper.writeValueAsString(it) })
             .fetch().first()
@@ -108,6 +112,7 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             domain = row["domain"] as String,
             description = row["description"] as? String,
             stylesUrl = row["styles_url"] as? String,
+            availableThemes = (row["available_themes"] as Array<String>).mapNotNull { Theme.fromValue(it) },
             languages = languages,
             config = config,
             createdAt = row["created_at"] as OffsetDateTime,

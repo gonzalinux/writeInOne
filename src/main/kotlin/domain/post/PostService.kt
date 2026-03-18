@@ -101,12 +101,20 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
             .flatMap { postRepo.update(id, siteId, null, PostStatus.PUBLISHED, OffsetDateTime.now(), null) }
         .doOnSuccess { logger.info { "Post published [postId=$id, siteId=$siteId]" } }
 
+    fun unpublish(id: Long, siteId: Long, userId: Long): Mono<Post> =
+        siteRepo.findById(siteId, userId)
+            .switchIfEmpty(Mono.error(SiteNotFoundException(siteId)))
+            .flatMap { postRepo.findById(id, siteId) }
+            .switchIfEmpty(Mono.error(PostNotFoundException(id)))
+            .flatMap { postRepo.update(id, siteId, null, PostStatus.DRAFT, null, null) }
+            .doOnSuccess { logger.info { "Post unpublished [postId=$id, siteId=$siteId]" } }
+
     fun schedule(id: Long, siteId: Long, userId: Long, scheduledAt: OffsetDateTime): Mono<Post> =
         siteRepo.findById(siteId, userId)
             .switchIfEmpty(Mono.error(SiteNotFoundException(siteId)))
             .flatMap { postRepo.findById(id, siteId) }
             .switchIfEmpty(Mono.error(PostNotFoundException(id)))
-            .flatMap { postRepo.update(id, siteId, null, PostStatus.DRAFT, null, scheduledAt) }
+            .flatMap { postRepo.update(id, siteId, null, PostStatus.SCHEDULED, null, scheduledAt) }
             .doOnSuccess { logger.info { "Post scheduled [postId=$id, siteId=$siteId, scheduledAt=$scheduledAt]" } }
 
     private fun postWithTranslationsAndTags(post: Post): Mono<PostWithTranslations> =

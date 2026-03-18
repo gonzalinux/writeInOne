@@ -111,49 +111,68 @@ affect the rest of the page.
 
 ---
 
-## Example: minimal dark theme
+## Dark mode
+
+When the site has `availableThemes` set to both `LIGHT` and `DARK`, the blog adds `class="dark"` to the `<html>` element
+whenever dark mode is active (either via the toggle button or `prefers-color-scheme`). You can target this class in your
+custom stylesheet to apply dark-mode overrides.
+
+## Example: light defaults with dark overrides
 
 ```css
+/* Light defaults */
 body {
+    background: #fff;
+    color: #1a1a1a;
+}
+
+header, footer {
+    border-color: #e5e5e5;
+}
+
+.tag {
+    background: #f0f0f0;
+    color: #555;
+}
+
+.post-body pre {
+    background: #f6f6f6;
+}
+
+/* Dark overrides — applied when html.dark is set */
+html.dark body {
     background: #0f0f0f;
     color: #e8e8e8;
 }
 
-header, footer {
+html.dark header,
+html.dark footer {
     border-color: #2a2a2a;
 }
 
-.site-name {
+html.dark .site-name {
     color: #fff;
 }
 
-.nav-links a {
+html.dark .nav-links a {
     color: #aaa;
 }
 
-.post-card__title a {
-    color: #fff;
-}
-
-.post-card__excerpt {
-    color: #bbb;
-}
-
-.tag {
+html.dark .tag {
     background: #2a2a2a;
     color: #aaa;
 }
 
-.post-body blockquote {
+html.dark .post-body blockquote {
     border-left-color: #444;
     color: #aaa;
 }
 
-.post-body pre {
+html.dark .post-body pre {
     background: #1a1a1a;
 }
 
-.post-body code {
+html.dark .post-body code {
     background: #1e1e1e;
     color: #e8e8e8;
 }

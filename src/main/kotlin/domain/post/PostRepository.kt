@@ -38,7 +38,7 @@ class PostRepository(private val client: DatabaseClient) {
         client.sql("""
             UPDATE posts SET
                 cover_url    = COALESCE(:coverUrl, cover_url),
-                status       = COALESCE(:status::post_status, status),
+                status       = COALESCE(:status, status),
                 published_at = COALESCE(:publishedAt, published_at),
                 scheduled_at = COALESCE(:scheduledAt, scheduled_at),
                 updated_at   = now()
@@ -57,7 +57,7 @@ class PostRepository(private val client: DatabaseClient) {
     fun publishScheduled(): Mono<Int> =
         client.sql("""
             UPDATE posts SET status = 'published', published_at = now(), scheduled_at = null, updated_at = now()
-            WHERE status = 'draft' AND scheduled_at IS NOT NULL AND scheduled_at <= now()
+            WHERE status = 'scheduled' AND scheduled_at <= now()
         """)
             .fetch().rowsUpdated()
             .map { it.toInt() }

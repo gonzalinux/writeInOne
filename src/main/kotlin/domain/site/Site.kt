@@ -10,6 +10,7 @@ data class Site(
     val domain: String,
     val description: String?,
     val stylesUrl: String?,
+    val availableThemes: List<Theme>,
     val languages: List<Languages>,
     val config: SiteConfig,
     val createdAt: OffsetDateTime,

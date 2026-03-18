@@ -15,7 +15,7 @@ class SiteService(private val repo: SiteRepository) {
         repo.existsByDomain(request.domain)
             .flatMap { exists ->
                 if (exists) Mono.error(SiteDomainTakenException(request.domain))
-                else repo.create(userId, request.name, request.domain, request.description, request.stylesUrl, request.languages, request.config)
+                else repo.create(userId, request.name, request.domain, request.description, request.stylesUrl, request.availableThemes, request.languages, request.config)
             }
 
     fun list(userId: Long): Flux<Site> =
@@ -26,7 +26,7 @@ class SiteService(private val repo: SiteRepository) {
             .switchIfEmpty(Mono.error(SiteNotFoundException(id)))
 
     fun update(id: Long, userId: Long, request: UpdateSiteRequest): Mono<Site> =
-        repo.update(id, userId, request.name, request.description, request.stylesUrl, request.languages, request.config)
+        repo.update(id, userId, request.name, request.description, request.stylesUrl, request.availableThemes, request.languages, request.config)
             .switchIfEmpty(Mono.error(SiteNotFoundException(id)))
 
     fun delete(id: Long, userId: Long): Mono<Void> =

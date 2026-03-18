@@ -3,6 +3,9 @@
 <head>
     <th:block th:replace="~{fragments/layout :: head(${translation.title + ' — ' + site.name})}"/>
     <meta th:if="${translation.excerpt != null}" name="description" th:content="${translation.excerpt}"/>
+    <!-- href is updated by theme.js on DOMContentLoaded to match the active theme -->
+    <link id="hljs-theme" rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css"/>
 </head>
 <body>
     <th:block th:replace="~{fragments/layout :: nav}"/>
@@ -39,5 +42,30 @@
     </main>
 
     <th:block th:replace="~{fragments/layout :: footer}"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script>
+        hljs.highlightAll();
+        document.querySelectorAll('.post-body pre').forEach(pre => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'code-block';
+            pre.parentNode.insertBefore(wrapper, pre);
+            wrapper.appendChild(pre);
+
+            const btn = document.createElement('button');
+            btn.className = 'copy-btn';
+            btn.textContent = 'Copy';
+            btn.addEventListener('click', () => {
+                navigator.clipboard.writeText(pre.querySelector('code').innerText).then(() => {
+                    btn.textContent = 'Copied!';
+                    btn.classList.add('copied');
+                    setTimeout(() => {
+                        btn.textContent = 'Copy';
+                        btn.classList.remove('copied');
+                    }, 2000);
+                });
+            });
+            wrapper.appendChild(btn);
+        });
+    </script>
 </body>
 </html>

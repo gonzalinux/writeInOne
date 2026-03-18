@@ -4,6 +4,68 @@
    custom stylesheet (configured via stylesUrl in site settings).
    ============================================================ */
 
+/* ── Design tokens (light theme) ── */
+:root {
+    --bg:                 #fff;
+    --fg:                 #1a1a1a;
+    --border:             #e5e5e5;
+    --muted:              #888;
+    --muted-2:            #555;
+    --muted-3:            #444;
+    --tag-bg:             #f0f0f0;
+    --tag-fg:             #555;
+    --blockquote-border:  #ddd;
+    --blockquote-fg:      #666;
+    --code-bg:            #f6f6f6;
+    --inline-code-bg:     #f0f0f0;
+    --copy-btn-bg:        #fff;
+    --copy-btn-border:    #ddd;
+    --copy-btn-fg:        #555;
+    --surface:            #f6f6f6;
+}
+
+/* Dark theme — activated by class="dark" on <html> (set by theme.js).
+   prefers-color-scheme serves as a no-JS fallback. */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg:                 #111;
+        --fg:                 #e0e0e0;
+        --border:             #2a2a2a;
+        --muted:              #777;
+        --muted-2:            #aaa;
+        --muted-3:            #bbb;
+        --tag-bg:             #252525;
+        --tag-fg:             #aaa;
+        --blockquote-border:  #444;
+        --blockquote-fg:      #999;
+        --code-bg:            #1e1e1e;
+        --inline-code-bg:     #252525;
+        --copy-btn-bg:        #1e1e1e;
+        --copy-btn-border:    #444;
+        --copy-btn-fg:        #aaa;
+        --surface:            #1a1a1a;
+    }
+}
+
+html.dark {
+    --bg:                 #111;
+    --fg:                 #e0e0e0;
+    --border:             #2a2a2a;
+    --muted:              #777;
+    --muted-2:            #aaa;
+    --muted-3:            #bbb;
+    --tag-bg:             #252525;
+    --tag-fg:             #aaa;
+    --blockquote-border:  #444;
+    --blockquote-fg:      #999;
+    --code-bg:            #1e1e1e;
+    --inline-code-bg:     #252525;
+    --copy-btn-bg:        #1e1e1e;
+    --copy-btn-border:    #444;
+    --copy-btn-fg:        #aaa;
+    --surface:            #1a1a1a;
+}
+
 /* ── Reset ── */
 *, *::before, *::after {
     box-sizing: border-box;
@@ -16,8 +78,9 @@ body {
     font-family: Georgia, 'Times New Roman', serif;
     font-size: 18px;
     line-height: 1.7;
-    color: #1a1a1a;
-    background: #fff;
+    color: var(--fg);
+    background: var(--bg);
+    transition: background 0.2s, color 0.2s;
 }
 
 a {
@@ -37,7 +100,7 @@ a:hover {
 
 /* ── Header / Nav ── */
 header {
-    border-bottom: 1px solid #e5e5e5;
+    border-bottom: 1px solid var(--border);
     padding: 1.25rem 0;
     margin-bottom: 3rem;
 }
@@ -56,6 +119,12 @@ nav {
     text-decoration: none;
 }
 
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
 .nav-links {
     display: flex;
     gap: 1.5rem;
@@ -65,20 +134,39 @@ nav {
 .nav-links a {
     text-decoration: none;
     font-size: 0.95rem;
-    color: #555;
+    color: var(--muted-2);
 }
 
 .nav-links a:hover {
-    color: #1a1a1a;
+    color: var(--fg);
+}
+
+/* ── Theme toggle button ── */
+.theme-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--muted);
+    font-family: inherit;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.theme-btn:hover {
+    border-color: var(--muted-2);
+    color: var(--fg);
 }
 
 /* ── Footer ── */
 footer {
-    border-top: 1px solid #e5e5e5;
+    border-top: 1px solid var(--border);
     margin-top: 4rem;
     padding: 2rem 0;
     font-size: 0.875rem;
-    color: #888;
+    color: var(--muted);
     text-align: center;
 }
 
@@ -92,7 +180,7 @@ footer {
 }
 
 .site-description {
-    color: #555;
+    color: var(--muted-2);
     font-size: 1rem;
     margin-top: 0.25rem;
 }
@@ -120,7 +208,7 @@ footer {
 
 .post-card__meta {
     font-size: 0.85rem;
-    color: #888;
+    color: var(--muted);
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -140,7 +228,7 @@ footer {
 }
 
 .post-card__excerpt {
-    color: #444;
+    color: var(--muted-3);
     font-size: 0.95rem;
 }
 
@@ -154,15 +242,15 @@ footer {
 .tag {
     font-size: 0.78rem;
     padding: 0.2rem 0.55rem;
-    background: #f0f0f0;
+    background: var(--tag-bg);
     border-radius: 999px;
-    color: #555;
+    color: var(--tag-fg);
     text-decoration: none;
 }
 
 /* ── Empty state ── */
 .empty-state {
-    color: #888;
+    color: var(--muted);
     font-style: italic;
     margin-top: 2rem;
 }
@@ -175,18 +263,18 @@ footer {
 .post-header__back {
     display: inline-block;
     font-size: 0.875rem;
-    color: #888;
+    color: var(--muted);
     text-decoration: none;
     margin-bottom: 1.5rem;
 }
 
 .post-header__back:hover {
-    color: #1a1a1a;
+    color: var(--fg);
 }
 
 .post-header__meta {
     font-size: 0.875rem;
-    color: #888;
+    color: var(--muted);
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -202,7 +290,7 @@ footer {
 
 .post-header__excerpt {
     font-size: 1.1rem;
-    color: #555;
+    color: var(--muted-2);
     font-style: italic;
     margin-bottom: 1.25rem;
 }
@@ -251,25 +339,56 @@ footer {
 }
 
 .post-body blockquote {
-    border-left: 3px solid #ddd;
+    border-left: 3px solid var(--blockquote-border);
     padding-left: 1rem;
-    color: #666;
+    color: var(--blockquote-fg);
     margin: 1.5rem 0;
 }
 
+.post-body .code-block {
+    position: relative;
+    margin-bottom: 1.25rem;
+}
+
+.post-body .copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+    font-family: inherit;
+    background: var(--copy-btn-bg);
+    border: 1px solid var(--copy-btn-border);
+    border-radius: 3px;
+    cursor: pointer;
+    color: var(--copy-btn-fg);
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.post-body .code-block:hover .copy-btn {
+    opacity: 1;
+}
+
+.post-body .copy-btn.copied {
+    color: #2a7a2a;
+    border-color: #2a7a2a;
+    opacity: 1;
+}
+
 .post-body pre {
-    background: #f6f6f6;
+    background: var(--code-bg);
     padding: 1rem;
     border-radius: 4px;
     overflow-x: auto;
     font-size: 0.875rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 0;
 }
 
 .post-body code {
     font-family: 'Courier New', monospace;
     font-size: 0.875em;
-    background: #f0f0f0;
+    background: var(--inline-code-bg);
     padding: 0.15em 0.35em;
     border-radius: 3px;
 }
@@ -286,12 +405,12 @@ footer {
 
 .post-body a {
     text-decoration: underline;
-    color: #1a1a1a;
+    color: var(--fg);
 }
 
 .post-body hr {
     border: none;
-    border-top: 1px solid #e5e5e5;
+    border-top: 1px solid var(--border);
     margin: 2rem 0;
 }
 
@@ -304,11 +423,11 @@ footer {
 
 .post-body th,
 .post-body td {
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border);
     padding: 0.5rem 0.75rem;
     text-align: left;
 }
 
 .post-body th {
-    background: #f6f6f6;
+    background: var(--surface);
 }

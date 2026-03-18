@@ -1,9 +1,7 @@
-CREATE TYPE post_status AS ENUM ('draft', 'published', 'archived');
-
 CREATE TABLE posts (
     id           BIGSERIAL   PRIMARY KEY,
     site_id      BIGINT      NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
-    status       post_status NOT NULL DEFAULT 'draft',
+    status       TEXT        NOT NULL DEFAULT 'draft',
     cover_url    TEXT,
     view_count   BIGINT      NOT NULL DEFAULT 0,
     published_at TIMESTAMPTZ,

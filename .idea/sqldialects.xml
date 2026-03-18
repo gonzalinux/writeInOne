@@ -5,5 +5,7 @@
     <file url="file://$PROJECT_DIR$/src/main/kotlin/domain/site/SiteRepository.kt" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/src/main/kotlin/domain/user/UserRepository.kt" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V1__create_users.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V2__create_sites.sql" dialect="GenericSQL" />
+    <file url="PROJECT" dialect="PostgreSQL" />
   </component>
 </project>

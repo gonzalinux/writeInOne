@@ -32,6 +32,7 @@ async function loadDashboard() {
                 <a class="btn btn-ghost" href="/admin/sites/${site.id}/posts">Posts</a>
                 <a class="btn btn-ghost" href="/admin/sites/${site.id}/posts/new">+ New post</a>
                 <a class="btn btn-ghost" href="/admin/sites/${site.id}/edit">Edit</a>
+                <a class="btn btn-ghost" href="https://${escHtml(site.domain)}" target="_blank" rel="noopener">View</a>
             </div>`;
     siteList.appendChild(card);
   });

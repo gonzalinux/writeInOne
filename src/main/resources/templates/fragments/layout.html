@@ -7,6 +7,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title th:text="${title}">Blog</title>
     <link rel="icon" th:if="${site.config.faviconUrl != null}" th:href="${site.config.faviconUrl}"/>
+    <!-- Expose available themes to theme.js before it runs -->
+    <script th:inline="javascript">
+        window.SITE_THEMES = /*[[${site.availableThemes}]]*/['LIGHT'];
+    </script>
+    <!-- Theme script — sync (no defer) so html.dark class is set before first paint -->
+    <script src="/js/theme.js"></script>
     <!-- Default blog stylesheet — all classes are overridable by the site's custom stylesheet -->
     <link rel="stylesheet" href="/css/blog.css"/>
     <!-- Site custom stylesheet loaded after defaults so it can override any class -->
@@ -19,11 +25,16 @@
         <div class="container">
             <nav>
                 <a class="site-name" th:href="'/' + ${lang}" th:text="${site.name}">Site Name</a>
-                <ul class="nav-links" th:if="${langConfig != null and !langConfig.nav.isEmpty()}">
-                    <li th:each="link : ${langConfig.nav}">
-                        <a th:href="${link.url}" th:text="${link.label}">Link</a>
-                    </li>
-                </ul>
+                <div class="nav-right">
+                    <ul class="nav-links" th:if="${langConfig != null and !langConfig.nav.isEmpty()}">
+                        <li th:each="link : ${langConfig.nav}">
+                            <a th:href="${link.url}" th:text="${link.label}">Link</a>
+                        </li>
+                    </ul>
+                    <button th:if="${#lists.contains(site.availableThemes, T(com.gonzalinux.domain.site.Theme).LIGHT)
+                                 and #lists.contains(site.availableThemes, T(com.gonzalinux.domain.site.Theme).DARK)}"
+                            id="themeBtn" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme">&#9789;</button>
+                </div>
             </nav>
         </div>
     </header>
