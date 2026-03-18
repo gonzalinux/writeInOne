@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Site — WriteInOne</title>
+    <link rel="stylesheet" href="/css/admin.css"/>
+    <script src="/js/api.js" defer></script>
+    <script src="/js/site-form.js" defer></script>
+</head>
+<body>
+    <header>
+        <span class="brand">WriteInOne</span>
+        <a href="/admin">← Dashboard</a>
+    </header>
+
+    <main class="main--compact">
+        <h1 id="pageTitle">Site</h1>
+        <form id="siteForm" onsubmit="return false">
+
+            <!-- Basic -->
+            <h2 class="section-title">Basic</h2>
+            <div class="field">
+                <label for="name">Site name</label>
+                <input id="name" type="text" required placeholder="My Blog"/>
+            </div>
+            <div class="field" id="domainField">
+                <label for="domain">Domain</label>
+                <input id="domain" type="text" required placeholder="blog.example.com"/>
+                <p class="hint">The domain where your blog will be served (e.g. blog.example.com)</p>
+            </div>
+            <div class="field" id="domainReadonly" style="display:none">
+                <label>Domain</label>
+                <input id="domainDisplay" type="text" disabled/>
+                <p class="hint">Domain cannot be changed after creation.</p>
+            </div>
+            <div class="field">
+                <label for="description">Description <span style="color:#aaa">(optional)</span></label>
+                <textarea id="description" placeholder="A short description of your blog"></textarea>
+            </div>
+
+            <!-- Appearance -->
+            <h2 class="section-title">Appearance</h2>
+            <div class="field">
+                <label for="stylesUrl">Styles URL <span style="color:#aaa">(optional)</span></label>
+                <input id="stylesUrl" type="url" placeholder="https://example.com/styles.css"/>
+            </div>
+            <div class="field">
+                <label for="faviconUrl">Favicon URL <span style="color:#aaa">(optional)</span></label>
+                <input id="faviconUrl" type="url" placeholder="https://example.com/favicon.ico"/>
+            </div>
+
+            <!-- Languages -->
+            <h2 class="section-title">Languages</h2>
+
+            <!-- English -->
+            <div class="lang-block">
+                <label class="lang-toggle">
+                    <input type="checkbox" id="lang-ENGLISH" value="ENGLISH" checked/>
+                    <span>English</span>
+                </label>
+                <div class="lang-config" id="config-ENGLISH">
+                    <div class="field">
+                        <label for="en-footer">Footer text <span style="color:#aaa">(optional)</span></label>
+                        <textarea id="en-footer" rows="2" placeholder="Footer content for the English version"></textarea>
+                    </div>
+                    <div class="field">
+                        <label>Navigation links</label>
+                        <div id="en-nav"></div>
+                        <button type="button" class="btn btn-ghost btn--small" data-add-nav="en-nav">+ Add link</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spanish -->
+            <div class="lang-block">
+                <label class="lang-toggle">
+                    <input type="checkbox" id="lang-SPANISH" value="SPANISH"/>
+                    <span>Spanish</span>
+                </label>
+                <div class="lang-config" id="config-SPANISH">
+                    <div class="field">
+                        <label for="es-footer">Footer text <span style="color:#aaa">(optional)</span></label>
+                        <textarea id="es-footer" rows="2" placeholder="Footer content for the Spanish version"></textarea>
+                    </div>
+                    <div class="field">
+                        <label>Navigation links</label>
+                        <div id="es-nav"></div>
+                        <button type="button" class="btn btn-ghost btn--small" data-add-nav="es-nav">+ Add link</button>
+                    </div>
+                </div>
+            </div>
+
+            <p id="error" style="display:none;color:#c00;font-size:0.875rem;margin-top:0.75rem;"></p>
+            <div class="actions">
+                <button class="btn" type="submit" id="submitBtn">Submit</button>
+                <a class="btn btn-ghost" href="/admin">Cancel</a>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

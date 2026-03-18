@@ -18,15 +18,15 @@ class AdminHandler(private val userService: UserService) {
     fun serve(request: ServerRequest): Mono<ServerResponse> {
         val path = request.path().trimEnd('/')
         val file = when {
-            path == "/admin"                                                    -> "index.html"
-            path == "/admin/login"                                              -> "login.html"
-            path == "/admin/register"                                           -> "register.html"
-            path.matches(Regex(".*/sites/[^/]+/posts/[^/]+/edit"))              -> "post-form.html"
-            path.matches(Regex(".*/sites/[^/]+/posts/new"))                     -> "post-form.html"
-            path.matches(Regex(".*/sites/[^/]+/posts"))                         -> "post-list.html"
-            path.matches(Regex(".*/sites/[^/]+/edit"))                          -> "site-form.html"
-            path == "/admin/sites/new"                                          -> "site-form.html"
-            else                                                                -> "index.html"
+            path == "/admin" -> "index.html"
+            path == "/admin/login" -> "login.html"
+            path == "/admin/register" -> "register.html"
+            path.matches(Regex(".*/sites/[^/]+/posts/[^/]+/edit")) -> "post-form.html"
+            path.matches(Regex(".*/sites/[^/]+/posts/new")) -> "post-form.html"
+            path.matches(Regex(".*/sites/[^/]+/posts")) -> "post-list.html"
+            path.matches(Regex(".*/sites/[^/]+/edit")) -> "site-form.html"
+            path == "/admin/sites/new" -> "site-form.html"
+            else -> "index.html"
         }
         val resource = ClassPathResource("static/admin/$file")
         return ServerResponse.ok().contentType(MediaType.TEXT_HTML).bodyValue(resource)
