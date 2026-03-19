@@ -33,7 +33,7 @@ class JwtAuthFilter(private val tokenService: TokenService) : HandlerFilterFunct
                 next.handle(request).contextWrite { it.withRequestContext(reqContext) }
             }
             .onErrorMap {
-                logger.info { "Error $it"}
+                logger.info { "Error $it | cause: ${it.cause} | rootCause: ${it.cause?.cause}"}
                 throw UnauthorizedException() }
 
     }
