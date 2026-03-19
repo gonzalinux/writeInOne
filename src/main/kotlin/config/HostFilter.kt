@@ -16,10 +16,11 @@ private val logger = KotlinLogging.logger {}
 class HostFilter(private val siteRepository: SiteRepository) : HandlerFilterFunction<ServerResponse, ServerResponse> {
 
     override fun filter(request: ServerRequest, next: HandlerFunction<ServerResponse>): Mono<ServerResponse> {
+        logger.info { "Requested domain: ${request.headers()}" }
         val domain = request.headers().firstHeader("Host")
             ?.substringBefore(":")  // strip port if present
             ?: return ServerResponse.badRequest().build()
-        logger.info { "Requested domain: $domain" }
+
 
         return siteRepository.findByDomain(domain)
             .flatMap { site ->
