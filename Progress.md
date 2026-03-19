@@ -18,7 +18,6 @@
 - [x] MDC integration via `ThreadLocalAccessor` (requestId + userId in all logs)
 - [x] Structured logging with `kotlin-logging`
 - [x] `@ConfigurationPropertiesScan` for auto-discovery of config properties
-- [ ] Rate limiting on auth endpoints (handled by API gateway)
 - [ ] GitHub Actions CI
 - [x] Swagger UI at `/swagger-ui.html` — via `springdoc-openapi-starter-webflux-ui`
 
@@ -61,7 +60,6 @@
 - [x] Created implicitly when assigned to a post
 - [x] `GET /sites/{siteId}/tags` — list tags for a site
 - [x] `DELETE /sites/{siteId}/tags/{tagId}` — delete tag (removes from posts, not posts themselves)
-
 
 ## Schedulers
 - [x] `SchedulerBase` — abstract coroutine-based scheduler with configurable interval
