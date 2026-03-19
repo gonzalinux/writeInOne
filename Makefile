@@ -18,7 +18,7 @@ watch:
 
 ## db: Start only the database via Docker Compose
 db:
-	docker compose up db
+	mkdir -p postgres_data && docker compose up db
 
 ## test: Run tests locally
 test:
@@ -30,7 +30,7 @@ docker-test:
 
 ## prod: Load .env and start app + db via Docker Compose
 prod:
-	docker compose --env-file $(ENV_FILE) up --build -d
+	mkdir -p postgres_data && docker compose --env-file $(ENV_FILE) up --build -d
 
 ## down: Stop all running containers
 down:
