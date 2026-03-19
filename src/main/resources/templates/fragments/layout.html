@@ -7,6 +7,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title th:text="${title}">Blog</title>
     <link rel="icon" th:if="${site.config.faviconUrl != null}" th:href="${site.config.faviconUrl}"/>
+    <!-- RSS auto-discovery — one per language, readers will find these automatically -->
+    <th:block th:each="l : ${site.languages}">
+        <link rel="alternate" type="application/rss+xml"
+              th:title="${site.name + ' (' + l.value + ')'}"
+              th:href="'/' + ${l.value} + '/rss.xml'"/>
+    </th:block>
     <!-- Expose available themes to theme.js before it runs -->
     <script th:inline="javascript">
         window.SITE_THEMES = /*[[${site.availableThemes}]]*/['LIGHT'];

@@ -2,6 +2,7 @@ package com.gonzalinux.domain.post
 
 import com.gonzalinux.api.data.CreatePostRequest
 import com.gonzalinux.api.data.UpdatePostRequest
+import com.gonzalinux.common.Page
 import com.gonzalinux.common.PostNotFoundException
 import com.gonzalinux.common.SiteNotFoundException
 import com.gonzalinux.domain.site.SiteRepository
@@ -52,11 +53,19 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
             .switchIfEmpty(Mono.error(PostNotFoundException(id)))
             .flatMap { post -> postWithTranslationsAndTags(post) }
 
-    fun list(siteId: Long, userId: Long): Flux<PostWithTranslations> =
+    fun list(siteId: Long, userId: Long, page: Int, size: Int, status: String? = null, tag: String? = null, search: String? = null): Mono<Page<PostWithTranslations>> =
         siteRepo.findById(siteId, userId)
             .switchIfEmpty(Mono.error(SiteNotFoundException(siteId)))
-            .flatMapMany { postRepo.findAllBySiteId(siteId) }
-            .flatMap { post -> postWithTranslationsAndTags(post) }
+            .flatMap {
+                postRepo.countBySiteId(siteId, status, tag, search).zipWith(
+                    postRepo.findAllBySiteId(siteId, page, size, status, tag, search)
+                        .flatMap { post -> postWithTranslationsAndTags(post) }
+                        .collectList()
+                )
+            }
+            .map { (total, content) ->
+                Page(content, page, size, total, ((total + size - 1) / size).toInt())
+            }
 
     fun update(id: Long, siteId: Long, userId: Long, request: UpdatePostRequest): Mono<PostWithTranslations> =
         siteRepo.findById(siteId, userId)

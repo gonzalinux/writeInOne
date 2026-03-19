@@ -5,11 +5,9 @@ import com.gonzalinux.api.data.SchedulePostRequest
 import com.gonzalinux.api.data.UpdatePostRequest
 import com.gonzalinux.common.RequestContextHolder.getRequestContext
 import com.gonzalinux.domain.post.PostService
-import com.gonzalinux.domain.post.PostWithTranslations
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
-import org.springframework.web.reactive.function.server.body
 import org.springframework.web.reactive.function.server.bodyToMono
 import reactor.core.publisher.Mono
 
@@ -36,8 +34,14 @@ class PostHandler(private val service: PostService) {
 
     fun list(request: ServerRequest): Mono<ServerResponse> {
         val siteId = request.pathVariable("siteId").toLong()
+        val page   = request.queryParam("page").map { it.toIntOrNull() ?: 0 }.orElse(0).coerceAtLeast(0)
+        val size   = request.queryParam("size").map { it.toIntOrNull() ?: 20 }.orElse(20).coerceIn(1, 100)
+        val status = request.queryParam("status").orElse(null)?.takeIf { it.isNotBlank() }
+        val tag    = request.queryParam("tag").orElse(null)?.takeIf { it.isNotBlank() }
+        val search = request.queryParam("search").orElse(null)?.takeIf { it.isNotBlank() }
         return Mono.deferContextual { ctx ->
-            ServerResponse.ok().body<PostWithTranslations>(service.list(siteId, ctx.getRequestContext()!!.userId))
+            service.list(siteId, ctx.getRequestContext()!!.userId, page, size, status, tag, search)
+                .flatMap { ServerResponse.ok().bodyValue(it) }
         }
     }
 

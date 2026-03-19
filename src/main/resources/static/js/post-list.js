@@ -9,6 +9,26 @@ if (newPostLink)  newPostLink.href  = `/admin/sites/${siteId}/posts/new`;
 if (emptyNewLink) emptyNewLink.href = `/admin/sites/${siteId}/posts/new`;
 
 let siteDomain = null;
+let currentPage = 0;
+const PAGE_SIZE = 20;
+
+const filterSearch = document.getElementById('filterSearch');
+const filterStatus = document.getElementById('filterStatus');
+const filterTag    = document.getElementById('filterTag');
+
+function applyFilters() { currentPage = 0; loadPosts(); }
+function clearFilters() {
+  filterSearch.value = '';
+  filterStatus.value = '';
+  filterTag.value    = '';
+  currentPage = 0;
+  loadPosts();
+}
+
+[filterSearch, filterTag].forEach(el => {
+  el?.addEventListener('keydown', e => { if (e.key === 'Enter') applyFilters(); });
+});
+filterStatus?.addEventListener('change', applyFilters);
 
 function formatDate(iso) {
   if (!iso) return '—';
@@ -66,14 +86,40 @@ function attachActionListeners() {
   });
 }
 
+function renderPagination(page, totalPages) {
+  let nav = document.getElementById('postPagination');
+  if (!nav) {
+    nav = document.createElement('div');
+    nav.id = 'postPagination';
+    nav.className = 'table-pagination';
+    postTable.insertAdjacentElement('afterend', nav);
+  }
+  if (totalPages <= 1) { nav.innerHTML = ''; return; }
+  nav.innerHTML = `
+    <button class="btn btn-ghost btn--small" id="pgPrev" ${page === 0 ? 'disabled' : ''}>← Prev</button>
+    <span>${page + 1} / ${totalPages}</span>
+    <button class="btn btn-ghost btn--small" id="pgNext" ${page + 1 >= totalPages ? 'disabled' : ''}>Next →</button>`;
+  nav.querySelector('#pgPrev')?.addEventListener('click', () => { currentPage--; loadPosts(); });
+  nav.querySelector('#pgNext')?.addEventListener('click', () => { currentPage++; loadPosts(); });
+}
+
 async function loadPosts() {
-  const res = await api(`/sites/${siteId}/posts/`);
+  const params = new URLSearchParams({ page: currentPage, size: PAGE_SIZE });
+  const search = filterSearch?.value.trim();
+  const status = filterStatus?.value;
+  const tag    = filterTag?.value.trim();
+  if (search) params.set('search', search);
+  if (status) params.set('status', status);
+  if (tag)    params.set('tag', tag);
+
+  const res = await api(`/sites/${siteId}/posts/?${params}`);
   if (!res) return;
 
-  const posts = await res.json();
+  const data = await res.json();
+  const posts = data.content;
   postTableBody.innerHTML = '';
 
-  if (posts.length === 0) {
+  if (posts.length === 0 && currentPage === 0) {
     postTable.style.display = 'none';
     empty.style.display = '';
     return;
@@ -81,6 +127,7 @@ async function loadPosts() {
 
   postTable.style.display = '';
   empty.style.display = 'none';
+  renderPagination(data.page, data.totalPages);
 
   posts.forEach(item => {
     const langs  = item.translations.map(t => t.lang).join(' ');

@@ -20,6 +20,19 @@
             <a class="btn" id="newPostLink" href="#">+ New post</a>
         </div>
 
+        <div class="filter-bar">
+            <input id="filterSearch" type="text" placeholder="Search by title…" class="filter-bar__input"/>
+            <select id="filterStatus" class="filter-bar__select">
+                <option value="">All statuses</option>
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="scheduled">Scheduled</option>
+            </select>
+            <input id="filterTag" type="text" placeholder="Tag…" class="filter-bar__input filter-bar__input--narrow"/>
+            <button class="btn btn-ghost btn--small" onclick="applyFilters()">Filter</button>
+            <button class="btn btn-ghost btn--small" onclick="clearFilters()">Clear</button>
+        </div>
+
         <table id="postTable" style="display:none">
             <thead>
                 <tr>

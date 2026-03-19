@@ -170,6 +170,90 @@ footer {
     text-align: center;
 }
 
+/* ── Search bar ── */
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.search-bar__input {
+    flex: 1;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.search-bar__input:focus {
+    outline: none;
+    border-color: var(--muted-2);
+}
+
+.search-bar__btn {
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--muted-2);
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.search-bar__btn:hover {
+    border-color: var(--muted-2);
+    color: var(--fg);
+}
+
+.search-bar__clear {
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.search-bar__clear:hover {
+    color: var(--fg);
+}
+
+.filter-label {
+    font-size: 0.875rem;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+}
+
+/* ── Pagination ── */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 3rem;
+    font-size: 0.9rem;
+}
+
+.pagination__btn {
+    text-decoration: none;
+    color: var(--muted-2);
+    border: 1px solid var(--border);
+    padding: 0.3rem 0.75rem;
+    border-radius: 4px;
+}
+
+.pagination__btn:hover {
+    color: var(--fg);
+    border-color: var(--muted-2);
+}
+
+.pagination__info {
+    color: var(--muted);
+}
+
 /* ── Post list page ── */
 .site-hero {
     margin-bottom: 3rem;
@@ -246,6 +330,11 @@ footer {
     border-radius: 999px;
     color: var(--tag-fg);
     text-decoration: none;
+    cursor: pointer;
+}
+
+.tag:hover {
+    opacity: 0.75;
 }
 
 /* ── Empty state ── */

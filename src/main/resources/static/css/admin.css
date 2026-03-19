@@ -135,6 +135,18 @@ h1 {
     color: #1a1a1a;
 }
 
+/* Danger variant */
+.btn--danger {
+    color: #c00;
+    border-color: #e0b0b0;
+}
+
+.btn--danger:hover {
+    background: #fff5f5;
+    border-color: #c00;
+    color: #900;
+}
+
 /* Publish / success variant */
 .btn-publish {
     background: #1a6b1a;
@@ -381,6 +393,50 @@ tr:last-child td {
 
 .action-btn--danger { color: #c00; border-color: #e0b0b0; }
 .action-btn--danger:hover { color: #900; border-color: #c00; }
+
+/* ── Filter bar (post list) ── */
+.filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-bar__input {
+    padding: 0.35rem 0.6rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.875rem;
+    background: #fff;
+    color: #1a1a1a;
+    flex: 1;
+    min-width: 140px;
+}
+
+.filter-bar__input--narrow { flex: 0 0 120px; }
+
+.filter-bar__select {
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.875rem;
+    background: #fff;
+    color: #1a1a1a;
+}
+
+/* ── Table pagination ── */
+.table-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    font-size: 0.875rem;
+    color: #888;
+}
 
 /* ── Section titles inside forms ── */
 .section-title {

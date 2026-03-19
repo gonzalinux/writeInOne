@@ -2,7 +2,25 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en" th:lang="${lang}">
 <head>
     <th:block th:replace="~{fragments/layout :: head(${translation.title + ' — ' + site.name})}"/>
+
+    <!-- Primary meta -->
     <meta th:if="${translation.excerpt != null}" name="description" th:content="${translation.excerpt}"/>
+
+    <!-- Open Graph -->
+    <meta property="og:type"                content="article"/>
+    <meta property="og:site_name"           th:content="${site.name}"/>
+    <meta property="og:title"               th:content="${translation.title}"/>
+    <meta property="og:description"         th:if="${translation.excerpt != null}" th:content="${translation.excerpt}"/>
+    <meta property="og:image"               th:if="${post.coverUrl != null}" th:content="${post.coverUrl}"/>
+    <meta property="og:url"                 th:content="'https://' + ${site.domain} + '/' + ${lang} + '/' + ${translation.slug}"/>
+    <meta property="article:published_time" th:if="${post.publishedAt != null}" th:content="${post.publishedAt}"/>
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card"        th:content="${post.coverUrl != null ? 'summary_large_image' : 'summary'}"/>
+    <meta name="twitter:title"       th:content="${translation.title}"/>
+    <meta name="twitter:description" th:if="${translation.excerpt != null}" th:content="${translation.excerpt}"/>
+    <meta name="twitter:image"       th:if="${post.coverUrl != null}" th:content="${post.coverUrl}"/>
+
     <!-- href is updated by theme.js on DOMContentLoaded to match the active theme -->
     <link id="hljs-theme" rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css"/>
@@ -27,7 +45,10 @@
                    th:text="${translation.excerpt}">Excerpt</p>
 
                 <div class="post-header__tags" th:if="${!tags.isEmpty()}">
-                    <span class="tag" th:each="tag : ${tags}" th:text="${tag.name}">tag</span>
+                    <a class="tag"
+                       th:each="tag : ${tags}"
+                       th:text="${tag.name}"
+                       th:href="@{/{lang}(lang=${lang}, tag=${tag.name})}">tag</a>
                 </div>
 
                 <img class="post-header__cover"

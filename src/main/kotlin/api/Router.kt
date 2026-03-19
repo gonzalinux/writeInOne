@@ -79,7 +79,9 @@ class Router(
 
     private fun blogUiRoutes(): RouterFunction<ServerResponse> = route()
         .GET("/", blogsHandler::index)
+        .GET("/rss.xml", blogsHandler::rssRoot)
         .GET("/{lang:es|en}", blogsHandler::postList)
+        .GET("/{lang:es|en}/rss.xml", blogsHandler::rss)
         .GET("/{lang:es|en}/{slug}", blogsHandler::post)
         .build()
         .filter(hostFilter)

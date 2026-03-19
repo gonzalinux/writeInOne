@@ -28,11 +28,34 @@ class PostRepository(private val client: DatabaseClient) {
             .fetch().first()
             .map { mapToPost(it) }
 
-    fun findAllBySiteId(siteId: Long): Flux<Post> =
-        client.sql("SELECT * FROM posts WHERE site_id = :siteId ORDER BY created_at DESC")
-            .bind("siteId", siteId)
-            .fetch().all()
-            .map { mapToPost(it) }
+    fun findAllBySiteId(siteId: Long, page: Int, size: Int, status: String? = null, tag: String? = null, search: String? = null): Flux<Post> {
+        val (sql, spec) = buildAdminQuery("SELECT DISTINCT p.*", "ORDER BY p.created_at DESC LIMIT :limit OFFSET :offset", siteId, status, tag, search)
+        return spec(client.sql(sql))
+            .bind("limit", size).bind("offset", page * size)
+            .fetch().all().map { mapToPost(it) }
+    }
+
+    fun countBySiteId(siteId: Long, status: String? = null, tag: String? = null, search: String? = null): Mono<Long> {
+        val (sql, spec) = buildAdminQuery("SELECT COUNT(DISTINCT p.id)", "", siteId, status, tag, search)
+        return spec(client.sql(sql)).fetch().first().map { it["count"] as Long }
+    }
+
+    private fun buildAdminQuery(select: String, tail: String, siteId: Long, status: String?, tag: String?, search: String?): Pair<String, (org.springframework.r2dbc.core.DatabaseClient.GenericExecuteSpec) -> org.springframework.r2dbc.core.DatabaseClient.GenericExecuteSpec> {
+        val tagJoin = if (tag != null) "JOIN post_tags ptags ON ptags.post_id = p.id JOIN tags t ON t.id = ptags.tag_id" else ""
+        val conditions = mutableListOf("p.site_id = :siteId")
+        if (status != null) conditions.add("p.status = :status")
+        if (tag != null) conditions.add("t.name = :tag")
+        if (search != null) conditions.add("EXISTS (SELECT 1 FROM post_translations pts WHERE pts.post_id = p.id AND pts.title ILIKE :search)")
+        val sql = "$select FROM posts p $tagJoin WHERE ${conditions.joinToString(" AND ")} $tail"
+        val bind: (org.springframework.r2dbc.core.DatabaseClient.GenericExecuteSpec) -> org.springframework.r2dbc.core.DatabaseClient.GenericExecuteSpec = { spec ->
+            var s = spec.bind("siteId", siteId)
+            if (status != null) s = s.bind("status", status)
+            if (tag != null) s = s.bind("tag", tag)
+            if (search != null) s = s.bind("search", "%$search%")
+            s
+        }
+        return sql to bind
+    }
 
     fun update(id: Long, siteId: Long, coverUrl: String?, status: PostStatus?, publishedAt: OffsetDateTime?, scheduledAt: OffsetDateTime?): Mono<Post> =
         client.sql("""
@@ -110,30 +133,39 @@ class PostRepository(private val client: DatabaseClient) {
             .fetch().all()
             .map { mapToTranslation(it) }
 
-    fun findPublishedBySiteAndLang(siteId: Long, lang: String): Flux<Pair<Post, PostTranslation>> =
-        client.sql("""
-            SELECT
-                p.id, p.site_id, p.status, p.cover_url, p.view_count,
-                p.published_at, p.scheduled_at, p.created_at, p.updated_at,
-                pt.id         AS pt_id,
-                pt.post_id    AS pt_post_id,
-                pt.site_id    AS pt_site_id,
-                pt.lang       AS pt_lang,
-                pt.title      AS pt_title,
-                pt.slug       AS pt_slug,
-                pt.body       AS pt_body,
-                pt.excerpt    AS pt_excerpt,
-                pt.created_at AS pt_created_at,
-                pt.updated_at AS pt_updated_at
-            FROM posts p
-            JOIN post_translations pt ON pt.post_id = p.id AND pt.lang = :lang AND pt.site_id = :siteId
-            WHERE p.site_id = :siteId AND p.status = 'published'
-            ORDER BY p.published_at DESC
-        """)
-            .bind("siteId", siteId)
-            .bind("lang", lang)
-            .fetch().all()
-            .map { mapToPostAndTranslation(it) }
+    fun findPublishedBySiteAndLang(siteId: Long, lang: String, page: Int, size: Int, tag: String? = null, search: String? = null): Flux<Pair<Post, PostTranslation>> {
+        val (sql, bind) = buildBlogQuery(
+            """SELECT p.id, p.site_id, p.status, p.cover_url, p.view_count,
+                      p.published_at, p.scheduled_at, p.created_at, p.updated_at,
+                      pt.id AS pt_id, pt.post_id AS pt_post_id, pt.site_id AS pt_site_id,
+                      pt.lang AS pt_lang, pt.title AS pt_title, pt.slug AS pt_slug,
+                      pt.body AS pt_body, pt.excerpt AS pt_excerpt,
+                      pt.created_at AS pt_created_at, pt.updated_at AS pt_updated_at""",
+            "ORDER BY p.published_at DESC LIMIT :limit OFFSET :offset", siteId, lang, tag, search)
+        return bind(client.sql(sql))
+            .bind("limit", size).bind("offset", page * size)
+            .fetch().all().map { mapToPostAndTranslation(it) }
+    }
+
+    fun countPublishedBySiteAndLang(siteId: Long, lang: String, tag: String? = null, search: String? = null): Mono<Long> {
+        val (sql, bind) = buildBlogQuery("SELECT COUNT(DISTINCT p.id)", "", siteId, lang, tag, search)
+        return bind(client.sql(sql)).fetch().first().map { it["count"] as Long }
+    }
+
+    private fun buildBlogQuery(select: String, tail: String, siteId: Long, lang: String, tag: String?, search: String?): Pair<String, (org.springframework.r2dbc.core.DatabaseClient.GenericExecuteSpec) -> org.springframework.r2dbc.core.DatabaseClient.GenericExecuteSpec> {
+        val tagJoin = if (tag != null) "JOIN post_tags ptags ON ptags.post_id = p.id JOIN tags t ON t.id = ptags.tag_id" else ""
+        val conditions = mutableListOf("p.site_id = :siteId", "p.status = 'published'")
+        if (tag != null) conditions.add("t.name = :tag")
+        if (search != null) conditions.add("(pt.title ILIKE :search OR pt.excerpt ILIKE :search)")
+        val sql = "$select FROM posts p JOIN post_translations pt ON pt.post_id = p.id AND pt.lang = :lang AND pt.site_id = :siteId $tagJoin WHERE ${conditions.joinToString(" AND ")} $tail"
+        val bind: (org.springframework.r2dbc.core.DatabaseClient.GenericExecuteSpec) -> org.springframework.r2dbc.core.DatabaseClient.GenericExecuteSpec = { spec ->
+            var s = spec.bind("siteId", siteId).bind("lang", lang)
+            if (tag != null) s = s.bind("tag", tag)
+            if (search != null) s = s.bind("search", "%$search%")
+            s
+        }
+        return sql to bind
+    }
 
     fun findPublishedBySlug(siteId: Long, lang: String, slug: String): Mono<Pair<Post, PostTranslation>> =
         client.sql("""

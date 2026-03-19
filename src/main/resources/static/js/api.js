@@ -11,3 +11,8 @@ async function api(url, options = {}) {
 
   return res;
 }
+
+// Silently refresh the access token every 5 minutes
+setInterval(async function () {
+  await fetch('/auth/refresh', { method: 'POST', credentials: 'include' });
+}, 5 * 60 * 1000);

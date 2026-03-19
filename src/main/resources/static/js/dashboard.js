@@ -33,8 +33,20 @@ async function loadDashboard() {
                 <a class="btn btn-ghost" href="/admin/sites/${site.id}/posts/new">+ New post</a>
                 <a class="btn btn-ghost" href="/admin/sites/${site.id}/edit">Edit</a>
                 <a class="btn btn-ghost" href="https://${escHtml(site.domain)}" target="_blank" rel="noopener">View</a>
+                <button class="btn btn-ghost btn--danger" data-delete-site="${site.id}" data-site-name="${escHtml(site.name)}">Delete</button>
             </div>`;
     siteList.appendChild(card);
+  });
+
+  siteList.querySelectorAll('[data-delete-site]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const name = btn.dataset.siteName;
+      if (!confirm(`Delete "${name}" and all its posts? This cannot be undone.`)) return;
+      const res = await api(`/sites/${btn.dataset.deleteSite}`, { method: 'DELETE' });
+      if (!res) return;
+      if (res.ok) loadDashboard();
+      else alert('Failed to delete site');
+    });
   });
 }
 

@@ -1,7 +1,7 @@
 package com.gonzalinux.api
 
-import com.gonzalinux.blogs.BlogPostSummary
 import com.gonzalinux.blogs.BlogService
+import com.gonzalinux.blogs.buildRss
 import com.gonzalinux.common.SiteContextHolder.getSite
 import com.gonzalinux.domain.site.LangConfig
 import com.gonzalinux.domain.site.SiteConfig
@@ -9,7 +9,6 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
-import org.springframework.web.reactive.function.server.body
 import reactor.core.publisher.Mono
 import java.net.URI
 
@@ -24,18 +23,25 @@ class BlogsHandler(private val blogService: BlogService) {
         }
 
     fun postList(request: ServerRequest): Mono<ServerResponse> {
-        val lang = request.pathVariable("lang")
+        val lang   = request.pathVariable("lang")
+        val page   = request.queryParam("page").map { it.toIntOrNull() ?: 0 }.orElse(0).coerceAtLeast(0)
+        val tag    = request.queryParam("tag").orElse(null)?.takeIf { it.isNotBlank() }
+        val search = request.queryParam("search").orElse(null)?.takeIf { it.isNotBlank() }
+        val size   = 10
         return Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!
-            blogService.listPublished(site.id, lang)
-                .collectList()
-                .flatMap { posts ->
+            blogService.listPublished(site.id, lang, page, size, tag, search)
+                .flatMap { result ->
                     ServerResponse.ok().contentType(MediaType.TEXT_HTML)
                         .render("index", mapOf(
                             "site" to site,
                             "lang" to lang,
                             "langConfig" to site.config.forLang(lang),
-                            "posts" to posts
+                            "posts" to result.content,
+                            "currentPage" to result.page,
+                            "totalPages" to result.totalPages,
+                            "activeTag" to tag,
+                            "search" to search,
                         ))
                 }
         }
@@ -62,11 +68,43 @@ class BlogsHandler(private val blogService: BlogService) {
         }
     }
 
-    fun postListJson(request: ServerRequest): Mono<ServerResponse> {
+    fun rssRoot(request: ServerRequest): Mono<ServerResponse> =
+        Mono.deferContextual { ctx ->
+            val site = ctx.getSite()!!
+            val defaultLang = site.languages.firstOrNull()?.value ?: "en"
+            ServerResponse.permanentRedirect(URI.create("/$defaultLang/rss.xml")).build()
+        }
+
+    fun rss(request: ServerRequest): Mono<ServerResponse> {
         val lang = request.pathVariable("lang")
         return Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!
-            ServerResponse.ok().body<BlogPostSummary>(blogService.listPublished(site.id, lang))
+            blogService.listPublished(site.id, lang, 0, 20)
+                .flatMap { result ->
+                    val xml = buildRss(
+                        siteTitle       = site.name,
+                        siteDescription = site.description ?: site.name,
+                        domain          = site.domain,
+                        lang            = lang,
+                        posts           = result.content,
+                    )
+                    ServerResponse.ok()
+                        .contentType(MediaType.valueOf("application/rss+xml;charset=UTF-8"))
+                        .bodyValue(xml)
+                }
+        }
+    }
+
+    fun postListJson(request: ServerRequest): Mono<ServerResponse> {
+        val lang   = request.pathVariable("lang")
+        val page   = request.queryParam("page").map { it.toIntOrNull() ?: 0 }.orElse(0).coerceAtLeast(0)
+        val size   = request.queryParam("size").map { it.toIntOrNull() ?: 10 }.orElse(10).coerceIn(1, 100)
+        val tag    = request.queryParam("tag").orElse(null)?.takeIf { it.isNotBlank() }
+        val search = request.queryParam("search").orElse(null)?.takeIf { it.isNotBlank() }
+        return Mono.deferContextual { ctx ->
+            val site = ctx.getSite()!!
+            blogService.listPublished(site.id, lang, page, size, tag, search)
+                .flatMap { ServerResponse.ok().bodyValue(it) }
         }
     }
 }
@@ -76,3 +114,4 @@ private fun SiteConfig.forLang(lang: String): LangConfig = when (lang) {
     "es" -> es
     else -> LangConfig()
 }
+
