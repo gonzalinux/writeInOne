@@ -3,6 +3,7 @@ package com.gonzalinux.domain.user
 import com.gonzalinux.common.UnauthorizedException
 import com.gonzalinux.common.UserAlreadyExistsException
 import com.gonzalinux.config.PasswordEncoder
+import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
@@ -14,7 +15,8 @@ private val logger = KotlinLogging.logger {}
 class UserService(
     private val repo: UserRepository,
     private val encoder: PasswordEncoder,
-    private val tokenService: TokenService
+    private val tokenService: TokenService,
+    private val registry: MeterRegistry
 ) {
 
     fun register(email: String, displayName: String, password: String): Mono<AuthTokens> {
@@ -28,7 +30,7 @@ class UserService(
                 ).flatMap { user ->
                     logger.info { "User registered [userId=${user.id}, email=$email]" }
                     issueTokens(user.id)
-                }
+                }.doOnSuccess { registry.counter("auth.registrations").increment() }
             )
     }
 
@@ -43,8 +45,10 @@ class UserService(
                 logger.info { "User logged in [userId=${user.id}]" }
                 issueTokens(user.id)
             }
+            .doOnSuccess { registry.counter("auth.logins", "result", "success").increment() }
             .switchIfEmpty {
                 logger.warn { "Failed login attempt [email=$email]" }
+                registry.counter("auth.logins", "result", "failure").increment()
                 Mono.error(UnauthorizedException())
             }
     }
@@ -66,6 +70,7 @@ class UserService(
                     .then(issueTokens(stored.userId))
                     .doOnSuccess { logger.debug { "Token refreshed [userId=${stored.userId}]" } }
             }
+            .doOnSuccess { registry.counter("auth.token.refreshes").increment() }
     }
 
     private fun issueTokens(userId: Long): Mono<AuthTokens> {

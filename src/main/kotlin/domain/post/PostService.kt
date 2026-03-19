@@ -8,6 +8,7 @@ import com.gonzalinux.common.SiteNotFoundException
 import com.gonzalinux.domain.site.SiteRepository
 import com.gonzalinux.domain.tag.Tag
 import com.gonzalinux.domain.tag.TagRepository
+import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
@@ -20,7 +21,7 @@ private val logger = KotlinLogging.logger {}
 
 
 @Service
-class PostService(private val postRepo: PostRepository, private val siteRepo: SiteRepository, private val tagRepo: TagRepository) {
+class PostService(private val postRepo: PostRepository, private val siteRepo: SiteRepository, private val tagRepo: TagRepository, private val registry: MeterRegistry) {
 
     fun create(siteId: Long, userId: Long, request: CreatePostRequest): Mono<PostWithTranslations> =
         siteRepo.findById(siteId, userId)
@@ -43,7 +44,10 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
                             Mono.just(PostWithTranslations(post, translations, tags))
                         )
                     }
-                    .doOnSuccess { logger.info { "Post created [postId=${post.id}, siteId=$siteId]" } }
+                    .doOnSuccess {
+                        logger.info { "Post created [postId=${post.id}, siteId=$siteId]" }
+                        registry.counter("posts.created").increment()
+                    }
             }
 
     fun get(id: Long, siteId: Long, userId: Long): Mono<PostWithTranslations> =
@@ -101,6 +105,7 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
             .flatMap { postRepo.findById(id, siteId) }
             .switchIfEmpty(Mono.error(PostNotFoundException(id)))
             .flatMap { postRepo.delete(id, siteId) }
+            .doOnSuccess { registry.counter("posts.deleted").increment() }
 
     fun publish(id: Long, siteId: Long, userId: Long): Mono<Post> =
         siteRepo.findById(siteId, userId)
@@ -108,7 +113,10 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
             .flatMap { postRepo.findById(id, siteId) }
             .switchIfEmpty(Mono.error(PostNotFoundException(id)))
             .flatMap { postRepo.update(id, siteId, null, PostStatus.PUBLISHED, OffsetDateTime.now(), null) }
-        .doOnSuccess { logger.info { "Post published [postId=$id, siteId=$siteId]" } }
+        .doOnSuccess {
+            logger.info { "Post published [postId=$id, siteId=$siteId]" }
+            registry.counter("posts.published", "source", "manual").increment()
+        }
 
     fun unpublish(id: Long, siteId: Long, userId: Long): Mono<Post> =
         siteRepo.findById(siteId, userId)
@@ -116,7 +124,10 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
             .flatMap { postRepo.findById(id, siteId) }
             .switchIfEmpty(Mono.error(PostNotFoundException(id)))
             .flatMap { postRepo.update(id, siteId, null, PostStatus.DRAFT, null, null) }
-            .doOnSuccess { logger.info { "Post unpublished [postId=$id, siteId=$siteId]" } }
+            .doOnSuccess {
+                logger.info { "Post unpublished [postId=$id, siteId=$siteId]" }
+                registry.counter("posts.unpublished").increment()
+            }
 
     fun schedule(id: Long, siteId: Long, userId: Long, scheduledAt: OffsetDateTime): Mono<Post> =
         siteRepo.findById(siteId, userId)
@@ -124,7 +135,10 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
             .flatMap { postRepo.findById(id, siteId) }
             .switchIfEmpty(Mono.error(PostNotFoundException(id)))
             .flatMap { postRepo.update(id, siteId, null, PostStatus.SCHEDULED, null, scheduledAt) }
-            .doOnSuccess { logger.info { "Post scheduled [postId=$id, siteId=$siteId, scheduledAt=$scheduledAt]" } }
+            .doOnSuccess {
+                logger.info { "Post scheduled [postId=$id, siteId=$siteId, scheduledAt=$scheduledAt]" }
+                registry.counter("posts.scheduled").increment()
+            }
 
     private fun postWithTranslationsAndTags(post: Post): Mono<PostWithTranslations> =
         postRepo.findTranslationsByPostId(post.id).collectList()

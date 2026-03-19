@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
+import java.time.Duration
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -135,6 +136,63 @@ class AuthIntegrationTest {
                 "email" to "ghost@integrationtest.com",
                 "password" to "password123"
             ))
+            .exchange()
+            .expectStatus().isUnauthorized
+    }
+
+    @Test
+    fun `logout returns 200 and clears cookies`() {
+        val cookies = webTestClient.post().uri("/auth/register")
+            .bodyValue(mapOf(
+                "email" to "logout@integrationtest.com",
+                "displayName" to "Test User",
+                "password" to "password123"
+            ))
+            .exchange()
+            .returnResult(String::class.java)
+            .responseCookies
+        val refreshToken = cookies.getFirst(REFRESH_TOKEN_COOKIE)?.value ?: ""
+
+        webTestClient.post().uri("/auth/logout")
+            .cookie(REFRESH_TOKEN_COOKIE, refreshToken)
+            .exchange()
+            .expectStatus().isOk
+            .expectCookie().maxAge(ACCESS_TOKEN_COOKIE, Duration.ZERO)
+            .expectCookie().maxAge(REFRESH_TOKEN_COOKIE, Duration.ZERO)
+    }
+
+    @Test
+    fun `refresh returns 200 and rotates tokens`() {
+        val cookies = webTestClient.post().uri("/auth/register")
+            .bodyValue(mapOf(
+                "email" to "refresh@integrationtest.com",
+                "displayName" to "Test User",
+                "password" to "password123"
+            ))
+            .exchange()
+            .returnResult(String::class.java)
+            .responseCookies
+        val refreshToken = cookies.getFirst(REFRESH_TOKEN_COOKIE)?.value ?: ""
+
+        webTestClient.post().uri("/auth/refresh")
+            .cookie(REFRESH_TOKEN_COOKIE, refreshToken)
+            .exchange()
+            .expectStatus().isOk
+            .expectCookie().exists(ACCESS_TOKEN_COOKIE)
+            .expectCookie().exists(REFRESH_TOKEN_COOKIE)
+    }
+
+    @Test
+    fun `refresh returns 401 when no token provided`() {
+        webTestClient.post().uri("/auth/refresh")
+            .exchange()
+            .expectStatus().isUnauthorized
+    }
+
+    @Test
+    fun `refresh returns 401 with invalid token`() {
+        webTestClient.post().uri("/auth/refresh")
+            .cookie(REFRESH_TOKEN_COOKIE, "this-is-not-a-valid-token")
             .exchange()
             .expectStatus().isUnauthorized
     }

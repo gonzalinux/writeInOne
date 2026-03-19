@@ -63,6 +63,9 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
     implementation("io.micrometer:context-propagation")
 
+    // Prometheus metrics
+    implementation("io.micrometer:micrometer-registry-prometheus")
+
     // Dev tools
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 

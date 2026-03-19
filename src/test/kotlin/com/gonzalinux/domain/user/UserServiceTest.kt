@@ -2,6 +2,7 @@ package com.gonzalinux.domain.user
 
 import com.gonzalinux.common.UnauthorizedException
 import com.gonzalinux.common.UserAlreadyExistsException
+import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -17,7 +18,8 @@ class UserServiceTest {
     private val repo = mockk<UserRepository>()
     private val encoder = mockk<PasswordEncoder>()
     private val tokenService = mockk<TokenService>()
-    private val service = UserService(repo, encoder, tokenService)
+    private val registry = mockk<MeterRegistry>(relaxed = true)
+    private val service = UserService(repo, encoder, tokenService, registry)
 
     private val user = User(
         id = 1L,
@@ -104,5 +106,42 @@ class UserServiceTest {
         service.register("test@test.com", "Test User", "password").block()
 
         verify { repo.saveRefreshToken(1L, "hashed-refresh", refreshToken.expiresAt) }
+    }
+
+    @Test
+    fun `logout deletes hashed refresh token`() {
+        every { tokenService.hashToken("raw-token") } returns "hashed"
+        every { repo.deleteRefreshToken("hashed") } returns Mono.empty()
+
+        StepVerifier.create(service.logout("raw-token"))
+            .verifyComplete()
+
+        verify { repo.deleteRefreshToken("hashed") }
+    }
+
+    @Test
+    fun `refreshToken returns new tokens when token is valid`() {
+        val stored = StoredRefreshToken(1L, "hashed-old", OffsetDateTime.now(ZoneOffset.UTC).plusDays(30))
+        every { tokenService.hashToken("old-token") } returns "hashed-old"
+        every { repo.findRefreshToken("hashed-old") } returns Mono.just(stored)
+        every { repo.deleteRefreshToken("hashed-old") } returns Mono.empty()
+        every { tokenService.generateAccessToken(1L) } returns accessToken
+        every { tokenService.generateRefreshToken() } returns refreshToken
+        every { tokenService.hashToken("refresh-value") } returns "hashed-new"
+        every { repo.saveRefreshToken(1L, "hashed-new", refreshToken.expiresAt) } returns Mono.empty()
+
+        StepVerifier.create(service.refreshToken("old-token"))
+            .expectNext(authTokens)
+            .verifyComplete()
+    }
+
+    @Test
+    fun `refreshToken throws UnauthorizedException when token not found`() {
+        every { tokenService.hashToken("bad-token") } returns "hashed-bad"
+        every { repo.findRefreshToken("hashed-bad") } returns Mono.empty()
+
+        StepVerifier.create(service.refreshToken("bad-token"))
+            .expectError(UnauthorizedException::class.java)
+            .verify()
     }
 }

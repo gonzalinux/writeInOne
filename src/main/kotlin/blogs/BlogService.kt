@@ -11,6 +11,7 @@ import com.gonzalinux.domain.tag.TagRepository
 import com.vladsch.flexmark.html.HtmlRenderer
 import com.vladsch.flexmark.parser.Parser
 import com.vladsch.flexmark.util.data.MutableDataSet
+import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.util.function.component1
@@ -20,7 +21,8 @@ import reactor.kotlin.core.util.function.component2
 @Service
 class BlogService(
     private val postRepo: PostRepository,
-    private val tagRepo: TagRepository
+    private val tagRepo: TagRepository,
+    private val registry: MeterRegistry
 ) {
     private val mdParser: Parser
     private val mdRenderer: HtmlRenderer
@@ -51,7 +53,11 @@ class BlogService(
                 tagRepo.findByPostId(post.id).collectList()
                     .map { tags -> BlogPostDetail(post, translation, tags, renderMarkdown(translation.body)) }
             }
-            .flatMap { detail -> postRepo.incrementViewCount(detail.post.id).thenReturn(detail) }
+            .flatMap { detail ->
+                postRepo.incrementViewCount(detail.post.id)
+                    .doOnSuccess { registry.counter("blog.post.views", "lang", lang).increment() }
+                    .thenReturn(detail)
+            }
 
     private fun renderMarkdown(markdown: String): String =
         mdRenderer.render(mdParser.parse(markdown))

@@ -26,3 +26,16 @@ token-scheduler:
 
 post-scheduler:
   interval-ms: 60000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http_request_duration_milliseconds: true
