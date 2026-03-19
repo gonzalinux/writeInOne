@@ -5,6 +5,8 @@ import org.springframework.web.reactive.function.server.ServerRequest
 import reactor.util.context.Context
 
 fun ServerRequest.isSecureContext(): Boolean {
+    val forwardedProto = headers().firstHeader("X-Forwarded-Proto")
+    if (forwardedProto != null) return forwardedProto.lowercase() == "https"
     val host = uri().host
     return host != "localhost" && host != "127.0.0.1" && !host.startsWith("192.168.") && !host.startsWith("10.")
 }

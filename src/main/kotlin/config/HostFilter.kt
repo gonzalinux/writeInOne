@@ -19,6 +19,7 @@ class HostFilter(private val siteRepository: SiteRepository) : HandlerFilterFunc
         val domain = request.headers().firstHeader("Host")
             ?.substringBefore(":")  // strip port if present
             ?: return ServerResponse.badRequest().build()
+        logger.info { "Requested domain: $domain" }
 
         return siteRepository.findByDomain(domain)
             .flatMap { site ->

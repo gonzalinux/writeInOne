@@ -3,6 +3,7 @@ package com.gonzalinux.config
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.DistributionSummary
 import io.micrometer.core.instrument.MeterRegistry
+import mu.KotlinLogging
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
@@ -12,12 +13,16 @@ import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
 
+private val logger = KotlinLogging.logger {}
+
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
 class MetricsFilter(private val registry: MeterRegistry) : WebFilter {
 
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
         val start = System.currentTimeMillis()
+        val req = exchange.request
+        logger.info { "${req.method} ${req.uri.path}" }
         return chain.filter(exchange).doFinally {
             val path = exchange.getAttribute<Any>(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE)
                 ?.toString() ?: exchange.request.path.value()
