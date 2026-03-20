@@ -1,0 +1,245 @@
+/* ============================================================
+   WriteInOne — Post Preview Bar
+   Loaded only by post_preview.html; does not affect blog.css
+   ============================================================ */
+
+/* Offset body so the nav isn't hidden behind the fixed preview bar */
+body.has-preview-bar {
+    padding-top: 48px;
+}
+
+/* ── Preview bar ── */
+.preview-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 48px;
+    background: #1a1a1a;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    z-index: 1000;
+    gap: 0.75rem;
+}
+
+.preview-bar__left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.preview-bar__right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.preview-bar__label {
+    font-size: 0.8rem;
+    color: #999;
+    font-family: Georgia, 'Times New Roman', serif;
+}
+
+.unsaved-badge {
+    font-size: 0.75rem;
+    color: #f59e0b;
+    font-family: Georgia, 'Times New Roman', serif;
+}
+
+/* ── Status badge ── */
+.status {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+}
+
+.status--draft {
+    color: #f59e0b;
+    border-color: #f59e0b;
+}
+
+.status--published {
+    color: #10b981;
+    border-color: #10b981;
+}
+
+.status--scheduled {
+    color: #6366f1;
+    border-color: #6366f1;
+}
+
+/* ── Buttons ── */
+.preview-bar__btn {
+    font-size: 0.78rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid #555;
+    background: transparent;
+    color: #ccc;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    font-family: Georgia, 'Times New Roman', serif;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.preview-bar__btn:hover {
+    background: #333;
+    color: #fff;
+    border-color: #888;
+}
+
+.preview-bar__btn--active {
+    background: #fff;
+    color: #1a1a1a;
+    border-color: #fff;
+}
+
+.preview-bar__btn--active:hover {
+    background: #e5e5e5;
+    color: #1a1a1a;
+    border-color: #e5e5e5;
+}
+
+.preview-bar__btn--publish {
+    border-color: #10b981;
+    color: #10b981;
+}
+
+.preview-bar__btn--publish:hover {
+    background: #10b981;
+    color: #fff;
+}
+
+.preview-bar__save {
+    border-color: #6366f1;
+    color: #6366f1;
+}
+
+.preview-bar__save:hover {
+    background: #6366f1;
+    color: #fff;
+}
+
+/* ── Schedule panel ── */
+.schedule-panel {
+    position: fixed;
+    top: 48px;
+    left: 0;
+    right: 0;
+    background: #222;
+    border-bottom: 1px solid #333;
+    padding: 0.6rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    z-index: 999;
+}
+
+.schedule-panel[hidden] {
+    display: none;
+}
+
+#schedule-input {
+    background: #333;
+    border: 1px solid #555;
+    color: #fff;
+    border-radius: 4px;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    font-family: Georgia, 'Times New Roman', serif;
+}
+
+#schedule-input:focus {
+    outline: none;
+    border-color: #6366f1;
+}
+
+/* ── Error strip ── */
+#preview-error {
+    position: fixed;
+    top: 48px;
+    left: 0;
+    right: 0;
+    background: #7f1d1d;
+    color: #fca5a5;
+    font-size: 0.8rem;
+    padding: 0.4rem 1rem;
+    z-index: 998;
+    font-family: Georgia, 'Times New Roman', serif;
+}
+
+#preview-error[hidden] {
+    display: none;
+}
+
+/* ── Edit section — inputs look like the blog post they're editing ── */
+.edit-input {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: Georgia, 'Times New Roman', serif;
+    color: var(--fg);
+    padding: 0;
+    resize: none;
+}
+
+#edit-title {
+    font-size: 2.2rem;
+    line-height: 1.25;
+    font-weight: bold;
+    margin-bottom: 0.75rem;
+}
+
+#edit-excerpt {
+    font-size: 1.1rem;
+    color: var(--muted-2);
+    font-style: italic;
+    margin-bottom: 1.25rem;
+}
+
+#edit-body {
+    margin-top: 2.5rem;
+    font-size: 1rem;
+    line-height: 1.7;
+    overflow: hidden;
+    resize: none;
+}
+
+/* Slug / tags / cover — shown as small meta row below the header */
+.edit-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    font-size: 0.875rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    padding-top: 0.75rem;
+}
+
+.edit-meta__field {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.edit-meta__label {
+    white-space: nowrap;
+}
+
+.edit-meta .edit-input {
+    font-size: 0.875rem;
+    color: var(--muted-2);
+    width: 12rem;
+}

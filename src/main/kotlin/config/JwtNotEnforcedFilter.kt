@@ -25,7 +25,7 @@ class JwtNotEnforcedFilter(private val tokenService: TokenService) : HandlerFilt
 
     override fun filter(request: ServerRequest, next: HandlerFunction<ServerResponse>): Mono<ServerResponse> {
         val token = request.cookies()[ACCESS_TOKEN_COOKIE]?.firstOrNull()?.value
-            ?: throw UnauthorizedException()
+            ?: return next.handle(request)
 
         return Mono.fromCallable { tokenService.getUserIdFromToken(token) }
             .map {

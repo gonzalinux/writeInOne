@@ -184,7 +184,8 @@ class PostRepository(private val client: DatabaseClient) {
                 pt.updated_at AS pt_updated_at
             FROM posts p
             JOIN post_translations pt ON pt.post_id = p.id AND pt.lang = :lang AND pt.site_id = :siteId
-            WHERE p.site_id = :siteId AND (p.status = 'published' OR p.user_id = :user) AND pt.slug = :slug
+            JOIN sites s ON s.id = p.site_id
+            WHERE p.site_id = :siteId AND (p.status = 'published' OR s.user_id = :user) AND pt.slug = :slug
         """)
             .bind("siteId", siteId)
             .bind("lang", lang)
