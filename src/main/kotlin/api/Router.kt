@@ -4,6 +4,7 @@ import com.gonzalinux.config.AdminExceptionFilter
 import com.gonzalinux.config.BlogExceptionFilter
 import com.gonzalinux.config.HostFilter
 import com.gonzalinux.config.JwtAuthFilter
+import com.gonzalinux.config.JwtNotEnforcedFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.reactive.function.server.RouterFunction
@@ -19,6 +20,7 @@ class Router(
     private val blogsHandler: BlogsHandler,
     private val adminHandler: AdminHandler,
     private val jwtAuthFilter: JwtAuthFilter,
+    private val jwtNotEnforcedFilter: JwtNotEnforcedFilter,
     private val hostFilter: HostFilter,
     private val blogExceptionFilter: BlogExceptionFilter,
     private val adminExceptionFilter: AdminExceptionFilter
@@ -85,6 +87,7 @@ class Router(
         .GET("/{lang:es|en}/{slug}", blogsHandler::post)
         .build()
         .filter(hostFilter)
+        .filter(jwtNotEnforcedFilter)
         .filter(blogExceptionFilter)
 
     private fun blogApiRoutes(): RouterFunction<ServerResponse> = route()

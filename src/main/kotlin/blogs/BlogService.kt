@@ -46,8 +46,8 @@ class BlogService(
             Page(content, page, size, total, ((total + size - 1) / size).toInt())
         }
 
-    fun getBySlug(siteId: Long, lang: String, slug: String): Mono<BlogPostDetail> =
-        postRepo.findPublishedBySlug(siteId, lang, slug)
+    fun getBySlug(siteId: Long, lang: String, slug: String, user: Long?): Mono<BlogPostDetail> =
+        postRepo.findPublishedBySlug(siteId, lang, slug, user)
             .switchIfEmpty(Mono.error(PostNotFoundException(0)))
             .flatMap { (post, translation) ->
                 tagRepo.findByPostId(post.id).collectList()

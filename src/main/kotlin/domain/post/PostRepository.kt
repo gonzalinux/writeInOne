@@ -167,7 +167,7 @@ class PostRepository(private val client: DatabaseClient) {
         return sql to bind
     }
 
-    fun findPublishedBySlug(siteId: Long, lang: String, slug: String): Mono<Pair<Post, PostTranslation>> =
+    fun findPublishedBySlug(siteId: Long, lang: String, slug: String, user: Long? = -1): Mono<Pair<Post, PostTranslation>> =
         client.sql("""
             SELECT
                 p.id, p.site_id, p.status, p.cover_url, p.view_count,
@@ -184,11 +184,12 @@ class PostRepository(private val client: DatabaseClient) {
                 pt.updated_at AS pt_updated_at
             FROM posts p
             JOIN post_translations pt ON pt.post_id = p.id AND pt.lang = :lang AND pt.site_id = :siteId
-            WHERE p.site_id = :siteId AND p.status = 'published' AND pt.slug = :slug
+            WHERE p.site_id = :siteId AND (p.status = 'published' OR p.user_id = :user) AND pt.slug = :slug
         """)
             .bind("siteId", siteId)
             .bind("lang", lang)
             .bind("slug", slug)
+            .bind("user", user?:-1)
             .fetch().first()
             .map { mapToPostAndTranslation(it) }
 
