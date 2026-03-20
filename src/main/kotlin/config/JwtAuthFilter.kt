@@ -28,13 +28,14 @@ class JwtAuthFilter(private val tokenService: TokenService) : HandlerFilterFunct
             .map {
                 RequestContext(it, RequestContextHolder.extractRequestId(request))
             }
+            .onErrorMap {
+                logger.info { "Error $it"}
+                throw UnauthorizedException() }
             .flatMap { reqContext->
                 logger.debug { "${request.method()} ${request.path()} [requestId=${reqContext.requestId}, userId=${reqContext.userId}]" }
                 next.handle(request).contextWrite { it.withRequestContext(reqContext) }
             }
-            .onErrorMap {
-                logger.info { "Error $it | cause: ${it.cause} | rootCause: ${it.cause?.cause}"}
-                throw UnauthorizedException() }
+
 
     }
 }

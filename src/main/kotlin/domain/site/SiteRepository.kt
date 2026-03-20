@@ -1,6 +1,6 @@
 package com.gonzalinux.domain.site
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.databind.ObjectMapper
 import com.gonzalinux.common.bindNullable
 import com.gonzalinux.domain.Languages
 import io.r2dbc.postgresql.codec.Json

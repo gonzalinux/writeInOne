@@ -26,14 +26,18 @@ class SiteIntegrationTest {
     lateinit var db: DatabaseClient
 
     private var accessTokenCookie: String = ""
+    private lateinit var testEmail: String
+    private var ts: Long = 0L
 
     @BeforeEach
     fun setup() {
+        ts = System.currentTimeMillis()
+        testEmail = "sitetest-$ts@integrationtest.com"
         webTestClient = WebTestClient.bindToServer().baseUrl("http://localhost:$port").build()
         val result = webTestClient.post().uri("/auth/register")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(mapOf(
-                "email" to "sitetest@integrationtest.com",
+                "email" to testEmail,
                 "displayName" to "Test User",
                 "password" to "password123"
             ))
@@ -45,7 +49,10 @@ class SiteIntegrationTest {
 
     @AfterEach
     fun cleanup() {
-        db.sql("DELETE FROM users WHERE email LIKE '%@integrationtest.com'").then().block()
+        db.sql("DELETE FROM sites WHERE user_id IN (SELECT id FROM users WHERE email = :email)")
+            .bind("email", testEmail).then().block()
+        db.sql("DELETE FROM users WHERE email = :email")
+            .bind("email", testEmail).then().block()
     }
 
     @Test
@@ -53,38 +60,37 @@ class SiteIntegrationTest {
         webTestClient.post().uri("/sites/")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(mapOf("name" to "Test Blog", "domain" to "testblog.example.com"))
+            .bodyValue(mapOf("name" to "Test Blog", "domain" to "testblog-$ts.example.com"))
             .exchange()
             .expectStatus().isOk
             .expectBody()
             .jsonPath("$.name").isEqualTo("Test Blog")
-            .jsonPath("$.domain").isEqualTo("testblog.example.com")
+            .jsonPath("$.domain").isEqualTo("testblog-$ts.example.com")
             .jsonPath("$.id").isNumber
     }
 
     @Test
-    fun `create site returns 401 when domain is already taken`() {
+    fun `create site returns 409 when domain is already taken`() {
         webTestClient.post().uri("/sites/")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(mapOf("name" to "Blog 1", "domain" to "duplicate.example.com"))
+            .bodyValue(mapOf("name" to "Blog 1", "domain" to "duplicate-$ts.example.com"))
             .exchange()
             .expectStatus().isOk
 
-        // Domain conflict becomes 401 because JwtAuthFilter.onErrorMap catches all handler errors
         webTestClient.post().uri("/sites/")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(mapOf("name" to "Blog 2", "domain" to "duplicate.example.com"))
+            .bodyValue(mapOf("name" to "Blog 2", "domain" to "duplicate-$ts.example.com"))
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.UNAUTHORIZED)
+            .expectStatus().isEqualTo(HttpStatus.CONFLICT)
     }
 
     @Test
     fun `create site returns 401 when not authenticated`() {
         webTestClient.post().uri("/sites/")
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(mapOf("name" to "Test Blog", "domain" to "unauth.example.com"))
+            .bodyValue(mapOf("name" to "Test Blog", "domain" to "unauth-$ts.example.com"))
             .exchange()
             .expectStatus().isUnauthorized
     }
@@ -104,7 +110,7 @@ class SiteIntegrationTest {
         webTestClient.post().uri("/sites/")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(mapOf("name" to "My Blog", "domain" to "myblog.example.com"))
+            .bodyValue(mapOf("name" to "My Blog", "domain" to "myblog-$ts.example.com"))
             .exchange()
             .expectStatus().isOk
 
@@ -113,12 +119,12 @@ class SiteIntegrationTest {
             .exchange()
             .expectStatus().isOk
             .expectBody()
-            .jsonPath("$[0].domain").isEqualTo("myblog.example.com")
+            .jsonPath("$[0].domain").isEqualTo("myblog-$ts.example.com")
     }
 
     @Test
     fun `get site returns 200 when found`() {
-        val siteId = createSite("Get Blog", "getblog.example.com")
+        val siteId = createSite("Get Blog", "getblog-$ts.example.com")
 
         webTestClient.get().uri("/sites/$siteId")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
@@ -126,21 +132,20 @@ class SiteIntegrationTest {
             .expectStatus().isOk
             .expectBody()
             .jsonPath("$.id").isEqualTo(siteId)
-            .jsonPath("$.domain").isEqualTo("getblog.example.com")
+            .jsonPath("$.domain").isEqualTo("getblog-$ts.example.com")
     }
 
     @Test
-    fun `get site returns 401 when not found`() {
-        // SiteNotFoundException is caught by JwtAuthFilter.onErrorMap → 401
+    fun `get site returns 404 when not found`() {
         webTestClient.get().uri("/sites/999999")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .exchange()
-            .expectStatus().isUnauthorized
+            .expectStatus().isNotFound
     }
 
     @Test
     fun `update site returns 200 with updated name`() {
-        val siteId = createSite("Old Name", "updateblog.example.com")
+        val siteId = createSite("Old Name", "updateblog-$ts.example.com")
 
         webTestClient.put().uri("/sites/$siteId")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
@@ -154,27 +159,25 @@ class SiteIntegrationTest {
 
     @Test
     fun `delete site returns 200 and site is no longer accessible`() {
-        val siteId = createSite("Delete Me", "deleteblog.example.com")
+        val siteId = createSite("Delete Me", "deleteblog-$ts.example.com")
 
         webTestClient.delete().uri("/sites/$siteId")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .exchange()
             .expectStatus().isOk
 
-        // After deletion, get returns 401 (SiteNotFoundException caught by JWT filter)
         webTestClient.get().uri("/sites/$siteId")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .exchange()
-            .expectStatus().isUnauthorized
+            .expectStatus().isNotFound
     }
 
     @Test
-    fun `delete site returns 401 when site not found`() {
-        // SiteNotFoundException caught by JwtAuthFilter.onErrorMap → 401
+    fun `delete site returns 404 when site not found`() {
         webTestClient.delete().uri("/sites/999999")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .exchange()
-            .expectStatus().isUnauthorized
+            .expectStatus().isNotFound
     }
 
     @Suppress("UNCHECKED_CAST")

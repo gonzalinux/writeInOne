@@ -27,15 +27,18 @@ class PostIntegrationTest {
 
     private var accessTokenCookie: String = ""
     private var siteId: Long = 0L
+    private lateinit var testEmail: String
 
     @BeforeEach
     fun setup() {
+        val ts = System.currentTimeMillis()
+        testEmail = "posttest-$ts@integrationtest.com"
         webTestClient = WebTestClient.bindToServer().baseUrl("http://localhost:$port").build()
 
         val result = webTestClient.post().uri("/auth/register")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(mapOf(
-                "email" to "posttest@integrationtest.com",
+                "email" to testEmail,
                 "displayName" to "Test User",
                 "password" to "password123"
             ))
@@ -44,7 +47,7 @@ class PostIntegrationTest {
             .returnResult()
         accessTokenCookie = result.responseCookies.getFirst(ACCESS_TOKEN_COOKIE)?.value ?: ""
 
-        siteId = createSite("Post Test Blog", "posttest.example.com")
+        siteId = createSite("Post Test Blog", "posttest-$ts.example.com")
     }
 
     @AfterEach
@@ -103,8 +106,7 @@ class PostIntegrationTest {
     }
 
     @Test
-    fun `create post returns 401 when site not found`() {
-        // SiteNotFoundException caught by JwtAuthFilter.onErrorMap → 401
+    fun `create post returns 404 when site not found`() {
         webTestClient.post().uri("/sites/999999/posts/")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
@@ -112,7 +114,7 @@ class PostIntegrationTest {
                 "translations" to mapOf("en" to mapOf("title" to "Post", "body" to "Content"))
             ))
             .exchange()
-            .expectStatus().isUnauthorized
+            .expectStatus().isNotFound
     }
 
     @Test
@@ -129,12 +131,11 @@ class PostIntegrationTest {
     }
 
     @Test
-    fun `get post returns 401 when not found`() {
-        // PostNotFoundException caught by JwtAuthFilter.onErrorMap → 401
+    fun `get post returns 404 when not found`() {
         webTestClient.get().uri("/sites/$siteId/posts/999999")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .exchange()
-            .expectStatus().isUnauthorized
+            .expectStatus().isNotFound
     }
 
     @Test
@@ -148,7 +149,7 @@ class PostIntegrationTest {
             .expectStatus().isOk
             .expectBody()
             .jsonPath("$.content").isArray
-            .jsonPath("$.total").isNumber
+            .jsonPath("$.totalElements").isNumber
     }
 
     @Test
@@ -236,11 +237,10 @@ class PostIntegrationTest {
             .exchange()
             .expectStatus().isOk
 
-        // After deletion, get returns 401 (PostNotFoundException caught by JWT filter)
         webTestClient.get().uri("/sites/$siteId/posts/$postId")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .exchange()
-            .expectStatus().isUnauthorized
+            .expectStatus().isNotFound
     }
 
     @Test

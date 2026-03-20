@@ -83,7 +83,7 @@ class AuthIntegrationTest {
             .bodyValue(mapOf(
                 "email" to "user@integrationtest.com",
                 "displayName" to "Test User",
-                "password" to "short"
+                "password" to "123"
             ))
             .exchange()
             .expectStatus().isBadRequest

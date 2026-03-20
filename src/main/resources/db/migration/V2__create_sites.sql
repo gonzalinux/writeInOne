@@ -1,6 +1,6 @@
 CREATE TABLE sites (
     id          BIGSERIAL   PRIMARY KEY,
-    user_id     BIGINT      NOT NULL REFERENCES users(id),
+    user_id     BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name        TEXT        NOT NULL,
     domain      TEXT        NOT NULL UNIQUE,
     description       TEXT,

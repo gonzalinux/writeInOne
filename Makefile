@@ -6,7 +6,7 @@ ifneq (,$(wildcard $(ENV_FILE)))
   export $(shell sed 's/=.*//' $(ENV_FILE))
 endif
 
-.PHONY: run watch db test docker-test prod down
+.PHONY: run watch db test docker-test prod logs down
 
 ## run: Start the app locally with bootRun (pair with `make watch` for auto-reload)
 run:
@@ -30,11 +30,11 @@ docker-test:
 
 ## prod: Load .env and start app + db via Docker Compose
 prod:
-   git pull
-	mkdir -p postgres_data && docker compose --env-file $(ENV_FILE) up --build -d
+	git pull
+	mkdir -p postgres_data && docker compose --env-file $(ENV_FILE) up --build -d --remove-orphans
 
 logs:
-   docker compose logs
+	docker compose logs
 
 ## down: Stop all running containers
 down:

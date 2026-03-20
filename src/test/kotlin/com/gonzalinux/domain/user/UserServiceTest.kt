@@ -15,8 +15,8 @@ import java.time.ZoneOffset
 
 class UserServiceTest {
 
-    private val repo = mockk<UserRepository>()
-    private val encoder = mockk<PasswordEncoder>()
+    private val repo = mockk<UserRepository>(relaxed=true)
+    private val encoder = mockk<PasswordEncoder>(relaxed=true)
     private val tokenService = mockk<TokenService>()
     private val registry = mockk<MeterRegistry>(relaxed = true)
     private val service = UserService(repo, encoder, tokenService, registry)
