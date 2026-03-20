@@ -30,7 +30,11 @@ docker-test:
 
 ## prod: Load .env and start app + db via Docker Compose
 prod:
+   git pull
 	mkdir -p postgres_data && docker compose --env-file $(ENV_FILE) up --build -d
+
+logs:
+   docker compose logs
 
 ## down: Stop all running containers
 down:
