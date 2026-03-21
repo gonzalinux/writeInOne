@@ -28,7 +28,7 @@
         <ul class="post-list" th:if="${!posts.isEmpty()}">
             <li class="post-card" th:each="item : ${posts}">
                 <img class="post-card__cover"
-                     th:if="${item.post.coverUrl != null}"
+                     th:if="${not #strings.isEmpty(item.post.coverUrl)}"
                      th:src="${item.post.coverUrl}"
                      th:alt="${item.translation.title}"/>
 

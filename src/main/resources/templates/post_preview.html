@@ -101,7 +101,7 @@
                     </div>
 
                     <img class="post-header__cover"
-                         th:if="${post.coverUrl != null}"
+                         th:if="${not #strings.isEmpty(post.coverUrl)}"
                          th:src="${post.coverUrl}"
                          th:alt="${translation.title}"/>
                 </header>
@@ -134,7 +134,7 @@
                     </div>
 
                     <img class="post-header__cover"
-                         th:if="${post.coverUrl != null}"
+                         th:if="${not #strings.isEmpty(post.coverUrl)}"
                          th:src="${post.coverUrl}"
                          th:alt="${translation.title}"/>
 
