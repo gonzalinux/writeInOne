@@ -53,6 +53,7 @@
                          and #lists.contains(site.availableThemes, T(com.gonzalinux.domain.site.Theme).DARK)}"
                     class="preview-bar__btn" onclick="toggleTheme()" aria-label="Toggle theme">&#9789;</button>
             <button id="btn-edit-mode" class="preview-bar__btn">Edit</button>
+            <button id="btn-split-mode" class="preview-bar__btn">Split</button>
             <button id="btn-preview-mode" class="preview-bar__btn preview-bar__btn--active">Preview</button>
             <button id="btn-save" class="preview-bar__btn preview-bar__save">Save</button>
             <button id="btn-publish" class="preview-bar__btn preview-bar__btn--publish">Publish</button>
@@ -74,7 +75,42 @@
 
     <main class="container">
 
-        <!-- Edit section (hidden by default) -->
+        <!-- Preview section (left in split, full width otherwise) -->
+        <section id="preview-section">
+            <article>
+                <header class="post-header">
+                    <a class="post-header__back" th:href="'/' + ${lang}">← All posts</a>
+
+                    <div class="post-header__meta">
+                        <time th:datetime="${post.publishedAt}"
+                              th:if="${post.publishedAt != null}"
+                              th:text="${#temporals.format(post.publishedAt, 'MMM d, yyyy')}">Jan 1, 2025</time>
+                    </div>
+
+                    <h1 class="post-header__title" th:text="${translation.title}">Post Title</h1>
+
+                    <p class="post-header__excerpt"
+                       th:if="${translation.excerpt != null}"
+                       th:text="${translation.excerpt}">Excerpt</p>
+
+                    <div class="post-header__tags" th:if="${!tags.isEmpty()}">
+                        <a class="tag"
+                           th:each="tag : ${tags}"
+                           th:text="${tag.name}"
+                           th:href="@{/{lang}(lang=${lang}, tag=${tag.name})}">tag</a>
+                    </div>
+
+                    <img class="post-header__cover"
+                         th:if="${post.coverUrl != null}"
+                         th:src="${post.coverUrl}"
+                         th:alt="${translation.title}"/>
+                </header>
+
+                <div class="post-body" th:utext="${renderedBody}">Post content</div>
+            </article>
+        </section>
+
+        <!-- Edit section (right in split, hidden by default) -->
         <section id="edit-section" hidden>
             <article>
                 <header class="post-header">
@@ -120,42 +156,6 @@
                 </header>
 
                 <textarea id="edit-body" class="edit-input" th:text="${translation.body}"></textarea>
-            </article>
-        </section>
-
-        <!-- Preview section (visible by default) -->
-        <section id="preview-section">
-            <article>
-                <header class="post-header">
-                    <a class="post-header__back" th:href="'/' + ${lang}">← All posts</a>
-
-                    <div class="post-header__meta">
-                        <time th:datetime="${post.publishedAt}"
-                              th:if="${post.publishedAt != null}"
-                              th:text="${#temporals.format(post.publishedAt, 'MMM d, yyyy')}">Jan 1, 2025</time>
-                    </div>
-
-                    <h1 class="post-header__title" th:text="${translation.title}">Post Title</h1>
-
-                    <p class="post-header__excerpt"
-                       th:if="${translation.excerpt != null}"
-                       th:text="${translation.excerpt}">Excerpt</p>
-
-                    <div class="post-header__tags" th:if="${!tags.isEmpty()}">
-                        <a class="tag"
-                           th:each="tag : ${tags}"
-                           th:text="${tag.name}"
-                           th:href="@{/{lang}(lang=${lang}, tag=${tag.name})}">tag</a>
-                    </div>
-
-                    <img class="post-header__cover"
-                         th:if="${post.coverUrl != null}"
-                         th:src="${post.coverUrl}"
-                         th:alt="${translation.title}"/>
-                </header>
-
-                <!-- th:utext renders the pre-rendered HTML from flexmark -->
-                <div class="post-body" th:utext="${renderedBody}">Post content</div>
             </article>
         </section>
 

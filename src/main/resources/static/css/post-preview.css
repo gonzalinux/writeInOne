@@ -181,6 +181,24 @@ body.has-preview-bar {
     display: none;
 }
 
+/* ── Split pane ── */
+.split-pane {
+    display: flex;
+    align-items: start;
+    max-width: none !important;
+    padding: 0 !important;
+}
+
+.split-pane #preview-section,
+.split-pane #edit-section {
+    flex: 1;
+    padding: 0 2rem;
+}
+
+.split-pane #edit-section {
+    border-left: 1px solid var(--border);
+}
+
 /* ── Edit section — inputs look like the blog post they're editing ── */
 .edit-input {
     display: block;

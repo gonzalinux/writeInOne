@@ -11,8 +11,7 @@
 
     function getTheme() {
         if (!supportsToggle) return defaultTheme;
-        return localStorage.getItem('theme') ||
-            (window.matchMedia('(prefers-color-scheme: dark)').matches ? DARK : LIGHT);
+        return localStorage.getItem('theme') || defaultTheme;
     }
 
     function applyTheme(theme) {

@@ -7,8 +7,9 @@
     <th:block th:replace="~{fragments/layout :: nav}"/>
 
     <main class="container">
-        <div class="site-hero" th:if="${site.description != null}">
-            <p class="site-description" th:text="${site.description}">Site description</p>
+        <div class="site-hero">
+            <h1 class="site-hero__title" th:text="${site.name}">Site Name</h1>
+            <p class="site-description" th:if="${site.description != null}" th:text="${site.description}">Site description</p>
         </div>
 
         <form class="search-bar" method="get" th:action="'/' + ${lang}">

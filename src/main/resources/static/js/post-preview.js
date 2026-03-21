@@ -8,6 +8,7 @@ let   status  = data.status; // mutable: updated after publish/unpublish/schedul
 // ── Elements ──────────────────────────────────────────────
 const badge              = document.getElementById('status-badge');
 const btnEditMode        = document.getElementById('btn-edit-mode');
+const btnSplitMode       = document.getElementById('btn-split-mode');
 const btnPreviewMode     = document.getElementById('btn-preview-mode');
 const btnSave            = document.getElementById('btn-save');
 const btnPublish         = document.getElementById('btn-publish');
@@ -67,21 +68,33 @@ function syncPreview() {
 
 // ── Mode toggle ───────────────────────────────────────────
 function setMode(mode) {
+  const allBtns = [btnEditMode, btnSplitMode, btnPreviewMode];
+  allBtns.forEach(b => b.classList.remove('preview-bar__btn--active'));
+
+  const main = editSection.closest('main') || editSection.parentElement;
+  main.classList.remove('split-pane');
+
   if (mode === 'edit') {
     editSection.hidden    = false;
     previewSection.hidden = true;
     btnEditMode.classList.add('preview-bar__btn--active');
-    btnPreviewMode.classList.remove('preview-bar__btn--active');
+  } else if (mode === 'split') {
+    syncPreview();
+    editSection.hidden    = false;
+    previewSection.hidden = false;
+    main.classList.add('split-pane');
+    btnSplitMode.classList.add('preview-bar__btn--active');
+    autoGrow();
   } else {
     syncPreview();
     editSection.hidden    = true;
     previewSection.hidden = false;
     btnPreviewMode.classList.add('preview-bar__btn--active');
-    btnEditMode.classList.remove('preview-bar__btn--active');
   }
 }
 
 btnEditMode.addEventListener('click', () => setMode('edit'));
+btnSplitMode.addEventListener('click', () => setMode('split'));
 btnPreviewMode.addEventListener('click', () => setMode('preview'));
 
 // ── Auto-grow textarea ────────────────────────────────────
@@ -90,7 +103,10 @@ function autoGrow() {
   bodyEditor.style.height = 'auto';
   bodyEditor.style.height = bodyEditor.scrollHeight + 'px';
 }
-bodyEditor.addEventListener('input', autoGrow);
+bodyEditor.addEventListener('input', () => {
+  autoGrow();
+  if (!previewSection.hidden) syncPreview();
+});
 btnEditMode.addEventListener('click', autoGrow);
 
 // ── Unsaved indicator ─────────────────────────────────────
@@ -98,6 +114,7 @@ const editInputs = document.querySelectorAll('#edit-section .edit-input');
 editInputs.forEach(el => el.addEventListener('input', () => {
   unsavedBadge.hidden = false;
   window.onbeforeunload = () => true;
+  if (!previewSection.hidden) syncPreview();
 }));
 
 // ── Save ──────────────────────────────────────────────────

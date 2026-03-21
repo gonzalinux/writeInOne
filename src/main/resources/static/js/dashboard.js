@@ -32,6 +32,7 @@ async function loadDashboard() {
                 <a class="btn btn-ghost" href="/admin/sites/${site.id}/posts">Posts</a>
                 <a class="btn btn-ghost" href="/admin/sites/${site.id}/posts/new">+ New post</a>
                 <a class="btn btn-ghost" href="/admin/sites/${site.id}/edit">Edit</a>
+                <a class="btn btn-ghost" href="/admin/sites/${site.id}/style-tester">Style Tester</a>
                 <a class="btn btn-ghost" href="https://${escHtml(site.domain)}" target="_blank" rel="noopener">View</a>
                 <button class="btn btn-ghost btn--danger" data-delete-site="${site.id}" data-site-name="${escHtml(site.name)}">Delete</button>
             </div>`;

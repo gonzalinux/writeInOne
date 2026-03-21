@@ -244,8 +244,10 @@ footer {
     margin-bottom: 3rem;
 }
 
-.site-hero h1 {
-    font-size: 2rem;
+.site-hero__title {
+    font-size: 2.5rem;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
 }
 
 .site-description {
