@@ -11,6 +11,8 @@ import com.gonzalinux.domain.tag.TagRepository
 import com.vladsch.flexmark.html.HtmlRenderer
 import com.vladsch.flexmark.parser.Parser
 import com.vladsch.flexmark.util.data.MutableDataSet
+import org.jsoup.Jsoup
+import org.jsoup.safety.Safelist
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
@@ -26,6 +28,10 @@ class BlogService(
 ) {
     private val mdParser: Parser
     private val mdRenderer: HtmlRenderer
+
+    private val safelist = Safelist.relaxed()
+        .addAttributes("code", "class")
+        .addAttributes("pre", "class")
 
     init {
         val options = MutableDataSet()
@@ -60,5 +66,5 @@ class BlogService(
             }
 
     private fun renderMarkdown(markdown: String): String =
-        mdRenderer.render(mdParser.parse(markdown))
+        Jsoup.clean(mdRenderer.render(mdParser.parse(markdown)), safelist)
 }

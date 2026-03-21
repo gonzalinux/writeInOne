@@ -2,6 +2,7 @@ package com.gonzalinux.domain.site
 
 import com.gonzalinux.api.data.CreateSiteRequest
 import com.gonzalinux.api.data.UpdateSiteRequest
+import com.gonzalinux.common.BadRequestException
 import com.gonzalinux.common.SiteDomainTakenException
 import com.gonzalinux.common.SiteNotFoundException
 import com.gonzalinux.domain.Languages
@@ -129,6 +130,54 @@ class SiteServiceTest {
 
         StepVerifier.create(service.delete(99L, 1L))
             .expectError(SiteNotFoundException::class.java)
+            .verify()
+    }
+
+    @Test
+    fun `create throws BadRequestException when nav link URL is javascript scheme`() {
+        val config = SiteConfig(en = LangConfig(nav = listOf(NavLink("Evil", "javascript:alert(1)"))))
+        val request = CreateSiteRequest(name = "Blog", domain = "blog.example.com", config = config)
+
+        StepVerifier.create(service.create(1L, request))
+            .expectError(BadRequestException::class.java)
+            .verify()
+    }
+
+    @Test
+    fun `create throws BadRequestException when nav link URL has no valid scheme`() {
+        val config = SiteConfig(en = LangConfig(nav = listOf(NavLink("Bad", "data:text/html,<script>alert(1)</script>"))))
+        val request = CreateSiteRequest(name = "Blog", domain = "blog.example.com", config = config)
+
+        StepVerifier.create(service.create(1L, request))
+            .expectError(BadRequestException::class.java)
+            .verify()
+    }
+
+    @Test
+    fun `create allows nav links with http, https and relative URLs`() {
+        val config = SiteConfig(en = LangConfig(nav = listOf(
+            NavLink("Home", "/"),
+            NavLink("About", "/about"),
+            NavLink("External", "https://example.com"),
+            NavLink("External HTTP", "http://example.com")
+        )))
+        val request = CreateSiteRequest(name = "Blog", domain = "blog.example.com", config = config)
+
+        every { repo.existsByDomain("blog.example.com") } returns Mono.just(false)
+        every { repo.create(any(), any(), any(), any(), any(), any(), any(), any()) } returns Mono.just(site)
+
+        StepVerifier.create(service.create(1L, request))
+            .expectNext(site)
+            .verifyComplete()
+    }
+
+    @Test
+    fun `update throws BadRequestException when nav link URL is invalid`() {
+        val config = SiteConfig(es = LangConfig(nav = listOf(NavLink("Mal", "javascript:void(0)"))))
+        val request = UpdateSiteRequest(config = config)
+
+        StepVerifier.create(service.update(1L, 1L, request))
+            .expectError(BadRequestException::class.java)
             .verify()
     }
 }

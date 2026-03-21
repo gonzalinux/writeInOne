@@ -4,6 +4,7 @@ import com.gonzalinux.api.data.CreatePostRequest
 import com.gonzalinux.api.data.SchedulePostRequest
 import com.gonzalinux.api.data.UpdatePostRequest
 import com.gonzalinux.common.RequestContextHolder.getRequestContext
+import com.gonzalinux.common.pathVariableLong
 import com.gonzalinux.domain.post.PostService
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
@@ -15,7 +16,7 @@ import reactor.core.publisher.Mono
 class PostHandler(private val service: PostService) {
 
     fun create(request: ServerRequest): Mono<ServerResponse> {
-        val siteId = request.pathVariable("siteId").toLong()
+        val siteId = request.pathVariableLong("siteId")
         return Mono.deferContextual { ctx ->
             request.bodyToMono<CreatePostRequest>()
                 .flatMap { service.create(siteId, ctx.getRequestContext()!!.userId, it) }
@@ -24,8 +25,8 @@ class PostHandler(private val service: PostService) {
     }
 
     fun get(request: ServerRequest): Mono<ServerResponse> {
-        val siteId = request.pathVariable("siteId").toLong()
-        val postId = request.pathVariable("postId").toLong()
+        val siteId = request.pathVariableLong("siteId")
+        val postId = request.pathVariableLong("postId")
         return Mono.deferContextual { ctx ->
             service.get(postId, siteId, ctx.getRequestContext()!!.userId)
                 .flatMap { ServerResponse.ok().bodyValue(it) }
@@ -33,7 +34,7 @@ class PostHandler(private val service: PostService) {
     }
 
     fun list(request: ServerRequest): Mono<ServerResponse> {
-        val siteId = request.pathVariable("siteId").toLong()
+        val siteId = request.pathVariableLong("siteId")
         val page   = request.queryParam("page").map { it.toIntOrNull() ?: 0 }.orElse(0).coerceAtLeast(0)
         val size   = request.queryParam("size").map { it.toIntOrNull() ?: 20 }.orElse(20).coerceIn(1, 100)
         val status = request.queryParam("status").orElse(null)?.takeIf { it.isNotBlank() }
@@ -46,8 +47,8 @@ class PostHandler(private val service: PostService) {
     }
 
     fun update(request: ServerRequest): Mono<ServerResponse> {
-        val siteId = request.pathVariable("siteId").toLong()
-        val postId = request.pathVariable("postId").toLong()
+        val siteId = request.pathVariableLong("siteId")
+        val postId = request.pathVariableLong("postId")
         return Mono.deferContextual { ctx ->
             request.bodyToMono<UpdatePostRequest>()
                 .flatMap { service.update(postId, siteId, ctx.getRequestContext()!!.userId, it) }
@@ -56,8 +57,8 @@ class PostHandler(private val service: PostService) {
     }
 
     fun delete(request: ServerRequest): Mono<ServerResponse> {
-        val siteId = request.pathVariable("siteId").toLong()
-        val postId = request.pathVariable("postId").toLong()
+        val siteId = request.pathVariableLong("siteId")
+        val postId = request.pathVariableLong("postId")
         return Mono.deferContextual { ctx ->
             service.delete(postId, siteId, ctx.getRequestContext()!!.userId)
                 .then(ServerResponse.ok().build())
@@ -65,8 +66,8 @@ class PostHandler(private val service: PostService) {
     }
 
     fun publish(request: ServerRequest): Mono<ServerResponse> {
-        val siteId = request.pathVariable("siteId").toLong()
-        val postId = request.pathVariable("postId").toLong()
+        val siteId = request.pathVariableLong("siteId")
+        val postId = request.pathVariableLong("postId")
         return Mono.deferContextual { ctx ->
             service.publish(postId, siteId, ctx.getRequestContext()!!.userId)
                 .flatMap { ServerResponse.ok().bodyValue(it) }
@@ -74,8 +75,8 @@ class PostHandler(private val service: PostService) {
     }
 
     fun unpublish(request: ServerRequest): Mono<ServerResponse> {
-        val siteId = request.pathVariable("siteId").toLong()
-        val postId = request.pathVariable("postId").toLong()
+        val siteId = request.pathVariableLong("siteId")
+        val postId = request.pathVariableLong("postId")
         return Mono.deferContextual { ctx ->
             service.unpublish(postId, siteId, ctx.getRequestContext()!!.userId)
                 .flatMap { ServerResponse.ok().bodyValue(it) }
@@ -83,8 +84,8 @@ class PostHandler(private val service: PostService) {
     }
 
     fun schedule(request: ServerRequest): Mono<ServerResponse> {
-        val siteId = request.pathVariable("siteId").toLong()
-        val postId = request.pathVariable("postId").toLong()
+        val siteId = request.pathVariableLong("siteId")
+        val postId = request.pathVariableLong("postId")
         return Mono.deferContextual { ctx ->
             request.bodyToMono<SchedulePostRequest>()
                 .flatMap { service.schedule(postId, siteId, ctx.getRequestContext()!!.userId, it.scheduledAt) }

@@ -250,6 +250,53 @@ class PostIntegrationTest {
             .expectStatus().isUnauthorized
     }
 
+    @Test
+    fun `create post returns 409 when slug already exists`() {
+        webTestClient.post().uri("/sites/$siteId/posts/")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(mapOf("translations" to mapOf("en" to mapOf("title" to "Duplicate", "body" to "Body"))))
+            .exchange()
+            .expectStatus().isOk
+
+        webTestClient.post().uri("/sites/$siteId/posts/")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(mapOf("translations" to mapOf("en" to mapOf("title" to "Duplicate", "body" to "Body"))))
+            .exchange()
+            .expectStatus().isEqualTo(409)
+            .expectBody()
+            .jsonPath("$.error").isEqualTo("SLUG_ALREADY_EXISTS")
+    }
+
+    @Test
+    fun `get post returns 400 when siteId is not a number`() {
+        webTestClient.get().uri("/sites/abc/posts/1")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .exchange()
+            .expectStatus().isBadRequest
+            .expectBody()
+            .jsonPath("$.error").isEqualTo("BAD_REQUEST")
+    }
+
+    @Test
+    fun `get post returns 400 when postId is not a number`() {
+        webTestClient.get().uri("/sites/$siteId/posts/abc")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .exchange()
+            .expectStatus().isBadRequest
+            .expectBody()
+            .jsonPath("$.error").isEqualTo("BAD_REQUEST")
+    }
+
+    @Test
+    fun `delete post returns 400 when postId is not a number`() {
+        webTestClient.delete().uri("/sites/$siteId/posts/not-a-number")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .exchange()
+            .expectStatus().isBadRequest
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun createSite(name: String, domain: String): Long {
         val body = webTestClient.post().uri("/sites/")

@@ -5,6 +5,8 @@ import com.gonzalinux.api.data.TranslationInput
 import com.gonzalinux.api.data.UpdatePostRequest
 import com.gonzalinux.common.PostNotFoundException
 import com.gonzalinux.common.SiteNotFoundException
+import com.gonzalinux.common.SlugAlreadyExistsException
+import org.springframework.dao.DataIntegrityViolationException
 import com.gonzalinux.domain.Languages
 import com.gonzalinux.domain.site.Site
 import com.gonzalinux.domain.site.SiteConfig
@@ -245,6 +247,105 @@ class PostServiceTest {
 
         StepVerifier.create(service.update(99L, 1L, 1L, UpdatePostRequest()))
             .expectError(PostNotFoundException::class.java)
+            .verify()
+    }
+
+    @Test
+    fun `list returns page of summaries with translations and tags`() {
+        val translationSummary = PostTranslationSummary(postId = 1L, lang = "en", slug = "test-post", title = "Test Post")
+
+        every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
+        every { postRepo.countBySiteId(1L, null, null, null) } returns Mono.just(1L)
+        every { postRepo.findAllBySiteId(1L, 0, 20, null, null, null) } returns Flux.just(post)
+        every { postRepo.findTranslationSummariesByPostIds(listOf(1L)) } returns Flux.just(translationSummary)
+        every { tagRepo.findByPostIds(listOf(1L)) } returns Flux.just(1L to tag)
+
+        StepVerifier.create(service.list(1L, 1L, 0, 20))
+            .expectNextMatches { page ->
+                page.totalElements == 1L &&
+                page.content.size == 1 &&
+                page.content[0].post == post &&
+                page.content[0].translations == listOf(translationSummary) &&
+                page.content[0].tags == listOf(tag)
+            }
+            .verifyComplete()
+    }
+
+    @Test
+    fun `list returns empty page when no posts exist`() {
+        every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
+        every { postRepo.countBySiteId(1L, null, null, null) } returns Mono.just(0L)
+        every { postRepo.findAllBySiteId(1L, 0, 20, null, null, null) } returns Flux.empty()
+
+        StepVerifier.create(service.list(1L, 1L, 0, 20))
+            .expectNextMatches { page -> page.totalElements == 0L && page.content.isEmpty() }
+            .verifyComplete()
+    }
+
+    @Test
+    fun `list groups translations and tags correctly per post`() {
+        val post2 = post.copy(id = 2L)
+        val t1 = PostTranslationSummary(postId = 1L, lang = "en", slug = "post-one", title = "Post One")
+        val t2 = PostTranslationSummary(postId = 2L, lang = "en", slug = "post-two", title = "Post Two")
+        val tag2 = Tag(id = 2L, siteId = 1L, name = "spring", createdAt = now)
+
+        every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
+        every { postRepo.countBySiteId(1L, null, null, null) } returns Mono.just(2L)
+        every { postRepo.findAllBySiteId(1L, 0, 20, null, null, null) } returns Flux.just(post, post2)
+        every { postRepo.findTranslationSummariesByPostIds(listOf(1L, 2L)) } returns Flux.just(t1, t2)
+        every { tagRepo.findByPostIds(listOf(1L, 2L)) } returns Flux.just(1L to tag, 2L to tag2)
+
+        StepVerifier.create(service.list(1L, 1L, 0, 20))
+            .expectNextMatches { page ->
+                val first  = page.content[0]
+                val second = page.content[1]
+                first.translations == listOf(t1) && first.tags == listOf(tag) &&
+                second.translations == listOf(t2) && second.tags == listOf(tag2)
+            }
+            .verifyComplete()
+    }
+
+    @Test
+    fun `list throws SiteNotFoundException when site does not exist`() {
+        every { siteRepo.findById(1L, 1L) } returns Mono.empty()
+
+        StepVerifier.create(service.list(1L, 1L, 0, 20))
+            .expectError(SiteNotFoundException::class.java)
+            .verify()
+    }
+
+    @Test
+    fun `create throws SlugAlreadyExistsException when slug conflicts`() {
+        val request = CreatePostRequest(
+            translations = mapOf("en" to TranslationInput(title = "Test Post", body = "Body", slug = "test-post"))
+        )
+
+        every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
+        every { postRepo.create(1L, null) } returns Mono.just(post)
+        every { postRepo.createTranslation(1L, 1L, "en", "Test Post", "test-post", "Body", null) } returns
+            Mono.error(DataIntegrityViolationException("duplicate key value violates unique constraint"))
+
+        StepVerifier.create(service.create(1L, 1L, request))
+            .expectError(SlugAlreadyExistsException::class.java)
+            .verify()
+    }
+
+    @Test
+    fun `update throws SlugAlreadyExistsException when slug conflicts`() {
+        val request = UpdatePostRequest(
+            translations = mapOf("en" to TranslationInput(title = "Updated Title", body = "Body", slug = "existing-slug"))
+        )
+        val updatedPost = post.copy(updatedAt = now)
+
+        every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
+        every { postRepo.findById(1L, 1L) } returns Mono.just(post)
+        every { postRepo.update(1L, 1L, null, null, null, null) } returns Mono.just(updatedPost)
+        every { tagRepo.findByPostId(1L) } returns Flux.empty()
+        every { postRepo.updateTranslation(1L, "en", "Updated Title", "existing-slug", "Body", null) } returns
+            Mono.error(DataIntegrityViolationException("duplicate key value violates unique constraint"))
+
+        StepVerifier.create(service.update(1L, 1L, 1L, request))
+            .expectError(SlugAlreadyExistsException::class.java)
             .verify()
     }
 }

@@ -16,13 +16,13 @@ class UserRepository(private val client: DatabaseClient) {
 
     fun findByEmail(email: String): Mono<User> =
         client.sql("SELECT * FROM users WHERE email = :email LIMIT 1")
-            .bind("email", email)
+            .bind("email", email.lowercase())
             .fetch().first()
             .map { mapToUser(it) }
 
     fun create(email: String, displayName: String, passwordHash: String): Mono<User> =
         client.sql("INSERT INTO users (email, display_name, password) VALUES (:email, :displayName, :passwordHash) RETURNING *")
-            .bind("email", email)
+            .bind("email", email.lowercase())
             .bind("displayName", displayName)
             .bind("passwordHash", passwordHash)
             .fetch().first()

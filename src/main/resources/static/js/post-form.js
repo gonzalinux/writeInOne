@@ -116,7 +116,7 @@ function buildBody() {
 
 async function handleError(res) {
   const data = await res.json().catch(() => ({}));
-  err.textContent   = data.message || 'Something went wrong';
+  err.textContent   = data.details || data.error || 'Something went wrong';
   err.style.display = 'block';
 }
 

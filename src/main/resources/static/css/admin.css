@@ -349,6 +349,15 @@ tr:last-child td {
     color: #1a4fc4;
 }
 
+.tag-badge {
+    display: inline-block;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    background: #f0f0f0;
+    color: #555;
+}
+
 /* ── Schedule section (post form) ── */
 .schedule-row {
     display: flex;

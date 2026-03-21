@@ -1,6 +1,6 @@
 spring:
   thymeleaf:
-    cache: false
+    cache: ${THYMELEAF_CACHE:true}
 
   r2dbc:
     url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:writeinone}
@@ -28,6 +28,8 @@ post-scheduler:
   interval-ms: 60000
 
 management:
+  server:
+    port: ${MANAGEMENT_PORT:8081}
   endpoints:
     web:
       exposure:

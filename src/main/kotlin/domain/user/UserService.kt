@@ -66,9 +66,12 @@ class UserService(
                 Mono.error(UnauthorizedException())
             }
             .flatMap { stored ->
-                repo.deleteRefreshToken(stored.tokenHash)
-                    .then(issueTokens(stored.userId))
-                    .doOnSuccess { logger.debug { "Token refreshed [userId=${stored.userId}]" } }
+                issueTokens(stored.userId)
+                    .flatMap { token ->
+                        logger.debug { "Token refreshed [userId=${stored.userId}]" }
+                        repo.deleteRefreshToken(stored.tokenHash)
+                            .thenReturn(token)
+                    }
             }
             .doOnSuccess { registry.counter("auth.token.refreshes").increment() }
     }

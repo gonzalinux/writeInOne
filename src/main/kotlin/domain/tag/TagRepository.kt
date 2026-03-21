@@ -64,6 +64,19 @@ class TagRepository(private val client: DatabaseClient) {
             .bind("siteId", siteId)
             .then()
 
+    fun findByPostIds(postIds: List<Long>): Flux<Pair<Long, Tag>> {
+        if (postIds.isEmpty()) return Flux.empty()
+        val placeholders = postIds.indices.joinToString(",") { ":id$it" }
+        var spec = client.sql("""
+            SELECT pt.post_id, t.* FROM tags t
+            JOIN post_tags pt ON t.id = pt.tag_id
+            WHERE pt.post_id IN ($placeholders)
+            ORDER BY t.name
+        """)
+        postIds.forEachIndexed { i, id -> spec = spec.bind("id$i", id) }
+        return spec.fetch().all().map { row -> (row["post_id"] as Long) to mapToTag(row) }
+    }
+
     private fun mapToTag(row: Map<String, Any>): Tag = Tag(
         id = row["id"] as Long,
         siteId = row["site_id"] as Long,

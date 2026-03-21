@@ -133,6 +133,21 @@ class PostRepository(private val client: DatabaseClient) {
             .fetch().all()
             .map { mapToTranslation(it) }
 
+    fun findTranslationSummariesByPostIds(postIds: List<Long>): Flux<PostTranslationSummary> {
+        if (postIds.isEmpty()) return Flux.empty()
+        val placeholders = postIds.indices.joinToString(",") { ":id$it" }
+        var spec = client.sql("SELECT post_id, lang, slug, title FROM post_translations WHERE post_id IN ($placeholders)")
+        postIds.forEachIndexed { i, id -> spec = spec.bind("id$i", id) }
+        return spec.fetch().all().map {
+            PostTranslationSummary(
+                postId = it["post_id"] as Long,
+                lang   = it["lang"] as String,
+                slug   = it["slug"] as String,
+                title  = it["title"] as String
+            )
+        }
+    }
+
     fun findPublishedBySiteAndLang(siteId: Long, lang: String, page: Int, size: Int, tag: String? = null, search: String? = null): Flux<Pair<Post, PostTranslation>> {
         val (sql, bind) = buildBlogQuery(
             """SELECT p.id, p.site_id, p.status, p.cover_url, p.view_count,

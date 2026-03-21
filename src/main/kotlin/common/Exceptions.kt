@@ -33,3 +33,15 @@ class PostNotFoundException(id: Long) : ApiException(
     details = "Post with id $id not found"
 )
 
+class SlugAlreadyExistsException(slug: String) : ApiException(
+    status = HttpStatus.CONFLICT,
+    error = "SLUG_ALREADY_EXISTS",
+    details = "A post with slug '$slug' already exists for this site and language"
+)
+
+class BadRequestException(details: String) : ApiException(
+    status = HttpStatus.BAD_REQUEST,
+    error = "BAD_REQUEST",
+    details = details
+)
+

@@ -4,6 +4,9 @@ import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.web.reactive.function.server.ServerRequest
 import reactor.util.context.Context
 
+fun ServerRequest.pathVariableLong(name: String): Long =
+    pathVariable(name).toLongOrNull() ?: throw BadRequestException("'$name' must be a number")
+
 fun ServerRequest.isSecureContext(): Boolean {
     val forwardedProto = headers().firstHeader("X-Forwarded-Proto")
     if (forwardedProto != null) return forwardedProto.lowercase() == "https"

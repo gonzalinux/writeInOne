@@ -5,6 +5,8 @@ import com.gonzalinux.api.data.UpdatePostRequest
 import com.gonzalinux.common.Page
 import com.gonzalinux.common.PostNotFoundException
 import com.gonzalinux.common.SiteNotFoundException
+import com.gonzalinux.common.SlugAlreadyExistsException
+import org.springframework.dao.DataIntegrityViolationException
 import com.gonzalinux.domain.site.SiteRepository
 import com.gonzalinux.domain.tag.Tag
 import com.gonzalinux.domain.tag.TagRepository
@@ -38,6 +40,11 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
                     Flux.merge(request.tags.map { tagRepo.findOrCreate(siteId, it) }).collectList()
                 }
                 Flux.merge(saveTranslations).collectList()
+                    .onErrorMap(DataIntegrityViolationException::class.java) { e ->
+                        val slug = request.translations.values.firstOrNull()?.slug
+                            ?: generateSlug(request.translations.values.first().title)
+                        SlugAlreadyExistsException(slug)
+                    }
                     .zipWith(saveTags)
                     .flatMap { (translations, tags) ->
                         Flux.merge(tags.map { tagRepo.assignToPost(post.id, it.id) }).then(
@@ -57,18 +64,30 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
             .switchIfEmpty(Mono.error(PostNotFoundException(id)))
             .flatMap { post -> postWithTranslationsAndTags(post) }
 
-    fun list(siteId: Long, userId: Long, page: Int, size: Int, status: String? = null, tag: String? = null, search: String? = null): Mono<Page<PostWithTranslations>> =
+    fun list(siteId: Long, userId: Long, page: Int, size: Int, status: String? = null, tag: String? = null, search: String? = null): Mono<Page<PostSummary>> =
         siteRepo.findById(siteId, userId)
             .switchIfEmpty(Mono.error(SiteNotFoundException(siteId)))
             .flatMap {
                 postRepo.countBySiteId(siteId, status, tag, search).zipWith(
-                    postRepo.findAllBySiteId(siteId, page, size, status, tag, search)
-                        .flatMap { post -> postWithTranslationsAndTags(post) }
-                        .collectList()
+                    postRepo.findAllBySiteId(siteId, page, size, status, tag, search).collectList()
                 )
             }
-            .map { (total, content) ->
-                Page(content, page, size, total, ((total + size - 1) / size).toInt())
+            .flatMap { (total, posts) ->
+                if (posts.isEmpty()) {
+                    Mono.just(Page(emptyList(), page, size, total, 0))
+                } else {
+                    val ids = posts.map { it.id }
+                    postRepo.findTranslationSummariesByPostIds(ids).collectList()
+                        .zipWith(tagRepo.findByPostIds(ids).collectList())
+                        .map { (translations, tagPairs) ->
+                            val translsByPost = translations.groupBy { it.postId }
+                            val tagsByPost    = tagPairs.groupBy({ it.first }, { it.second })
+                            val content = posts.map { post ->
+                                PostSummary(post, translsByPost[post.id] ?: emptyList(), tagsByPost[post.id] ?: emptyList())
+                            }
+                            Page(content, page, size, total, ((total + size - 1) / size).toInt())
+                        }
+                }
             }
 
     fun update(id: Long, siteId: Long, userId: Long, request: UpdatePostRequest): Mono<PostWithTranslations> =
@@ -93,6 +112,12 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
                             tagRepo.findByPostId(post.id).collectList()
                         }
                         Flux.merge(updateTranslations).collectList()
+                            .onErrorMap(DataIntegrityViolationException::class.java) { _ ->
+                                val slug = request.translations?.values?.firstOrNull()?.slug
+                                    ?: request.translations?.values?.firstOrNull()?.let { generateSlug(it.title) }
+                                    ?: "provided"
+                                SlugAlreadyExistsException(slug)
+                            }
                             .flatMap { postRepo.findTranslationsByPostId(updated.id).collectList() }
                             .zipWith(tagsStep)
                             .map { (translations, tags) -> PostWithTranslations(updated, translations, tags) }

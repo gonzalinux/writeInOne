@@ -18,7 +18,6 @@
 - [x] MDC integration via `ThreadLocalAccessor` (requestId + userId in all logs)
 - [x] Structured logging with `kotlin-logging`
 - [x] `@ConfigurationPropertiesScan` for auto-discovery of config properties
-- [ ] GitHub Actions CI
 - [x] Swagger UI at `/swagger-ui.html` — via `springdoc-openapi-starter-webflux-ui`
 
 ## Database Migrations
@@ -27,6 +26,7 @@
 - [x] V3 — posts + post_translations
 - [x] V4 — tags + post_tags
 - [x] V5 — refresh_tokens
+- [x] V6 — indexes on `posts(site_id)` and `refresh_tokens(user_id)`
 
 ## Auth
 - [x] `POST /auth/register` — hash password, create user, issue tokens, set cookies
@@ -96,6 +96,20 @@
 - [x] 401 responses redirect to login
 - [x] Delete post from admin UI (with confirmation)
 - [x] Delete site from admin UI (with confirmation)
-- [ ] Markdown live preview in post editor (ideally renders with the site's actual `blog.css` + `stylesUrl`)
-- [ ] CSS style tester — `/admin/style-tester`: example article on left, live CSS input on right, changes apply in real time; hovering an element shows the class selector to target
+- [x] Markdown live preview in post editor (ideally renders with the site's actual `blog.css` + `stylesUrl`)
+- [x] CSS style tester — `/admin/style-tester`: example article on left, live CSS input on right, changes apply in real time; hovering an element shows the class selector to target
 - [x] Token refresh — silent `POST /auth/refresh` every 5 minutes via `setInterval` in `api.js`
+
+## Security & Bug Fixes
+- [x] Refresh token cookie path fixed (`/auth` covers both `/auth/refresh` and `/auth/logout`)
+- [x] Slug collision returns 409 with `SLUG_ALREADY_EXISTS` instead of raw DB error
+- [x] `pathVariableLong()` helper — invalid path variables return 400 instead of 500
+- [x] JWT default secret logs a warning on startup
+- [x] Markdown output sanitized with jsoup (`Safelist.relaxed()`) — strips scripts and event handlers, preserves safe HTML
+- [x] Nav link URLs validated on site create/update — rejects `javascript:` and `data:` schemes
+- [x] Actuator endpoints moved to management port `8081` (configurable via `MANAGEMENT_PORT`)
+- [x] Thymeleaf cache configurable via `THYMELEAF_CACHE` env var (defaults to `true`)
+
+## Performance
+- [x] Post list query reduced from 1+2N to 3 queries — `PostSummary` type with separate bulk translation and tag lookups
+- [x] Admin post list now shows tags

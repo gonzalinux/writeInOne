@@ -36,3 +36,16 @@ data class PostWithTranslations(
     val tags: List<Tag> = emptyList()
 )
 
+data class PostTranslationSummary(
+    val postId: Long,
+    val lang: String,
+    val slug: String,
+    val title: String
+)
+
+data class PostSummary(
+    val post: Post,
+    val translations: List<PostTranslationSummary>,
+    val tags: List<Tag>
+)
+

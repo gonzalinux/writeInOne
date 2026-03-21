@@ -52,6 +52,7 @@ dependencies {
 
     // Markdown rendering
     implementation("com.vladsch.flexmark:flexmark-all:0.64.8")
+    implementation("org.jsoup:jsoup:1.18.1")
 
     // Thymeleaf (reactive)
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")

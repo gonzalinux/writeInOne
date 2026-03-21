@@ -147,8 +147,8 @@ btnSave.addEventListener('click', async () => {
     window.onbeforeunload = null;
     location.reload();
   } else {
-    const text = await res.text().catch(() => res.statusText);
-    showError('Save failed: ' + text);
+    const data = await res.json().catch(() => ({}));
+    showError('Save failed: ' + (data.details || data.error || res.statusText));
   }
 });
 

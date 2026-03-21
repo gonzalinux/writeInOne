@@ -133,6 +133,7 @@ async function loadPosts() {
     const langs  = item.translations.map(t => t.lang).join(' ');
     const status = item.post.status.toLowerCase();
     const t      = item.translations[0];
+    const tags   = (item.tags || []).map(tag => `<span class="tag-badge">${escHtml(tag.name)}</span>`).join(' ');
 
     const dateDisplay = status === 'scheduled'
       ? formatDate(item.post.scheduledAt)
@@ -156,6 +157,7 @@ async function loadPosts() {
     tr.innerHTML = `
       <td>${escHtml(t?.title || '')}</td>
       <td>${escHtml(langs)}</td>
+      <td>${tags}</td>
       <td><span class="status status--${status}">${status}</span></td>
       <td>${dateDisplay}</td>
       <td class="td-actions">

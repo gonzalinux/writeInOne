@@ -3,14 +3,24 @@ package com.gonzalinux.domain.user
 import com.gonzalinux.config.JwtProperties
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
+import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.*
 
+private val logger = KotlinLogging.logger {}
+private const val DEFAULT_JWT_SECRET = "local-dev-secret-change-this-in-production-min-32-chars"
+
 @Service
 class TokenService(jwtProperties: JwtProperties) {
+
+    init {
+        if (jwtProperties.secret == DEFAULT_JWT_SECRET) {
+            logger.warn { "JWT secret is set to the default development value. Set a strong JWT_SECRET in production." }
+        }
+    }
 
     private val signingKey = Keys.hmacShaKeyFor(jwtProperties.secret.toByteArray())
     private val accessTokenExpiryMs = jwtProperties.accessTokenExpiryMinutes * 60 * 1000

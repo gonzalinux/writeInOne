@@ -98,6 +98,6 @@ class AuthHandler(private val service: UserService, private val validator: Reque
             .httpOnly(true)
             .secure(secure)
             .sameSite("Strict")
-            .path("/auth/refresh")
+            .path("/auth")
             .build()
 }

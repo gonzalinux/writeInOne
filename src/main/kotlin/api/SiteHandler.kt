@@ -4,6 +4,7 @@ import com.gonzalinux.api.data.CreateSiteRequest
 import com.gonzalinux.api.data.UpdateSiteRequest
 import com.gonzalinux.common.RequestContextHolder.getRequestContext
 import com.gonzalinux.common.RequestValidator
+import com.gonzalinux.common.pathVariableLong
 import com.gonzalinux.domain.site.Site
 import com.gonzalinux.domain.site.SiteService
 import org.springframework.stereotype.Component
@@ -31,7 +32,7 @@ class SiteHandler(private val service: SiteService, private val validator: Reque
         }
 
     fun update(request: ServerRequest): Mono<ServerResponse> {
-        val id = request.pathVariable("id").toLong()
+        val id = request.pathVariableLong("id")
         return Mono.deferContextual { ctx ->
             request.bodyToMono<UpdateSiteRequest>()
                 .flatMap { service.update(id, ctx.getRequestContext()!!.userId, it) }
@@ -40,7 +41,7 @@ class SiteHandler(private val service: SiteService, private val validator: Reque
     }
 
     fun get(request: ServerRequest): Mono<ServerResponse> {
-        val id = request.pathVariable("id").toLong()
+        val id = request.pathVariableLong("id")
         return Mono.deferContextual { ctx ->
             service.findById(id, ctx.getRequestContext()!!.userId)
                 .flatMap { ServerResponse.ok().bodyValue(it) }
@@ -48,7 +49,7 @@ class SiteHandler(private val service: SiteService, private val validator: Reque
     }
 
     fun delete(request: ServerRequest): Mono<ServerResponse> {
-        val id = request.pathVariable("id").toLong()
+        val id = request.pathVariableLong("id")
         return Mono.deferContextual { ctx ->
             service.delete(id, ctx.getRequestContext()!!.userId)
                 .then(ServerResponse.ok().build())
