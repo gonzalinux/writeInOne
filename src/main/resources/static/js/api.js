@@ -16,6 +16,12 @@ async function api(url, options = {}) {
   return res;
 }
 
+async function logout() {
+  await api("/auth/logout")
+  location.href = '/admin/login';
+
+}
+
 // Silently refresh the access token every 5 minutes
 setInterval(async function () {
   await fetch('/auth/refresh', { method: 'POST', credentials: 'include' });

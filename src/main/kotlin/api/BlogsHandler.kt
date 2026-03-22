@@ -6,12 +6,14 @@ import com.gonzalinux.common.RequestContextHolder.getRequestContext
 import com.gonzalinux.common.SiteContextHolder.getSite
 import com.gonzalinux.domain.site.LangConfig
 import com.gonzalinux.domain.site.SiteConfig
+import com.gonzalinux.utils.Utils
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import reactor.core.publisher.Mono
 import java.net.URI
+import kotlin.jvm.optionals.getOrNull
 
 @Component
 class BlogsHandler(private val blogService: BlogService) {
@@ -59,33 +61,21 @@ class BlogsHandler(private val blogService: BlogService) {
             blogService.getBySlug(site.id, lang, slug, user)
                 .flatMap { detail ->
 
-                    if (user == null) {
-                        ServerResponse.ok().contentType(MediaType.TEXT_HTML)
-                            .render(
-                                "post", mapOf(
-                                    "site" to site,
-                                    "lang" to lang,
-                                    "langConfig" to site.config.forLang(lang),
-                                    "post" to detail.post,
-                                    "translation" to detail.translation,
-                                    "tags" to detail.tags,
-                                    "renderedBody" to detail.renderedBody
-                                )
+
+                    ServerResponse.ok().contentType(MediaType.TEXT_HTML)
+                        .render(
+                            if (user == null) "post" else "post_preview",
+                             mapOf(
+                                "site" to site,
+                                "lang" to lang,
+                                "langConfig" to site.config.forLang(lang),
+                                "post" to detail.post,
+                                "translation" to detail.translation,
+                                "tags" to detail.tags,
+                                "renderedBody" to detail.renderedBody
                             )
-                    } else {
-                        ServerResponse.ok().contentType(MediaType.TEXT_HTML)
-                            .render(
-                                "post_preview", mapOf(
-                                    "site" to site,
-                                    "lang" to lang,
-                                    "langConfig" to site.config.forLang(lang),
-                                    "post" to detail.post,
-                                    "translation" to detail.translation,
-                                    "tags" to detail.tags,
-                                    "renderedBody" to detail.renderedBody
-                                )
-                            )
-                    }
+                        )
+
                 }
         }
     }
@@ -119,10 +109,10 @@ class BlogsHandler(private val blogService: BlogService) {
 
     fun postListJson(request: ServerRequest): Mono<ServerResponse> {
         val lang = request.pathVariable("lang")
-        val page = request.queryParam("page").map { it.toIntOrNull() ?: 0 }.orElse(0).coerceAtLeast(0)
-        val size = request.queryParam("size").map { it.toIntOrNull() ?: 10 }.orElse(10).coerceIn(1, 100)
-        val tag = request.queryParam("tag").orElse(null)?.takeIf { it.isNotBlank() }
-        val search = request.queryParam("search").orElse(null)?.takeIf { it.isNotBlank() }
+        val page = Utils.queryToInt(request.queryParam("page").getOrNull(), min = 0)
+        val size = Utils.queryToInt(request.queryParam("size").getOrNull(), default = 10, min = 1, max = 100)
+        val tag = request.queryParam("tag").getOrNull().takeIf { !it.isNullOrEmpty() }
+        val search = request.queryParam("search").getOrNull().takeIf { !it.isNullOrEmpty() }
         return Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!
             blogService.listPublished(site.id, lang, page, size, tag, search)

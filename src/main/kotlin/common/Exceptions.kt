@@ -27,10 +27,10 @@ class SiteDomainTakenException(domain: String) : ApiException(
     details = "Domain $domain is already taken"
 )
 
-class PostNotFoundException(id: Long) : ApiException(
+class PostNotFoundException(id: Long? = null, slug: String? = null) : ApiException(
     status = HttpStatus.NOT_FOUND,
     error = "POST_NOT_FOUND",
-    details = "Post with id $id not found"
+    details = if (id != null) "Post with id $id not found" else "Post $slug is not found"
 )
 
 class SlugAlreadyExistsException(slug: String) : ApiException(

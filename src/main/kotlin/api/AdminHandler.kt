@@ -33,17 +33,4 @@ class AdminHandler(private val userService: UserService) {
         return ServerResponse.ok().contentType(MediaType.TEXT_HTML).bodyValue(resource)
     }
 
-    fun logout(request: ServerRequest): Mono<ServerResponse> {
-        val refreshToken = request.cookies()[REFRESH_TOKEN_COOKIE]?.firstOrNull()?.value
-        val logoutMono = if (refreshToken != null) userService.logout(refreshToken) else Mono.empty<Void>()
-        return logoutMono.then(
-            ServerResponse.seeOther(URI.create("/admin/login"))
-                .cookie(clearCookie(ACCESS_TOKEN_COOKIE))
-                .cookie(clearCookie(REFRESH_TOKEN_COOKIE))
-                .build()
-        )
-    }
-
-    private fun clearCookie(name: String): ResponseCookie =
-        ResponseCookie.from(name).value("").maxAge(0).httpOnly(true).sameSite("Strict").build()
 }

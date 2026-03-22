@@ -73,7 +73,6 @@ class Router(
         .filter(jwtAuthFilter)
 
     private fun adminRoutes(): RouterFunction<ServerResponse> = route()
-        .GET("/admin/logout", adminHandler::logout)
         .GET("/admin", adminHandler::serve)
         .GET("/admin/**", adminHandler::serve)
         .build()

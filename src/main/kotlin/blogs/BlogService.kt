@@ -2,18 +2,14 @@ package com.gonzalinux.blogs
 
 import com.gonzalinux.common.Page
 import com.gonzalinux.common.PostNotFoundException
-import com.gonzalinux.domain.Languages
-import com.gonzalinux.domain.post.Post
 import com.gonzalinux.domain.post.PostRepository
-import com.gonzalinux.domain.post.PostTranslation
-import com.gonzalinux.domain.tag.Tag
 import com.gonzalinux.domain.tag.TagRepository
 import com.vladsch.flexmark.html.HtmlRenderer
 import com.vladsch.flexmark.parser.Parser
 import com.vladsch.flexmark.util.data.MutableDataSet
+import io.micrometer.core.instrument.MeterRegistry
 import org.jsoup.Jsoup
 import org.jsoup.safety.Safelist
-import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.util.function.component1
@@ -39,7 +35,14 @@ class BlogService(
         mdRenderer = HtmlRenderer.builder(options).build()
     }
 
-    fun listPublished(siteId: Long, lang: String, page: Int, size: Int, tag: String? = null, search: String? = null): Mono<Page<BlogPostSummary>> =
+    fun listPublished(
+        siteId: Long,
+        lang: String,
+        page: Int,
+        size: Int,
+        tag: String? = null,
+        search: String? = null
+    ): Mono<Page<BlogPostSummary>> =
         postRepo.countPublishedBySiteAndLang(siteId, lang, tag, search).zipWith(
             postRepo.findPublishedBySiteAndLang(siteId, lang, page, size, tag, search)
                 .flatMap { (post, translation) ->
@@ -48,13 +51,13 @@ class BlogService(
                 }
                 .collectList()
         )
-        .map { (total, content) ->
-            Page(content, page, size, total, ((total + size - 1) / size).toInt())
-        }
+            .map { (total, content) ->
+                Page(content, page, size, total, ((total + size - 1) / size).toInt())
+            }
 
     fun getBySlug(siteId: Long, lang: String, slug: String, user: Long?): Mono<BlogPostDetail> =
         postRepo.findPublishedBySlug(siteId, lang, slug, user)
-            .switchIfEmpty(Mono.error(PostNotFoundException(0)))
+            .switchIfEmpty(Mono.error(PostNotFoundException(slug = slug)))
             .flatMap { (post, translation) ->
                 tagRepo.findByPostId(post.id).collectList()
                     .map { tags -> BlogPostDetail(post, translation, tags, renderMarkdown(translation.body)) }

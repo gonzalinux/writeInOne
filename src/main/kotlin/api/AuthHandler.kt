@@ -1,8 +1,8 @@
 package com.gonzalinux.api
 
-import com.gonzalinux.api.data.RegisterRequest
 import com.gonzalinux.api.data.AuthResponse
 import com.gonzalinux.api.data.LoginRequest
+import com.gonzalinux.api.data.RegisterRequest
 import com.gonzalinux.common.RequestValidator
 import com.gonzalinux.common.UnauthorizedException
 import com.gonzalinux.common.isSecureContext
@@ -13,7 +13,6 @@ import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.bodyToMono
 import reactor.core.publisher.Mono
-import reactor.kotlin.core.publisher.switchIfEmpty
 import reactor.kotlin.core.publisher.toMono
 
 @Component
@@ -55,10 +54,12 @@ class AuthHandler(private val service: UserService, private val validator: Reque
             ?: return ServerResponse.ok().build()
 
         return service.logout(token)
-            .then(ServerResponse.ok()
-                .cookie(clearCookie(ACCESS_TOKEN_COOKIE))
-                .cookie(clearCookie(REFRESH_TOKEN_COOKIE))
-                .build())
+            .then(
+                ServerResponse.ok()
+                    .cookie(clearCookie(ACCESS_TOKEN_COOKIE))
+                    .cookie(clearCookie(REFRESH_TOKEN_COOKIE))
+                    .build()
+            )
     }
 
     fun refresh(request: ServerRequest): Mono<ServerResponse> {
