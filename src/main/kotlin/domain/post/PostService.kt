@@ -100,7 +100,7 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
                     .flatMap { updated ->
                         val updateTranslations = request.translations?.entries?.map { (lang, input) ->
                             val slug = input.slug ?: generateSlug(input.title)
-                            postRepo.updateTranslation(post.id, lang, input.title, slug, input.body, input.excerpt)
+                            postRepo.upsertTranslation(post.id, siteId, lang, input.title, slug, input.body, input.excerpt)
                         } ?: emptyList()
                         val tagsStep: Mono<List<Tag>> = if (request.tags != null) {
                             Flux.fromIterable(request.tags).flatMap { tagRepo.findOrCreate(siteId, it) }

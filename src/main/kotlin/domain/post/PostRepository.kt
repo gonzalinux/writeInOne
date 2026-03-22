@@ -157,31 +157,34 @@ class PostRepository(private val client: DatabaseClient) {
             .fetch().first()
             .map { mapToTranslation(it) }
 
-    fun updateTranslation(
+    fun upsertTranslation(
         postId: Long,
+        siteId: Long,
         lang: String,
-        title: String?,
-        slug: String?,
-        body: String?,
+        title: String,
+        slug: String,
+        body: String,
         excerpt: String?
     ): Mono<PostTranslation> =
         client.sql(
             """
-            UPDATE post_translations SET
-                title      = COALESCE(:title, title),
-                slug       = COALESCE(:slug, slug),
-                body       = COALESCE(:body, body),
-                excerpt    = COALESCE(:excerpt, excerpt),
+            INSERT INTO post_translations (post_id, site_id, lang, title, slug, body, excerpt)
+            VALUES (:postId, :siteId, :lang, :title, :slug, :body, :excerpt)
+            ON CONFLICT (post_id, lang) DO UPDATE SET
+                title      = EXCLUDED.title,
+                slug       = EXCLUDED.slug,
+                body       = EXCLUDED.body,
+                excerpt    = EXCLUDED.excerpt,
                 updated_at = now()
-            WHERE post_id = :postId AND lang = :lang
             RETURNING *
         """
         )
             .bind("postId", postId)
+            .bind("siteId", siteId)
             .bind("lang", lang)
-            .bindNullable<String>("title", title)
-            .bindNullable<String>("slug", slug)
-            .bindNullable<String>("body", body)
+            .bind("title", title)
+            .bind("slug", slug)
+            .bind("body", body)
             .bindNullable<String>("excerpt", excerpt)
             .fetch().first()
             .map { mapToTranslation(it) }
