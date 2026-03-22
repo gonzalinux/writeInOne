@@ -60,7 +60,10 @@ class BlogService(
             .switchIfEmpty(Mono.error(PostNotFoundException(slug = slug)))
             .flatMap { (post, translation) ->
                 tagRepo.findByPostId(post.id).collectList()
-                    .map { tags -> BlogPostDetail(post, translation, tags, renderMarkdown(translation.body)) }
+                    .zipWith(postRepo.findTranslationsByPostId(post.id).collectList())
+                    .map { (tags, allTranslations) ->
+                        BlogPostDetail(post, translation, tags, renderMarkdown(translation.body), allTranslations)
+                    }
             }
             .flatMap { detail ->
                 postRepo.incrementViewCount(detail.post.id)

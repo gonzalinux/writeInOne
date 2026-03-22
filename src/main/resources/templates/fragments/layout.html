@@ -37,10 +37,13 @@
                             <a th:href="${link.url}" th:text="${link.label}">Link</a>
                         </li>
                     </ul>
-                    <div th:if="${site.languages != null and #lists.size(site.languages) > 1}" class="lang-switcher">
+                    <div th:if="${site.languages != null and #lists.size(site.languages) > 1
+                                 and (langSlugs == null or langSlugs.size() > 1)}" class="lang-switcher">
                         <th:block th:each="l : ${site.languages}">
-                            <a th:if="${l.value != lang}" th:href="'/' + ${l.value}" class="lang-btn" th:text="${#strings.toUpperCase(l.value)}">ES</a>
                             <span th:if="${l.value == lang}" class="lang-btn lang-btn--active" th:text="${#strings.toUpperCase(l.value)}">EN</span>
+                            <a th:if="${l.value != lang and (langSlugs == null or langSlugs[l.value] != null)}"
+                               th:href="${langSlugs != null ? '/' + l.value + '/' + langSlugs[l.value] : '/' + l.value}"
+                               class="lang-btn" th:text="${#strings.toUpperCase(l.value)}">ES</a>
                         </th:block>
                     </div>
                     <button th:if="${#lists.contains(site.availableThemes, T(com.gonzalinux.domain.site.Theme).LIGHT)

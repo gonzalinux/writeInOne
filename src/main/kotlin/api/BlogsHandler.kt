@@ -62,6 +62,7 @@ class BlogsHandler(private val blogService: BlogService) {
                 .flatMap { detail ->
 
 
+                    val langSlugs = detail.allTranslations.associate { it.lang to it.slug }
                     ServerResponse.ok().contentType(MediaType.TEXT_HTML)
                         .render(
                             if (user == null) "post" else "post_preview",
@@ -72,7 +73,8 @@ class BlogsHandler(private val blogService: BlogService) {
                                 "post" to detail.post,
                                 "translation" to detail.translation,
                                 "tags" to detail.tags,
-                                "renderedBody" to detail.renderedBody
+                                "renderedBody" to detail.renderedBody,
+                                "langSlugs" to langSlugs
                             )
                         )
 
