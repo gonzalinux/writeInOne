@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Style Tester — WriteInOne</title>
     <link rel="stylesheet" href="/css/admin.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/css/css.min.js"></script>
     <style>
         html, body {
             height: 100%;
@@ -119,17 +122,17 @@
             white-space: nowrap;
         }
 
-        #cssEditor {
+        .CodeMirror {
             flex: 1;
-            border: none;
-            resize: none;
+            height: 0;
             font-family: 'Courier New', 'Consolas', monospace;
             font-size: 0.8125rem;
             line-height: 1.6;
-            padding: 0.75rem;
-            background: var(--bg);
-            color: var(--fg);
-            outline: none;
+            border: none;
+        }
+
+        .CodeMirror-scroll {
+            height: 100%;
         }
 
         .editor-status {

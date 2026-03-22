@@ -7,6 +7,53 @@ Set your stylesheet URL in the site settings under **Styles URL**.
 
 ---
 
+## CSS variables
+
+The easiest way to restyle your blog is to override the design tokens in `:root`. Changing a variable
+propagates automatically to every element that uses it.
+
+```css
+:root {
+    --bg:   #fff;     /* page background */
+    --fg:   #1a1a1a;  /* primary text and links */
+    --border: #e5e5e5; /* lines: header, footer, post dividers, table borders */
+    --muted:   #888;  /* timestamps, back link, footer text, subtle labels */
+    --muted-2: #555;  /* nav links, excerpt, secondary metadata */
+    --muted-3: #444;  /* post card excerpt */
+    --surface: #f6f6f6; /* table header cell background */
+
+    /* Tag pills */
+    --tag-bg: #f0f0f0;
+    --tag-fg: #555;
+
+    /* Blockquotes */
+    --blockquote-border: #ddd;
+    --blockquote-fg:     #666;
+
+    /* Code blocks */
+    --code-bg:        #f6f6f6; /* fenced code block background */
+    --inline-code-bg: #f0f0f0; /* inline code background */
+
+    /* Copy button inside code blocks */
+    --copy-btn-bg:     #fff;
+    --copy-btn-border: #ddd;
+    --copy-btn-fg:     #555;
+}
+```
+
+For dark mode, redefine the same variables under `html.dark`:
+
+```css
+html.dark {
+    --bg:     #111;
+    --fg:     #e0e0e0;
+    --border: #2a2a2a;
+    /* … and so on */
+}
+```
+
+---
+
 ## Global elements
 
 | Selector     | What it styles                                                        |
@@ -30,6 +77,8 @@ The header appears at the top of every page.
 | `.nav-links`         | The `<ul>` list of navigation links             |
 | `.nav-links a`       | Individual nav link text style                  |
 | `.nav-links a:hover` | Nav link hover state                            |
+| `.theme-btn`         | The light/dark toggle button in the nav bar     |
+| `.theme-btn:hover`   | Theme button hover state                        |
 
 ---
 

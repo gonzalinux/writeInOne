@@ -207,7 +207,7 @@ body.has-preview-bar {
     border: none;
     outline: none;
     font-family: Georgia, 'Times New Roman', serif;
-    color: var(--fg);
+    color: inherit;
     padding: 0;
     resize: none;
 }

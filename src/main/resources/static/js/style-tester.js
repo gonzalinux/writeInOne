@@ -4,7 +4,7 @@
 
   // ── DOM refs ──────────────────────────────────────────────────────────
   const frame        = document.getElementById('previewFrame');
-  const cssEditor    = document.getElementById('cssEditor');
+  const cssTextarea  = document.getElementById('cssEditor');
   const copyBtn      = document.getElementById('copyBtn');
   const loadBtn      = document.getElementById('loadBtn');
   const editorStatus = document.getElementById('editorStatus');
@@ -12,6 +12,17 @@
   const siteName     = document.getElementById('siteName');
   const editorTitle  = document.getElementById('editorSiteName');
   const tabs         = document.querySelectorAll('.preview-tab');
+
+  // ── CodeMirror editor ─────────────────────────────────────────────────
+  const editor = CodeMirror.fromTextArea(cssTextarea, {
+    mode: 'css',
+    lineNumbers: true,
+    indentWithTabs: false,
+    indentUnit: 2,
+    tabSize: 2,
+    lineWrapping: false,
+    autofocus: false,
+  });
 
   // ── State ─────────────────────────────────────────────────────────────
   let blogCssText  = '';
@@ -238,7 +249,7 @@
       const doc = frame.contentDocument;
       if (!doc) return;
       const styleTag = doc.getElementById('user-css');
-      if (styleTag) styleTag.textContent = cssEditor.value;
+      if (styleTag) styleTag.textContent = editor.getValue();
     } catch (_) {
       // cross-origin; fall back to full reload
       frame.srcdoc = buildSrcdoc(currentView, cssEditor.value);
@@ -307,20 +318,17 @@
   // ── Render ────────────────────────────────────────────────────────────
 
   function renderFrame() {
-    frame.srcdoc = buildSrcdoc(currentView, cssEditor.value);
+    frame.srcdoc = buildSrcdoc(currentView, editor.getValue());
   }
 
   // ── Copy button ───────────────────────────────────────────────────────
 
   copyBtn.addEventListener('click', async () => {
-    const text = cssEditor.value;
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(editor.getValue());
     } catch (_) {
-      // execCommand fallback
-      cssEditor.select();
+      editor.execCommand('selectAll');
       document.execCommand('copy');
-      window.getSelection()?.removeAllRanges();
     }
     const orig = copyBtn.textContent;
     copyBtn.textContent = 'Copied!';
@@ -339,7 +347,7 @@
     try {
       const res = await fetch(site.stylesUrl);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      cssEditor.value = await res.text();
+      editor.setValue(await res.text());
       updateCssOnly();
     } catch (err) {
       if (err.message.includes('Failed to fetch') || err instanceof TypeError) {
@@ -366,7 +374,7 @@
 
   // ── Editor input ──────────────────────────────────────────────────────
 
-  cssEditor.addEventListener('input', debounce(updateCssOnly, 250));
+  editor.on('change', debounce(updateCssOnly, 250));
 
   // ── Frame load — re-attach tooltip listeners ──────────────────────────
 

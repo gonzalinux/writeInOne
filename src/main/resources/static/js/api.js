@@ -5,8 +5,12 @@ async function api(url, options = {}) {
   const res = await fetch(url, {...options, credentials: 'include', headers});
 
   if (res.status === 401) {
-    location.href = '/admin/login';
-    return null;
+    const refreshRes = await fetch('/auth/refresh', { method: 'POST', credentials: 'include' });
+    if (!refreshRes.ok) {
+      location.href = '/admin/login';
+      return null;
+    }
+    return fetch(url, {...options, credentials: 'include', headers});
   }
 
   return res;
