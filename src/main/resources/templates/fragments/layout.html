@@ -19,9 +19,9 @@
         window.SITE_PREFIX = /*[[${prefix}]]*/ '';
     </script>
     <!-- Theme script — sync (no defer) so html.dark class is set before first paint -->
-    <script src="/js/theme.js"></script>
+    <script th:src="${prefix} + '/js/theme.js'"></script>
     <!-- Default blog stylesheet — all classes are overridable by the site's custom stylesheet -->
-    <link rel="stylesheet" href="/css/blog.css"/>
+    <link rel="stylesheet" th:href="${prefix} + '/css/blog.css'"/>
     <!-- Site custom stylesheet loaded after defaults so it can override any class -->
     <link th:if="${site.stylesUrl != null}" rel="stylesheet" th:href="${site.stylesUrl}"/>
 </th:block>

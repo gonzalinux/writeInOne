@@ -71,7 +71,7 @@
         </nav>
         </div>
 
-        <script defer src="/js/blog-search.js"></script>
+        <script th:src="${prefix} + '/js/blog-search.js'" defer></script>
     </main>
 
     <th:block th:replace="~{fragments/layout :: footer}"/>

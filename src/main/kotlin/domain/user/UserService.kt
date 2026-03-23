@@ -66,9 +66,12 @@ class UserService(
                 Mono.error(UnauthorizedException())
             }
             .flatMap { stored ->
-                val newAccessToken = tokenService.generateAccessToken(stored.userId)
-                logger.debug { "Token refreshed [userId=${stored.userId}]" }
-                Mono.just(AuthTokens(newAccessToken, RefreshToken(refreshToken, stored.expiresAt)))
+                issueTokens(stored.userId)
+                    .flatMap { token ->
+                        logger.debug { "Token refreshed [userId=${stored.userId}]" }
+                        repo.deleteRefreshToken(stored.tokenHash)
+                            .thenReturn(token)
+                    }
             }
             .doOnSuccess { registry.counter("auth.token.refreshes").increment() }
     }

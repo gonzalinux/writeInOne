@@ -8,16 +8,27 @@ import com.gonzalinux.common.SiteNotFoundException
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.toMono
 
 @Service
 class SiteService(private val repo: SiteRepository) {
 
     fun create(userId: Long, request: CreateSiteRequest): Mono<Site> {
-        validateNavLinks(request.config)
-        return repo.existsByDomain(request.domain)
+        return request.toMono()
+            .map { validateNavLinks(it.config) }
+            .flatMap { repo.existsByDomain(request.domain) }
             .flatMap { exists ->
                 if (exists) Mono.error(SiteDomainTakenException(request.domain))
-                else repo.create(userId, request.name, request.domain, request.description, request.stylesUrl, request.availableThemes, request.languages, request.config)
+                else repo.create(
+                    userId,
+                    request.name,
+                    request.domain,
+                    request.description,
+                    request.stylesUrl,
+                    request.availableThemes,
+                    request.languages,
+                    request.config
+                )
             }
     }
 
@@ -29,8 +40,20 @@ class SiteService(private val repo: SiteRepository) {
             .switchIfEmpty(Mono.error(SiteNotFoundException(id)))
 
     fun update(id: Long, userId: Long, request: UpdateSiteRequest): Mono<Site> {
-        validateNavLinks(request.config)
-        return repo.update(id, userId, request.name, request.description, request.stylesUrl, request.availableThemes, request.languages, request.config)
+        return request.toMono()
+            .map { validateNavLinks(it.config) }
+            .flatMap {
+                repo.update(
+                    id,
+                    userId,
+                    request.name,
+                    request.description,
+                    request.stylesUrl,
+                    request.availableThemes,
+                    request.languages,
+                    request.config
+                )
+            }
             .switchIfEmpty(Mono.error(SiteNotFoundException(id)))
     }
 

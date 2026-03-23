@@ -4,9 +4,9 @@ object Utils {
 
     fun queryToInt(query: String?, default: Int = 0, min: Int = Int.MIN_VALUE, max: Int = Int.MAX_VALUE): Int {
         val number = if (query.isNullOrBlank()) {
-            0
+            default
         } else {
-            query.toIntOrNull() ?: 0
+            query.toIntOrNull() ?: default
         }
         return number.coerceIn(min, max)
     }

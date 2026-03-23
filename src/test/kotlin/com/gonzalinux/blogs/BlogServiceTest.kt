@@ -38,6 +38,7 @@ class BlogServiceTest {
     private fun getBySlug(body: String): BlogPostDetail? {
         every { postRepo.findPublishedBySlug(1L, "en", "test", null) } returns Mono.just(Pair(post, translation(body)))
         every { tagRepo.findByPostId(1L) } returns Flux.empty()
+        every { postRepo.findTranslationsByPostId(1L) } returns Flux.just(translation(body))
         every { postRepo.incrementViewCount(1L) } returns Mono.empty()
 
         var result: BlogPostDetail? = null

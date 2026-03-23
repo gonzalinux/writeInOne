@@ -341,7 +341,7 @@ class PostServiceTest {
         every { postRepo.findById(1L, 1L) } returns Mono.just(post)
         every { postRepo.update(1L, 1L, null, null, null, null) } returns Mono.just(updatedPost)
         every { tagRepo.findByPostId(1L) } returns Flux.empty()
-        every { postRepo.updateTranslation(1L, "en", "Updated Title", "existing-slug", "Body", null) } returns
+        every { postRepo.upsertTranslation(1L, 1L, "en", "Updated Title", "existing-slug", "Body", null) } returns
             Mono.error(DataIntegrityViolationException("duplicate key value violates unique constraint"))
 
         StepVerifier.create(service.update(1L, 1L, 1L, request))
