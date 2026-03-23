@@ -67,8 +67,8 @@
 - [x] `PublishPostsScheduler` — publishes scheduled posts when their time is due
 
 ## Public Blog (blog-facing routes, Host-filtered)
-- [x] `HostFilter` — resolves site from `Host` header, writes to Reactor context
-- [x] `SiteContextHolder` — Reactor context holder for the resolved site
+- [x] `HostFilter` — resolves site from `Host` header, writes to Reactor context; reads `X-Forwarded-Prefix` header and stores validated prefix in context
+- [x] `SiteContextHolder` — Reactor context holder for resolved site and request prefix
 - [x] `GET /` — redirects to default language
 - [x] `GET /{lang}` — post list rendered via Thymeleaf (`index.html`)
 - [x] `GET /{lang}/{slug}` — single post rendered as HTML via flexmark (`post.html`)
@@ -82,6 +82,7 @@
 - [x] Paginated post list on public route (`?page=N`, 10 per page, prev/next nav)
 - [x] Search and tag filtering on public home (`?search=…&tag=…`); tags are clickable links; filters preserved across pagination
 - [x] RSS feed — `/{lang}/rss.xml` per language, `/rss.xml` redirects to default lang; auto-discovery `<link>` in every page head
+- [x] Reverse proxy prefix support — send `X-Forwarded-Prefix: blog` from your proxy to serve the blog under `yourdomain.com/blog/`; all internal links, OG tags, RSS, and JS fetch URLs are adjusted automatically; prefix validated as alphanumeric + hyphens, max 20 chars
 
 ## Admin UI
 - [x] Login page — JS fetch to `POST /auth/login`, sets httpOnly cookies
