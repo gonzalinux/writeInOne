@@ -17,7 +17,8 @@ private val logger = KotlinLogging.logger {}
 class HostFilter(private val siteRepository: SiteRepository) : HandlerFilterFunction<ServerResponse, ServerResponse> {
 
     override fun filter(request: ServerRequest, next: HandlerFunction<ServerResponse>): Mono<ServerResponse> {
-        val domain = request.headers().firstHeader("Host")
+        val domain = (request.headers().firstHeader("X-Site-Host")
+            ?: request.headers().firstHeader("Host"))
             ?.substringBefore(":")  // strip port if present
             ?: return ServerResponse.badRequest().build()
 
