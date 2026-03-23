@@ -3,6 +3,7 @@ const input = document.getElementById('search-input');
 const container = document.getElementById('post-list-container');
 
 const lang = form.dataset.lang;
+const prefix = window.SITE_PREFIX || '';
 const activeTag = new URLSearchParams(window.location.search).get('tag');
 
 // Hide the submit button — search is now live
@@ -33,12 +34,12 @@ function doSearch(query) {
         const a = document.createElement('a');
         a.id = 'search-clear';
         a.className = 'search-bar__clear';
-        a.href = '/' + lang;
+        a.href = prefix + '/' + lang;
         a.textContent = '✕ Clear';
         form.appendChild(a);
     }
 
-    fetch('/' + lang + '/posts?' + params)
+    fetch(prefix + '/' + lang + '/posts?' + params)
         .then(r => r.json())
         .then(page => render(page, query))
         .catch(() => {});
@@ -78,14 +79,14 @@ function render(page, query) {
             : '';
         const tags = item.tags.length > 0
             ? `<div class="post-card__tags">${item.tags.map(t =>
-                `<a class="tag" href="/${lang}?tag=${encodeURIComponent(t.name)}">${esc(t.name)}</a>`
+                `<a class="tag" href="${prefix}/${lang}?tag=${encodeURIComponent(t.name)}">${esc(t.name)}</a>`
             ).join('')}</div>`
             : '';
         const date = formatDate(item.post.publishedAt);
         return `<li class="post-card">
             ${cover}
             <div class="post-card__meta"><time datetime="${esc(item.post.publishedAt)}">${date}</time></div>
-            <h2 class="post-card__title"><a href="/${lang}/blogs/${esc(item.translation.slug)}">${esc(item.translation.title)}</a></h2>
+            <h2 class="post-card__title"><a href="${prefix}/${lang}/blogs/${esc(item.translation.slug)}">${esc(item.translation.title)}</a></h2>
             ${excerpt}
             ${tags}
         </li>`;
@@ -96,10 +97,10 @@ function render(page, query) {
         const qPart = query ? '&search=' + encodeURIComponent(query) : '';
         const tPart = activeTag ? '&tag=' + encodeURIComponent(activeTag) : '';
         const prev = page.page > 0
-            ? `<a class="pagination__btn" href="/${lang}?page=${page.page - 1}${qPart}${tPart}">← Newer</a>`
+            ? `<a class="pagination__btn" href="${prefix}/${lang}?page=${page.page - 1}${qPart}${tPart}">← Newer</a>`
             : '';
         const next = page.page + 1 < page.totalPages
-            ? `<a class="pagination__btn" href="/${lang}?page=${page.page + 1}${qPart}${tPart}">Older →</a>`
+            ? `<a class="pagination__btn" href="${prefix}/${lang}?page=${page.page + 1}${qPart}${tPart}">Older →</a>`
             : '';
         pagination = `<nav class="pagination">${prev}<span class="pagination__info">${page.page + 1} / ${page.totalPages}</span>${next}</nav>`;
     }

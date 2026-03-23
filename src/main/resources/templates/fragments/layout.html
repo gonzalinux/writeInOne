@@ -11,11 +11,12 @@
     <th:block th:each="l : ${site.languages}">
         <link rel="alternate" type="application/rss+xml"
               th:title="${site.name + ' (' + l.value + ')'}"
-              th:href="'/' + ${l.value} + '/rss.xml'"/>
+              th:href="${prefix} + '/' + ${l.value} + '/rss.xml'"/>
     </th:block>
-    <!-- Expose available themes to theme.js before it runs -->
+    <!-- Expose available themes and prefix to JS before it runs -->
     <script th:inline="javascript">
         window.SITE_THEMES = /*[[${site.availableThemes}]]*/['LIGHT'];
+        window.SITE_PREFIX = /*[[${prefix}]]*/ '';
     </script>
     <!-- Theme script — sync (no defer) so html.dark class is set before first paint -->
     <script src="/js/theme.js"></script>
@@ -30,7 +31,7 @@
     <header>
         <div class="container">
             <nav>
-                <a class="site-name" th:href="'/' + ${lang}" th:text="${site.name}">Site Name</a>
+                <a class="site-name" th:href="${prefix} + '/' + ${lang}" th:text="${site.name}">Site Name</a>
                 <div class="nav-right">
                     <ul class="nav-links" th:if="${langConfig != null and !langConfig.nav.isEmpty()}">
                         <li th:each="link : ${langConfig.nav}">
@@ -42,7 +43,7 @@
                         <th:block th:each="l : ${site.languages}">
                             <span th:if="${l.value == lang}" class="lang-btn lang-btn--active" th:text="${#strings.toUpperCase(l.value)}">EN</span>
                             <a th:if="${l.value != lang and (langSlugs == null or langSlugs[l.value] != null)}"
-                               th:href="${langSlugs != null ? '/blogs/' + l.value + '/' + langSlugs[l.value] : '/' + l.value}"
+                               th:href="${langSlugs != null ? prefix + '/blogs/' + l.value + '/' + langSlugs[l.value] : prefix + '/' + l.value}"
                                class="lang-btn" th:text="${#strings.toUpperCase(l.value)}">ES</a>
                         </th:block>
                     </div>

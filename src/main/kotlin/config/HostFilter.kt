@@ -1,5 +1,6 @@
 package com.gonzalinux.config
 
+import com.gonzalinux.common.SiteContextHolder.withPrefix
 import com.gonzalinux.common.SiteContextHolder.withSite
 import com.gonzalinux.domain.site.SiteRepository
 import mu.KotlinLogging
@@ -21,10 +22,15 @@ class HostFilter(private val siteRepository: SiteRepository) : HandlerFilterFunc
             ?: return ServerResponse.badRequest().build()
 
 
+        val prefix = request.headers().firstHeader("X-Forwarded-Prefix")
+            ?.trimStart('/')
+            ?.takeIf { it.matches(Regex("^[a-zA-Z0-9-]{1,20}$")) }
+            ?: ""
+
         return siteRepository.findByDomain(domain)
             .flatMap { site ->
-                logger.debug { "Resolved site [siteId=${site.id}, domain=$domain]" }
-                next.handle(request).contextWrite { it.withSite(site) }
+                logger.debug { "Resolved site [siteId=${site.id}, domain=$domain, prefix=$prefix]" }
+                next.handle(request).contextWrite { it.withSite(site).withPrefix(prefix) }
             }
             .switchIfEmpty(
                 Mono.defer {

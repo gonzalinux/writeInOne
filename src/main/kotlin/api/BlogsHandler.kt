@@ -3,6 +3,7 @@ package com.gonzalinux.api
 import com.gonzalinux.blogs.BlogService
 import com.gonzalinux.blogs.buildRss
 import com.gonzalinux.common.RequestContextHolder.getRequestContext
+import com.gonzalinux.common.SiteContextHolder.getPrefix
 import com.gonzalinux.common.SiteContextHolder.getSite
 import com.gonzalinux.domain.site.LangConfig
 import com.gonzalinux.domain.site.SiteConfig
@@ -35,6 +36,7 @@ class BlogsHandler(private val blogService: BlogService) {
         val size = Utils.queryToInt(request.queryParam("size").getOrNull(), default = 10, min= 1)
         return Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!
+            val prefix = ctx.getPrefix().let { if (it.isNotEmpty()) "/$it" else "" }
             blogService.listPublished(site.id, lang, page, size, tag, search)
                 .flatMap { result ->
                     ServerResponse.ok().contentType(MediaType.TEXT_HTML)
@@ -42,6 +44,7 @@ class BlogsHandler(private val blogService: BlogService) {
                             "index", mapOf(
                                 "site" to site,
                                 "lang" to lang,
+                                "prefix" to prefix,
                                 "langConfig" to site.config.forLang(lang),
                                 "posts" to result.content,
                                 "currentPage" to result.page,
@@ -72,10 +75,9 @@ class BlogsHandler(private val blogService: BlogService) {
         return Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!
             val user = ctx.getRequestContext()?.userId
+            val prefix = ctx.getPrefix().let { if (it.isNotEmpty()) "/$it" else "" }
             blogService.getBySlug(site.id, lang, slug, user)
                 .flatMap { detail ->
-
-
                     val langSlugs = detail.allTranslations.associate { it.lang to it.slug }
                     ServerResponse.ok().contentType(MediaType.TEXT_HTML)
                         .render(
@@ -83,6 +85,7 @@ class BlogsHandler(private val blogService: BlogService) {
                             mapOf(
                                 "site" to site,
                                 "lang" to lang,
+                                "prefix" to prefix,
                                 "langConfig" to site.config.forLang(lang),
                                 "post" to detail.post,
                                 "translation" to detail.translation,
@@ -91,7 +94,6 @@ class BlogsHandler(private val blogService: BlogService) {
                                 "langSlugs" to langSlugs
                             )
                         )
-
                 }
         }
     }
