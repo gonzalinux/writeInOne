@@ -42,7 +42,7 @@
                         <th:block th:each="l : ${site.languages}">
                             <span th:if="${l.value == lang}" class="lang-btn lang-btn--active" th:text="${#strings.toUpperCase(l.value)}">EN</span>
                             <a th:if="${l.value != lang and (langSlugs == null or langSlugs[l.value] != null)}"
-                               th:href="${langSlugs != null ? '/' + l.value + '/' + langSlugs[l.value] : '/' + l.value}"
+                               th:href="${langSlugs != null ? '/blogs/' + l.value + '/' + langSlugs[l.value] : '/' + l.value}"
                                class="lang-btn" th:text="${#strings.toUpperCase(l.value)}">ES</a>
                         </th:block>
                     </div>

@@ -140,7 +140,7 @@ async function loadPosts() {
       : formatDate(item.post.publishedAt);
 
     const viewBtn = (siteDomain && t)
-      ? `<a class="action-btn action-btn--view" href="https://${siteDomain}/${t.lang}/${t.slug}" target="_blank" rel="noopener">View</a>`
+      ? `<a class="action-btn action-btn--view" href="https://${siteDomain}/${t.lang}/blogs/${t.slug}" target="_blank" rel="noopener">View</a>`
       : '';
     const publishBtn = status === 'draft'
       ? `<button class="action-btn" data-publish-post="${item.post.id}">Publish</button>`

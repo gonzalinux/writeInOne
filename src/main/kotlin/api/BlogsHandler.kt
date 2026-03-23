@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import reactor.core.publisher.Mono
-import java.net.URI
 import kotlin.jvm.optionals.getOrNull
 
 @Component
@@ -22,15 +21,18 @@ class BlogsHandler(private val blogService: BlogService) {
         Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!
             val defaultLang = site.languages.firstOrNull()?.value ?: "en"
-            ServerResponse.permanentRedirect(URI.create("/$defaultLang")).build()
+            langPostList(defaultLang, request)
         }
 
     fun postList(request: ServerRequest): Mono<ServerResponse> {
-        val lang = request.pathVariable("lang")
-        val page = request.queryParam("page").map { it.toIntOrNull() ?: 0 }.orElse(0).coerceAtLeast(0)
+        return langPostList(request.pathVariable("lang"), request)
+    }
+
+    private fun langPostList(lang: String, request: ServerRequest): Mono<ServerResponse> {
+        val page = Utils.queryToInt(request.queryParam("page").getOrNull(), default = 0, min= 0)
         val tag = request.queryParam("tag").orElse(null)?.takeIf { it.isNotBlank() }
         val search = request.queryParam("search").orElse(null)?.takeIf { it.isNotBlank() }
-        val size = 10
+        val size = Utils.queryToInt(request.queryParam("size").getOrNull(), default = 10, min= 1)
         return Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!
             blogService.listPublished(site.id, lang, page, size, tag, search)
@@ -52,8 +54,20 @@ class BlogsHandler(private val blogService: BlogService) {
         }
     }
 
+    fun postRoot(request: ServerRequest): Mono<ServerResponse> {
+        return Mono.deferContextual { ctx ->
+            val site = ctx.getSite()!!
+            val defaultLang = site.languages.firstOrNull()?.value ?: "en"
+            postLang(defaultLang, request)
+        }
+    }
+
     fun post(request: ServerRequest): Mono<ServerResponse> {
         val lang = request.pathVariable("lang")
+       return postLang(lang, request)
+    }
+
+    private fun postLang(lang: String, request: ServerRequest): Mono<ServerResponse> {
         val slug = request.pathVariable("slug")
         return Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!
@@ -66,7 +80,7 @@ class BlogsHandler(private val blogService: BlogService) {
                     ServerResponse.ok().contentType(MediaType.TEXT_HTML)
                         .render(
                             if (user == null) "post" else "post_preview",
-                             mapOf(
+                            mapOf(
                                 "site" to site,
                                 "lang" to lang,
                                 "langConfig" to site.config.forLang(lang),
@@ -86,11 +100,15 @@ class BlogsHandler(private val blogService: BlogService) {
         Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!
             val defaultLang = site.languages.firstOrNull()?.value ?: "en"
-            ServerResponse.permanentRedirect(URI.create("/$defaultLang/rss.xml")).build()
+            langRss(defaultLang, request)
         }
 
     fun rss(request: ServerRequest): Mono<ServerResponse> {
         val lang = request.pathVariable("lang")
+        return langRss(lang, request)
+    }
+
+    private fun langRss(lang: String, request: ServerRequest): Mono<ServerResponse> {
         return Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!
             blogService.listPublished(site.id, lang, 0, 20)

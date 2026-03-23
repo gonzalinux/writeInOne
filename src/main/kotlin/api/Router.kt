@@ -1,10 +1,6 @@
 package com.gonzalinux.api
 
-import com.gonzalinux.config.AdminExceptionFilter
-import com.gonzalinux.config.BlogExceptionFilter
-import com.gonzalinux.config.HostFilter
-import com.gonzalinux.config.JwtAuthFilter
-import com.gonzalinux.config.JwtNotEnforcedFilter
+import com.gonzalinux.config.*
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.reactive.function.server.RouterFunction
@@ -50,7 +46,7 @@ class Router(
                 .GET("/{id}", siteHandler::get)
                 .PUT("/{id}", siteHandler::update)
                 .DELETE("/{id}", siteHandler::delete)
-                .path("/{siteId}/posts") { posts->
+                .path("/{siteId}/posts") { posts ->
                     posts
                         .POST("/", postHandler::create)
                         .GET("/", postHandler::list)
@@ -83,7 +79,8 @@ class Router(
         .GET("/rss.xml", blogsHandler::rssRoot)
         .GET("/{lang:es|en}", blogsHandler::postList)
         .GET("/{lang:es|en}/rss.xml", blogsHandler::rss)
-        .GET("/{lang:es|en}/{slug}", blogsHandler::post)
+        .GET("/blogs/{slug}", blogsHandler::postRoot)
+        .GET("/{lang:es|en}/blogs/{slug}", blogsHandler::post)
         .build()
         .filter(hostFilter)
         .filter(jwtNotEnforcedFilter)

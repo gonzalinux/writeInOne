@@ -85,7 +85,7 @@ function render(page, query) {
         return `<li class="post-card">
             ${cover}
             <div class="post-card__meta"><time datetime="${esc(item.post.publishedAt)}">${date}</time></div>
-            <h2 class="post-card__title"><a href="/${lang}/${esc(item.translation.slug)}">${esc(item.translation.title)}</a></h2>
+            <h2 class="post-card__title"><a href="/${lang}/blogs/${esc(item.translation.slug)}">${esc(item.translation.title)}</a></h2>
             ${excerpt}
             ${tags}
         </li>`;
