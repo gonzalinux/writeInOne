@@ -1,3 +1,6 @@
+server:
+  port: ${SERVER_PORT:8080}
+
 spring:
   thymeleaf:
     cache: ${THYMELEAF_CACHE:true}
@@ -29,7 +32,7 @@ post-scheduler:
 
 management:
   server:
-    port: ${MANAGEMENT_PORT:8081}
+    port: ${MANAGEMENT_PORT:-8081}
   endpoints:
     web:
       exposure:
