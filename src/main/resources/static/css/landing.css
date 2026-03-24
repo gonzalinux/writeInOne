@@ -1,0 +1,113 @@
+@import 'common.css';
+
+/* ============================================================
+   WriteInOne — landing / home page stylesheet
+   Used by landing.html and home.html
+   ============================================================ */
+
+body {
+    font-family: Georgia, 'Times New Roman', serif;
+    background: #fff;
+    color: #1a1a1a;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+}
+
+a.logo {
+    text-decoration: none;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    letter-spacing: -0.5px;
+    margin-bottom: 3rem;
+    color: #4a4a4a;
+    font-family: 'Habibi', serif;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.logo__img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+h1 {
+    font-size: 2.5rem;
+    line-height: 1.2;
+    max-width: 560px;
+    margin-bottom: 1rem;
+    font-family: Habibi, serif;
+}
+
+p {
+    font-size: 1.1rem;
+    color: #555;
+    max-width: 420px;
+    line-height: 1.6;
+    margin-bottom: 2.5rem;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.75rem;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+.btn-primary {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+.btn-primary:hover { background: #333; }
+
+.btn-secondary {
+    border: 1px solid #ddd;
+    color: #555;
+}
+
+.btn-secondary:hover { border-color: #aaa; color: #1a1a1a; }
+
+footer {
+    position: fixed;
+    bottom: 1.5rem;
+    font-size: 0.8rem;
+    color: #4a4a4a;
+    font-family: 'Habibi', serif;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.footer__link {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: inherit;
+    text-decoration: none;
+}
+
+.footer__img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
