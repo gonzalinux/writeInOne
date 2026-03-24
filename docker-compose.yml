@@ -11,6 +11,7 @@ services:
       DB_USER: postgres
       DB_PASSWORD: secret
       SPRING_PROFILES_ACTIVE: prod
+      MANAGEMENT_PORT: 8081
     depends_on:
       - db
 
