@@ -3,6 +3,7 @@ package com.gonzalinux.blogs
 import com.gonzalinux.common.Page
 import com.gonzalinux.common.PostNotFoundException
 import com.gonzalinux.domain.post.PostRepository
+import com.gonzalinux.domain.site.SiteRepository
 import com.gonzalinux.domain.tag.TagRepository
 import com.vladsch.flexmark.html.HtmlRenderer
 import com.vladsch.flexmark.parser.Parser
@@ -20,6 +21,7 @@ import reactor.kotlin.core.util.function.component2
 class BlogService(
     private val postRepo: PostRepository,
     private val tagRepo: TagRepository,
+    private val siteRepo: SiteRepository,
     private val registry: MeterRegistry
 ) {
     private val mdParser: Parser
@@ -69,6 +71,13 @@ class BlogService(
                 postRepo.incrementViewCount(detail.post.id)
                     .doOnSuccess { registry.counter("blog.post.views", "lang", lang).increment() }
                     .thenReturn(detail)
+            }
+
+    fun getPreviewPost(siteId: Long, userId: Long, lang: String, slug: String): Mono<PreviewContext> =
+        siteRepo.findById(siteId, userId)
+            .flatMap { site ->
+                getBySlug(site.id, lang, slug, userId)
+                    .map { detail -> PreviewContext(site, detail) }
             }
 
     private fun renderMarkdown(markdown: String): String =

@@ -2,6 +2,8 @@ package com.gonzalinux.api
 
 import com.gonzalinux.api.AuthHandler.Companion.ACCESS_TOKEN_COOKIE
 import com.gonzalinux.api.AuthHandler.Companion.REFRESH_TOKEN_COOKIE
+import com.gonzalinux.blogs.BlogService
+import com.gonzalinux.common.RequestContextHolder.getRequestContext
 import com.gonzalinux.domain.user.UserService
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.MediaType
@@ -13,7 +15,10 @@ import reactor.core.publisher.Mono
 import java.net.URI
 
 @Component
-class AdminHandler(private val userService: UserService) {
+class AdminHandler(
+    private val userService: UserService,
+    private val blogService: BlogService,
+) {
 
     fun serve(request: ServerRequest): Mono<ServerResponse> {
         val path = request.path().trimEnd('/')
@@ -31,6 +36,36 @@ class AdminHandler(private val userService: UserService) {
         }
         val resource = ClassPathResource("static/admin/$file")
         return ServerResponse.ok().contentType(MediaType.TEXT_HTML).bodyValue(resource)
+    }
+
+    fun preview(request: ServerRequest): Mono<ServerResponse> {
+        val lang   = request.pathVariable("lang")
+        val slug   = request.pathVariable("slug")
+        val siteId = request.pathVariable("siteId").toLongOrNull()
+            ?: return ServerResponse.badRequest().build()
+
+        return Mono.deferContextual { ctx ->
+            val userId = ctx.getRequestContext()!!.userId
+            blogService.getPreviewPost(siteId, userId, lang, slug)
+                .flatMap { preview ->
+                    val langSlugs = preview.detail.allTranslations.associate { it.lang to it.slug }
+                    ServerResponse.ok().contentType(MediaType.TEXT_HTML)
+                        .render(
+                            "post_preview",
+                            mapOf(
+                                "site"         to preview.site,
+                                "lang"         to lang,
+                                "prefix"       to "",
+                                "langConfig"   to preview.site.config.forLang(lang),
+                                "post"         to preview.detail.post,
+                                "translation"  to preview.detail.translation,
+                                "tags"         to preview.detail.tags,
+                                "renderedBody" to preview.detail.renderedBody,
+                                "langSlugs"    to langSlugs,
+                            )
+                        )
+                }
+        }
     }
 
 }

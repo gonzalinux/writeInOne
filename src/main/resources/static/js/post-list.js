@@ -8,7 +8,6 @@ const emptyNewLink  = document.getElementById('emptyNewPostLink');
 if (newPostLink)  newPostLink.href  = `/admin/sites/${siteId}/posts/new`;
 if (emptyNewLink) emptyNewLink.href = `/admin/sites/${siteId}/posts/new`;
 
-let siteDomain = null;
 let currentPage = 0;
 const PAGE_SIZE = 20;
 
@@ -139,8 +138,8 @@ async function loadPosts() {
       ? formatDate(item.post.scheduledAt)
       : formatDate(item.post.publishedAt);
 
-    const viewBtn = (siteDomain && t)
-      ? `<a class="action-btn action-btn--view" href="https://${siteDomain}/${t.lang}/blogs/${t.slug}" target="_blank" rel="noopener">View</a>`
+    const viewBtn = t
+      ? `<a class="action-btn action-btn--view" href="/admin/preview/${siteId}/${t.lang}/${t.slug}" target="_blank" rel="noopener">View</a>`
       : '';
     const publishBtn = status === 'draft'
       ? `<button class="action-btn" data-publish-post="${item.post.id}">Publish</button>`
@@ -175,11 +174,6 @@ async function loadPosts() {
 }
 
 async function init() {
-  const siteRes = await api(`/sites/${siteId}`);
-  if (siteRes?.ok) {
-    const site = await siteRes.json();
-    siteDomain = site.domain;
-  }
   loadPosts();
 }
 

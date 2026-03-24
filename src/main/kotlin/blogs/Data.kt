@@ -3,6 +3,7 @@ package com.gonzalinux.blogs
 import com.gonzalinux.domain.Languages
 import com.gonzalinux.domain.post.Post
 import com.gonzalinux.domain.post.PostTranslation
+import com.gonzalinux.domain.site.Site
 import com.gonzalinux.domain.tag.Tag
 
 data class BlogPostSummary(
@@ -18,3 +19,5 @@ data class BlogPostDetail(
     val renderedBody: String,
     val allTranslations: List<PostTranslation>
 )
+
+data class PreviewContext(val site: Site, val detail: BlogPostDetail)

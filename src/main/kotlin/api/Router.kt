@@ -18,6 +18,7 @@ class Router(
     private val jwtAuthFilter: JwtAuthFilter,
     private val jwtNotEnforcedFilter: JwtNotEnforcedFilter,
     private val hostFilter: HostFilter,
+    private val adminHostFilter: AdminHostFilter,
     private val blogExceptionFilter: BlogExceptionFilter,
     private val adminExceptionFilter: AdminExceptionFilter
 ) {
@@ -25,6 +26,7 @@ class Router(
     @Bean
     fun routes(): RouterFunction<ServerResponse> =
         publicRoutes()
+            .and(adminPreviewRoute())
             .and(adminRoutes())
             .and(protectedRoutes())
             .and(blogUiRoutes())
@@ -68,10 +70,18 @@ class Router(
         .build()
         .filter(jwtAuthFilter)
 
+    private fun adminPreviewRoute(): RouterFunction<ServerResponse> = route()
+        .GET("/admin/preview/{siteId}/{lang}/{slug}", adminHandler::preview)
+        .build()
+        .filter(adminHostFilter)
+        .filter(jwtAuthFilter)
+        .filter(adminExceptionFilter)
+
     private fun adminRoutes(): RouterFunction<ServerResponse> = route()
         .GET("/admin", adminHandler::serve)
         .GET("/admin/**", adminHandler::serve)
         .build()
+        .filter(adminHostFilter)
         .filter(adminExceptionFilter)
 
     private fun blogUiRoutes(): RouterFunction<ServerResponse> = route()

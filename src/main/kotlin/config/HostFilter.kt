@@ -35,8 +35,14 @@ class HostFilter(private val siteRepository: SiteRepository) : HandlerFilterFunc
             }
             .switchIfEmpty(
                 Mono.defer {
-                    logger.debug { "No site found for domain: $domain, showing landing page" }
-                    ServerResponse.ok().render("landing")
+                    val isHomeDomain = domain == "writeinone.com" || domain == "localhost"
+                    if (isHomeDomain) {
+                        logger.debug { "Home domain: $domain, showing landing page" }
+                        ServerResponse.ok().render("landing")
+                    } else {
+                        logger.debug { "No site found for domain: $domain, showing home page" }
+                        ServerResponse.ok().render("home")
+                    }
                 }
             )
     }
