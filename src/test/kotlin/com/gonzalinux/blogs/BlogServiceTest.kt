@@ -4,6 +4,9 @@ import com.gonzalinux.domain.post.Post
 import com.gonzalinux.domain.post.PostRepository
 import com.gonzalinux.domain.post.PostStatus
 import com.gonzalinux.domain.post.PostTranslation
+import com.gonzalinux.domain.site.Site
+import com.gonzalinux.domain.site.SiteConfig
+import com.gonzalinux.domain.site.SiteRepository
 import com.gonzalinux.domain.tag.TagRepository
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
@@ -19,10 +22,18 @@ class BlogServiceTest {
 
     private val postRepo = mockk<PostRepository>()
     private val tagRepo = mockk<TagRepository>()
+    private val siteRepo = mockk<SiteRepository>()
     private val registry = mockk<MeterRegistry>(relaxed = true)
-    private val service = BlogService(postRepo, tagRepo, registry)
+    private val service = BlogService(postRepo, tagRepo, siteRepo, registry)
 
     private val now = OffsetDateTime.now(ZoneOffset.UTC)
+
+    private val site = Site(
+        id = 1L, userId = 42L, name = "Test Site", domain = "test.example.com",
+        description = null, stylesUrl = null, availableThemes = emptyList(),
+        languages = emptyList(), config = SiteConfig(),
+        createdAt = now, updatedAt = now
+    )
 
     private val post = Post(
         id = 1L, siteId = 1L, status = PostStatus.PUBLISHED, coverUrl = null,
@@ -79,5 +90,29 @@ class BlogServiceTest {
     fun `code block class attributes are preserved in rendered markdown`() {
         val detail = getBySlug("```kotlin\nval x = 1\n```")
         assert(detail!!.renderedBody.contains("class=\"language-kotlin\"")) { "renderedBody should preserve code class attribute" }
+    }
+
+    @Test
+    fun `getPreviewPost returns site and post detail for the site owner`() {
+        every { siteRepo.findById(1L, 42L) } returns Mono.just(site)
+        every { postRepo.findPublishedBySlug(1L, "en", "test", 42L) } returns Mono.just(Pair(post, translation("Hello")))
+        every { tagRepo.findByPostId(1L) } returns Flux.empty()
+        every { postRepo.findTranslationsByPostId(1L) } returns Flux.just(translation("Hello"))
+        every { postRepo.incrementViewCount(1L) } returns Mono.empty()
+
+        StepVerifier.create(service.getPreviewPost(1L, 42L, "en", "test"))
+            .assertNext { ctx ->
+                assert(ctx.site.id == 1L) { "site id should match" }
+                assert(ctx.detail.post.id == 1L) { "post id should match" }
+            }
+            .verifyComplete()
+    }
+
+    @Test
+    fun `getPreviewPost returns empty when site does not belong to user`() {
+        every { siteRepo.findById(1L, 99L) } returns Mono.empty()
+
+        StepVerifier.create(service.getPreviewPost(1L, 99L, "en", "test"))
+            .verifyComplete()
     }
 }

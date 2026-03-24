@@ -143,7 +143,7 @@ class BlogsHandler(private val blogService: BlogService) {
     }
 }
 
-private fun SiteConfig.forLang(lang: String): LangConfig = when (lang) {
+fun SiteConfig.forLang(lang: String): LangConfig = when (lang) {
     "en" -> en
     "es" -> es
     else -> LangConfig()

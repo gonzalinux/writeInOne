@@ -19,7 +19,7 @@ private val logger = KotlinLogging.logger {}
 class AdminExceptionFilter : HandlerFilterFunction<ServerResponse, ServerResponse> {
 
     override fun filter(request: ServerRequest, next: HandlerFunction<ServerResponse>): Mono<ServerResponse> =
-        next.handle(request)
+        Mono.defer { next.handle(request) }
             .onErrorResume(UnauthorizedException::class.java) {
                 ServerResponse.seeOther(URI.create("/admin/login")).build()
             }

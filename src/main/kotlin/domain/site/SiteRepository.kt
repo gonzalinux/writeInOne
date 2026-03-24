@@ -1,6 +1,5 @@
 package com.gonzalinux.domain.site
 
-import tools.jackson.databind.ObjectMapper
 import com.gonzalinux.common.bindNullable
 import com.gonzalinux.domain.Languages
 import io.r2dbc.postgresql.codec.Json
@@ -8,6 +7,7 @@ import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Repository
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import tools.jackson.databind.ObjectMapper
 import java.time.OffsetDateTime
 
 @Repository
@@ -50,7 +50,7 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
     fun update(
         id: Long, userId: Long, name: String?, domain: String?, description: String?,
         stylesUrl: String?, availableThemes: List<Theme>?,
-        languages: List<Languages>?, config: SiteConfig?
+        languages: List<Languages>?, config: SiteConfig? = null
     ): Mono<Site> =
         client.sql("""
             UPDATE sites SET
