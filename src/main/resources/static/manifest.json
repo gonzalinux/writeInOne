@@ -1,0 +1,21 @@
+{
+  "name": "WriteInOne",
+  "short_name": "WriteInOne",
+  "description": "A simple place to write. Connect a domain, publish posts, and share your words with the world.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a1a1a",
+  "icons": [
+    {
+      "src": "/img/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/img/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
