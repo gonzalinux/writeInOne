@@ -11,9 +11,6 @@ const stylesInput       = document.getElementById('stylesUrl');
 const defaultThemeSelect = document.getElementById('defaultTheme');
 const enableSwitcherCb  = document.getElementById('enableSwitcher');
 const faviconInput      = document.getElementById('faviconUrl');
-const domainField   = document.getElementById('domainField');
-const domainReadonly = document.getElementById('domainReadonly');
-const domainDisplay = document.getElementById('domainDisplay');
 const domainInput   = document.getElementById('domain');
 const englishCb     = document.getElementById('lang-ENGLISH');
 const spanishCb     = document.getElementById('lang-SPANISH');
@@ -88,10 +85,7 @@ async function loadSite() {
   enableSwitcherCb.checked = themes.length > 1;
   faviconInput.value = site.config?.faviconUrl || '';
 
-  domainField.style.display    = 'none';
-  domainReadonly.style.display = '';
-  domainDisplay.value          = site.domain || '';
-  if (domainInput) domainInput.removeAttribute('required');
+  domainInput.value = site.domain || '';
 
   englishCb.checked = site.languages?.includes('ENGLISH') ?? true;
   spanishCb.checked = site.languages?.includes('SPANISH') ?? false;
@@ -140,7 +134,7 @@ form.addEventListener('submit', async e => {
     },
   };
 
-  if (!siteId) body.domain = domainInput.value.trim();
+  body.domain = domainInput.value.trim();
 
   const url    = siteId ? `/sites/${siteId}` : '/sites/';
   const method = siteId ? 'PUT' : 'POST';

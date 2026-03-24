@@ -2,6 +2,21 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en" th:lang="${lang}">
 <head>
     <th:block th:replace="~{fragments/layout :: head(${site.name})}"/>
+
+    <!-- Primary meta -->
+    <meta th:if="${site.description != null}" name="description" th:content="${site.description}"/>
+
+    <!-- Open Graph -->
+    <meta property="og:type"        content="website"/>
+    <meta property="og:site_name"   th:content="${site.name}"/>
+    <meta property="og:title"       th:content="${site.name}"/>
+    <meta property="og:description" th:if="${site.description != null}" th:content="${site.description}"/>
+    <meta property="og:url"         th:content="'https://' + ${site.domain} + ${prefix} + '/' + ${lang}"/>
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card"        content="summary"/>
+    <meta name="twitter:title"       th:content="${site.name}"/>
+    <meta name="twitter:description" th:if="${site.description != null}" th:content="${site.description}"/>
 </head>
 <body>
     <th:block th:replace="~{fragments/layout :: nav}"/>

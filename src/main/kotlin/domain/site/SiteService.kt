@@ -43,19 +43,39 @@ class SiteService(private val repo: SiteRepository) {
         return request.toMono()
             .map { validateNavLinks(it.config) }
             .flatMap {
-                repo.update(
-                    id,
-                    userId,
-                    request.name,
-                    request.description,
-                    request.stylesUrl,
-                    request.availableThemes,
-                    request.languages,
-                    request.config
-                )
+                if (request.domain != null) {
+                    repo.findById(id, userId)
+                        .switchIfEmpty(Mono.error(SiteNotFoundException(id)))
+                        .flatMap { existing ->
+                            if (existing.domain == request.domain) {
+                                performUpdate(id, userId, request)
+                            } else {
+                                repo.existsByDomain(request.domain)
+                                    .flatMap { exists ->
+                                        if (exists) Mono.error(SiteDomainTakenException(request.domain))
+                                        else performUpdate(id, userId, request)
+                                    }
+                            }
+                        }
+                } else {
+                    performUpdate(id, userId, request)
+                        .switchIfEmpty(Mono.error(SiteNotFoundException(id)))
+                }
             }
-            .switchIfEmpty(Mono.error(SiteNotFoundException(id)))
     }
+
+    private fun performUpdate(id: Long, userId: Long, request: UpdateSiteRequest): Mono<Site> =
+        repo.update(
+            id,
+            userId,
+            request.name,
+            request.domain,
+            request.description,
+            request.stylesUrl,
+            request.availableThemes,
+            request.languages,
+            request.config
+        )
 
     private fun validateNavLinks(config: SiteConfig?) {
         config ?: return

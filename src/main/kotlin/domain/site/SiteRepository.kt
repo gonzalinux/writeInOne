@@ -48,13 +48,14 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             .map { mapToSite(it) }
 
     fun update(
-        id: Long, userId: Long, name: String?, description: String?,
+        id: Long, userId: Long, name: String?, domain: String?, description: String?,
         stylesUrl: String?, availableThemes: List<Theme>?,
         languages: List<Languages>?, config: SiteConfig?
     ): Mono<Site> =
         client.sql("""
             UPDATE sites SET
                 name             = COALESCE(:name, name),
+                domain           = COALESCE(:domain, domain),
                 description      = COALESCE(:description, description),
                 styles_url       = COALESCE(:stylesUrl, styles_url),
                 available_themes = COALESCE(:availableThemes, available_themes),
@@ -67,6 +68,7 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             .bind("id", id)
             .bind("userId", userId)
             .bindNullable<String>("name", name)
+            .bindNullable<String>("domain", domain)
             .bindNullable<String>("description", description)
             .bindNullable<String>("stylesUrl", stylesUrl)
             .bindNullable<Array<String>>("availableThemes", availableThemes?.map { it.value }?.toTypedArray())

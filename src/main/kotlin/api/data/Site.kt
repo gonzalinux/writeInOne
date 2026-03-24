@@ -21,6 +21,10 @@ data class CreateSiteRequest(
 
 data class UpdateSiteRequest(
     val name: String? = null,
+    @field:Pattern(
+        regexp = "^[a-z0-9][a-z0-9.-]+[a-z0-9]$",
+        message = "must be a valid domain (e.g. blog.site.com)"
+    ) val domain: String? = null,
     val description: String? = null,
     val stylesUrl: String? = null,
     val availableThemes: List<Theme>? = null,
