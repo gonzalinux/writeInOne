@@ -12,6 +12,15 @@ make test         # Run tests locally
 make docker-test  # Run tests inside Docker Compose
 make prod         # Load .env and start app + db via Docker Compose
 make down         # Stop all containers
+make logs         # Show Docker app logs (make logs f=1 to follow)
+make psql         # Open interactive psql session in postgres container
+```
+
+To run a single test class or pattern:
+```bash
+./gradlew test --tests "UserServiceTest"
+./gradlew test --tests "*IntegrationTest"
+./gradlew test --tests "PostServiceTest.create*"
 ```
 
 The database runs on **port 5433** (non-standard). Default credentials: `postgres / secret`, database `writeinone`.
@@ -82,6 +91,14 @@ Admin pages share `/css/admin.css`. Never use inline `<style>` blocks in templat
 ## Authentication
 
 JWT delivered via HttpOnly cookies (`access_token`, `refresh_token`). Access tokens expire in 15 minutes; refresh tokens in 30 days and are stored hashed in the DB. `JwtAuthFilter` validates the cookie and writes `RequestContext` into the Reactor context.
+
+## Tests
+
+Tests split into two groups:
+- **Unit tests** (`src/test/kotlin/domain/`, `blogs/`) — use mockk, test services in isolation
+- **Integration tests** (`src/test/kotlin/api/`) — use `@SpringBootTest` with `WebTestClient` and a real local database (port 5433)
+
+Integration tests clean up after themselves in `@AfterEach` using direct SQL deletes scoped to test-specific email patterns (e.g. `%@integrationtest.com`).
 
 ## Adding a new admin page
 

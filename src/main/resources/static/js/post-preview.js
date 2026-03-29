@@ -93,8 +93,8 @@ function setMode(mode) {
   }
 }
 
-btnEditMode.addEventListener('click', () => setMode('edit'));
-btnSplitMode.addEventListener('click', () => setMode('split'));
+btnEditMode.addEventListener('click',    () => setMode('edit'));
+btnSplitMode.addEventListener('click',   () => setMode('split'));
 btnPreviewMode.addEventListener('click', () => setMode('preview'));
 
 // ── Auto-grow textarea ────────────────────────────────────

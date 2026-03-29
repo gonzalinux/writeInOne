@@ -1,8 +1,8 @@
 (function () {
     var DARK  = 'dark';
     var LIGHT = 'light';
-    var HLJS_LIGHT = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css';
-    var HLJS_DARK  = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css';
+    var HLJS_LIGHT = 'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github.min.css';
+    var HLJS_DARK  = 'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github-dark.min.css';
 
     // Normalise SITE_THEMES to lowercase ('light' | 'dark')
     var themes = (window.SITE_THEMES || ['LIGHT']).map(function (t) { return t.toLowerCase(); });

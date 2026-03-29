@@ -23,7 +23,7 @@
 
     <!-- href is updated by theme.js on DOMContentLoaded to match the active theme -->
     <link id="hljs-theme" rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css"/>
+          href="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github.min.css"/>
 </head>
 <body>
     <th:block th:replace="~{fragments/layout :: nav}"/>
@@ -63,8 +63,16 @@
     </main>
 
     <th:block th:replace="~{fragments/layout :: footer}"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
-    <script>
+    <script th:inline="javascript">
+        const _hljsLangs = /*[[${codeLanguages}]]*/ [];
+    </script>
+    <script type="module">
+        import hljs from 'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/es/core.min.js';
+        await Promise.all(_hljsLangs.map(l =>
+            import(`https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/es/languages/${l}.min.js`)
+                .then(m => hljs.registerLanguage(l, m.default))
+                .catch(() => {})
+        ));
         hljs.highlightAll();
         document.querySelectorAll('.post-body pre').forEach(pre => {
             const wrapper = document.createElement('div');

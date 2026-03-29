@@ -24,9 +24,12 @@ function clearFilters() {
   loadPosts();
 }
 
-[filterSearch, filterTag].forEach(el => {
-  el?.addEventListener('keydown', e => { if (e.key === 'Enter') applyFilters(); });
+let searchDebounce = null;
+filterSearch?.addEventListener('input', () => {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(applyFilters, 300);
 });
+filterTag?.addEventListener('keydown', e => { if (e.key === 'Enter') applyFilters(); });
 filterStatus?.addEventListener('change', applyFilters);
 
 function formatDate(iso) {

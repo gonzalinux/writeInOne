@@ -47,7 +47,7 @@ class BlogService(
     ): Mono<Page<BlogPostSummary>> =
         postRepo.countPublishedBySiteAndLang(siteId, lang, tag, search).zipWith(
             postRepo.findPublishedBySiteAndLang(siteId, lang, page, size, tag, search)
-                .flatMap { (post, translation) ->
+                .concatMap { (post, translation) ->
                     tagRepo.findByPostId(post.id).collectList()
                         .map { tags -> BlogPostSummary(post, translation, tags) }
                 }
@@ -64,7 +64,8 @@ class BlogService(
                 tagRepo.findByPostId(post.id).collectList()
                     .zipWith(postRepo.findTranslationsByPostId(post.id).collectList())
                     .map { (tags, allTranslations) ->
-                        BlogPostDetail(post, translation, tags, renderMarkdown(translation.body), allTranslations)
+                        val rendered = renderMarkdown(translation.body)
+                        BlogPostDetail(post, translation, tags, rendered, extractCodeLanguages(rendered), allTranslations)
                     }
             }
             .flatMap { detail ->
@@ -82,4 +83,11 @@ class BlogService(
 
     private fun renderMarkdown(markdown: String): String =
         Jsoup.clean(mdRenderer.render(mdParser.parse(markdown)), safelist)
+
+    private fun extractCodeLanguages(html: String): List<String> =
+        Jsoup.parse(html).select("code[class]")
+            .flatMap { it.classNames() }
+            .filter { it.startsWith("language-") }
+            .map { it.removePrefix("language-") }
+            .distinct()
 }

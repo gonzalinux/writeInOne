@@ -21,6 +21,7 @@ if (backLink)   backLink.href   = `/admin/sites/${siteId}/posts`;
 if (cancelLink) cancelLink.href = `/admin/sites/${siteId}/posts`;
 
 let siteLanguages = [];
+const editors = {};
 
 // ── Panel creation ────────────────────────────────────────────────────────
 
@@ -28,19 +29,27 @@ function createPanel(lang) {
   const panel = document.createElement('div');
   panel.id = `panel-${lang}`;
   panel.className = 'lang-panel';
-  panel.innerHTML = `
-    <div class="field">
-      <label for="title-${lang}">Title</label>
-      <input id="title-${lang}" type="text" placeholder="Post title"/>
-    </div>
-    <div class="field">
-      <label for="excerpt-${lang}">Excerpt <span style="color:#aaa">(optional)</span></label>
-      <textarea id="excerpt-${lang}" rows="2" placeholder="A short summary shown in post listings"></textarea>
-    </div>
-    <div class="field">
-      <label for="body-${lang}">Body <span style="color:#aaa">(Markdown)</span></label>
-      <textarea id="body-${lang}" class="body-editor" placeholder="Write your post in Markdown..."></textarea>
-    </div>`;
+  if (postId) {
+    panel.innerHTML = `
+      <div class="field">
+        <label for="title-${lang}">Title</label>
+        <input id="title-${lang}" type="text" placeholder="Post title"/>
+      </div>
+      <div class="field">
+        <label for="excerpt-${lang}">Excerpt <span style="color:#aaa">(optional)</span></label>
+        <textarea id="excerpt-${lang}" rows="2" placeholder="A short summary shown in post listings"></textarea>
+      </div>
+      <div class="field">
+        <label for="body-${lang}">Body <span style="color:#aaa">(Markdown)</span></label>
+        <textarea id="body-${lang}" class="body-editor post-body" placeholder="Write your post in Markdown..."></textarea>
+      </div>`;
+  } else {
+    panel.innerHTML = `
+      <div class="field">
+        <label for="title-${lang}">Title</label>
+        <input id="title-${lang}" type="text" placeholder="Post title"/>
+      </div>`;
+  }
   return panel;
 }
 
@@ -53,6 +62,7 @@ function switchTab(activeLang) {
   document.querySelectorAll('.lang-panel').forEach(panel => {
     panel.style.display = panel.id === `panel-${activeLang}` ? '' : 'none';
   });
+  editors[activeLang]?.refresh();
 }
 
 function updateDot(lang) {
@@ -68,7 +78,22 @@ function buildUI(languages) {
     const panel = createPanel(lang);
     if (i !== 0) panel.style.display = 'none';
     panelsContainer.appendChild(panel);
+
+    if (postId) {
+      const textarea = document.getElementById(`body-${lang}`);
+      const cm = CodeMirror.fromTextArea(textarea, {
+        mode: 'markdown',
+        lineNumbers: true,
+        lineWrapping: true,
+      });
+      cm.getWrapperElement().classList.add('post-body', 'body-codemirror');
+      editors[lang] = cm;
+    }
   });
+
+  if (!postId) {
+    document.querySelector('.field-row').style.display = 'none';
+  }
 
   if (languages.length > 1) {
     const tabsDiv = document.createElement('div');
@@ -97,21 +122,26 @@ function buildUI(languages) {
 
 function buildBody() {
   const slug         = slugInput.value.trim() || null;
-  const tags         = tagsInput.value.split(',').map(t => t.trim()).filter(Boolean);
   const translations = {};
 
   siteLanguages.forEach(lang => {
     const title = document.getElementById(`title-${lang}`)?.value.trim();
     if (!title) return;
-    translations[lang] = {
-      title,
-      slug,
-      body:    document.getElementById(`body-${lang}`).value,
-      excerpt: document.getElementById(`excerpt-${lang}`).value.trim() || null,
-    };
+    if (postId) {
+      translations[lang] = {
+        title,
+        slug,
+        body:    editors[lang]?.getValue() ?? document.getElementById(`body-${lang}`).value,
+        excerpt: document.getElementById(`excerpt-${lang}`).value.trim() || null,
+      };
+    } else {
+      translations[lang] = { title, slug, body: '' };
+    }
   });
 
-  return { coverUrl: coverInput.value.trim() || null, translations, tags };
+  const tags     = postId ? tagsInput.value.split(',').map(t => t.trim()).filter(Boolean) : [];
+  const coverUrl = postId ? (coverInput.value.trim() || null) : null;
+  return { coverUrl, translations, tags };
 }
 
 async function handleError(res) {
@@ -135,7 +165,8 @@ async function loadPost() {
     if (!titleEl) return;
     titleEl.value = t.title || '';
     document.getElementById(`excerpt-${t.lang}`).value = t.excerpt || '';
-    document.getElementById(`body-${t.lang}`).value    = t.body    || '';
+    if (editors[t.lang]) editors[t.lang].setValue(t.body || '');
+    else document.getElementById(`body-${t.lang}`).value = t.body || '';
     if (t.slug) slugInput.value = t.slug;
     updateDot(t.lang);
   });
@@ -170,6 +201,13 @@ async function init() {
   if (siteLanguages.length === 0) siteLanguages = ['en'];
 
   buildUI(siteLanguages);
+
+  if (site.stylesUrl) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = site.stylesUrl;
+    document.head.appendChild(link);
+  }
 
   if (postId) {
     await loadPost();
@@ -246,7 +284,15 @@ form.addEventListener('submit', async e => {
   if (!res) return;
 
   if (res.ok) {
-    location.href = `/admin/sites/${siteId}/posts`;
+    if (!postId) {
+      const created = await res.json();
+      const t = created.translations?.[0];
+      location.href = t
+        ? `/admin/preview/${siteId}/${t.lang}/${t.slug}`
+        : `/admin/sites/${siteId}/posts`;
+    } else {
+      location.href = `/admin/sites/${siteId}/posts`;
+    }
   } else {
     await handleError(res);
   }

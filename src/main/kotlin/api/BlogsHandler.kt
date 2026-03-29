@@ -91,6 +91,7 @@ class BlogsHandler(private val blogService: BlogService) {
                                 "translation" to detail.translation,
                                 "tags" to detail.tags,
                                 "renderedBody" to detail.renderedBody,
+                                "codeLanguages" to detail.codeLanguages,
                                 "langSlugs" to langSlugs
                             )
                         )

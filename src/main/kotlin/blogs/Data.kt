@@ -17,6 +17,7 @@ data class BlogPostDetail(
     val translation: PostTranslation,
     val tags: List<Tag>,
     val renderedBody: String,
+    val codeLanguages: List<String>,
     val allTranslations: List<PostTranslation>
 )
 

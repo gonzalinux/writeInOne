@@ -23,7 +23,7 @@
 
     <!-- href is updated by theme.js on DOMContentLoaded to match the active theme -->
     <link id="hljs-theme" rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css"/>
+          href="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github.min.css"/>
 
     <link rel="stylesheet" th:href="${prefix} + '/css/post-preview.css'"/>
 </head>
@@ -163,7 +163,7 @@
 
     <th:block th:replace="~{fragments/layout :: footer}"/>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/highlight.min.js"></script>
     <script>
         if (document.getElementById('preview-section') && !document.getElementById('preview-section').hidden) {
             hljs.highlightAll();
