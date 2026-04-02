@@ -7,7 +7,6 @@ import mu.KotlinLogging
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
-import org.springframework.web.reactive.HandlerMapping
 import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
@@ -22,30 +21,33 @@ class MetricsFilter(private val registry: MeterRegistry) : WebFilter {
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
         val start = System.currentTimeMillis()
         val req = exchange.request
-        logger.info { "${req.method} ${req.uri.path}" }
-        return chain.filter(exchange).doFinally {
-            val path = exchange.getAttribute<Any>(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE)
-                ?.toString() ?: exchange.request.path.value()
+        return Mono.deferContextual { _ ->
+            logger.info { "${req.method} ${req.uri.path}" }
+            chain.filter(exchange).doFinally {
+                val path =  exchange.request.path.value()
 
-            if (path.startsWith("/actuator")) return@doFinally
+                if (path.startsWith("/actuator")) return@doFinally
 
-            val status = exchange.response.statusCode?.value()?.toString() ?: "0"
-            val method = exchange.request.method.name()
-            val elapsed = (System.currentTimeMillis() - start).toDouble()
+                val status = exchange.response.statusCode?.value() ?: 0
+                val method = exchange.request.method.name()
+                val elapsed = System.currentTimeMillis() - start
 
-            Counter.builder("http.requests")
-                .tag("status", status)
-                .tag("path", path)
-                .tag("method", method)
-                .register(registry)
-                .increment()
+                logger.info { "returned $status in ${elapsed}ms" }
 
-            DistributionSummary.builder("http_request_duration_milliseconds")
-                .tag("path", path)
-                .tag("method", method)
-                .serviceLevelObjectives(5.0, 10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 2500.0, 5000.0)
-                .register(registry)
-                .record(elapsed)
+                Counter.builder("http.requests")
+                    .tag("status", status.toString())
+                    .tag("path", path)
+                    .tag("method", method)
+                    .register(registry)
+                    .increment()
+
+                DistributionSummary.builder("http_request_duration_milliseconds")
+                    .tag("path", path)
+                    .tag("method", method)
+                    .serviceLevelObjectives(5.0, 10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 2500.0, 5000.0)
+                    .register(registry)
+                    .record(elapsed.toDouble())
+            }
         }
     }
 }
