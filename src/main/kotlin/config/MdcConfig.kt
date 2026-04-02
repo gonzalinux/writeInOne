@@ -31,7 +31,7 @@ class RequestIdMdcAccessor : ThreadLocalAccessor<String> {
         MDC.put("requestId", value)
     }
 
-    override fun restore() {
+    override fun setValue() {
         MDC.remove("requestId")
     }
 }
@@ -46,7 +46,7 @@ class UserIdMdcAccessor : ThreadLocalAccessor<Long> {
         MDC.put("userId", value.toString())
     }
 
-    override fun restore() {
+    override fun setValue() {
         MDC.remove("userId")
     }
 }
@@ -61,7 +61,7 @@ class SiteContextMdcAccessor : ThreadLocalAccessor<Site> {
         MDC.put("site", value.domain)
     }
 
-    override fun restore() {
+    override fun setValue() {
         MDC.remove("site")
     }
 }
