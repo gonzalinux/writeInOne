@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <link rel="icon" type="image/x-icon" href="/img/favicon.ico"/>
-    <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png"/>
-    <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png"/>
-    <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png"/>
+    <!--/*@thymesVar id="prefix" type="String"*/-->
+    <link rel="icon" type="image/x-icon" th:href="${prefix} + '/img/favicon.ico'"/>
+    <link rel="icon" type="image/png" sizes="32x32" th:href="${prefix} + '/img/favicon-32x32.png'"/>
+    <link rel="icon" type="image/png" sizes="16x16" th:href="${prefix} + '/img/favicon-16x16.png'"/>
+    <link rel="apple-touch-icon" sizes="180x180" th:href="${prefix} + '/img/apple-touch-icon.png'"/>
     <link rel="manifest" href="/manifest.json"/>
     <title>WriteInOne</title>
-    <link rel="stylesheet" href="/css/landing.css"/>
+    <link rel="stylesheet" th:href="${prefix} + '/css/blog.css'"/>
 </head>
 <body>
     <a class="logo" href="https://WriteInOne.com">
-        <img src="/img/logoWriteInOneGrey.png" alt="WriteInOne" class="logo__img"/>
+        <img th:src="${prefix} + '/img/logoWriteInOneGrey.png'" alt="WriteInOne" class="logo__img"/>
         WriteInOne
     </a>
 
@@ -27,7 +28,7 @@
 
     <footer>
         <a href="https://WriteInOne.com" class="footer__link">
-            <img src="/img/logoWriteInOneGrey.png" alt="WriteInOne" class="footer__img"/>
+            <img th:src="${prefix} + '/img/logoWriteInOneGrey.png'" alt="WriteInOne" class="footer__img"/>
             Powered by WriteInOne
         </a>
     </footer>

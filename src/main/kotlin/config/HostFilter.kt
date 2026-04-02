@@ -41,7 +41,7 @@ class HostFilter(private val siteRepository: SiteRepository) : HandlerFilterFunc
                         ServerResponse.ok().render("landing")
                     } else {
                         logger.debug { "No site found for domain: $domain, showing home page" }
-                        ServerResponse.ok().render("home")
+                        ServerResponse.ok().render("home", mapOf("prefix" to prefix))
                     }
                 }
             )
