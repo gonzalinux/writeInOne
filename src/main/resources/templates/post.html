@@ -67,9 +67,9 @@
         const _hljsLangs = /*[[${codeLanguages}]]*/ [];
     </script>
     <script type="module">
-        import hljs from 'https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/es/core.min.js';
+        import hljs from 'https://esm.sh/highlight.js@11.11.1/lib/core';
         await Promise.all(_hljsLangs.map(l =>
-            import(`https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/es/languages/${l}.min.js`)
+            import(`https://esm.sh/highlight.js@11.11.1/lib/languages/${l}`)
                 .then(m => hljs.registerLanguage(l, m.default))
                 .catch(() => {})
         ));
