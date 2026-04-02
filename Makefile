@@ -33,9 +33,8 @@ prod:
 	git pull
 	mkdir -p postgres_data && docker compose --env-file $(ENV_FILE) up --build -d --remove-orphans
 
-## logs: Show app logs (use `make logs f=1` to follow)
 logs:
-	docker compose logs $(if $(f),-f) app
+	docker compose logs  -f
 
 ## psql: Open a psql session inside the postgres container
 psql:

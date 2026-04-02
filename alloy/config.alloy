@@ -31,7 +31,7 @@ loki.process "app" {
   stage.static_labels {
     values = {
       app    = "writeinone",
-      deploy = coalesce(env("DEPLOY_ENV"), "unknown"),
+      deploy = coalesce(env("DEPLOY_ENV"), "local"),
     }
   }
 
