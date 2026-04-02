@@ -1,10 +1,7 @@
 package com.gonzalinux.config
 
 import com.gonzalinux.api.AuthHandler.Companion.ACCESS_TOKEN_COOKIE
-import com.gonzalinux.common.RequestContext
-import com.gonzalinux.common.RequestContextHolder
-import com.gonzalinux.common.RequestContextHolder.withRequestContext
-import com.gonzalinux.common.UnauthorizedException
+import com.gonzalinux.common.RequestContextHolder.withUserId
 import com.gonzalinux.domain.user.TokenService
 import mu.KotlinLogging
 import org.springframework.stereotype.Component
@@ -13,34 +10,28 @@ import org.springframework.web.reactive.function.server.HandlerFunction
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import reactor.core.publisher.Mono
-import reactor.kotlin.core.publisher.onErrorResume
-import reactor.kotlin.core.publisher.onErrorReturn
 import reactor.kotlin.core.publisher.switchIfEmpty
-import reactor.kotlin.core.publisher.toMono
 
 private val logger = KotlinLogging.logger {}
 
 @Component
-class JwtNotEnforcedFilter(private val tokenService: TokenService) : HandlerFilterFunction<ServerResponse, ServerResponse> {
+class JwtNotEnforcedFilter(private val tokenService: TokenService) :
+    HandlerFilterFunction<ServerResponse, ServerResponse> {
 
     override fun filter(request: ServerRequest, next: HandlerFunction<ServerResponse>): Mono<ServerResponse> {
         val token = request.cookies()[ACCESS_TOKEN_COOKIE]?.firstOrNull()?.value
             ?: return next.handle(request)
 
         return Mono.fromCallable { tokenService.getUserIdFromToken(token) }
-            .map {
-                RequestContext(it, RequestContextHolder.extractRequestId(request))
-            }
             .onErrorResume {
                 Mono.empty()
             }
-            .flatMap { reqContext->
-                logger.debug { "${request.method()} ${request.path()} [requestId=${reqContext.requestId}, userId=${reqContext.userId}]" }
-                next.handle(request).contextWrite { it.withRequestContext(reqContext) }
+            .flatMap { userId ->
+                logger.debug { "${request.method()} ${request.path()} [userId=$userId]" }
+                next.handle(request).contextWrite { it.withUserId(userId) }
             }
             .switchIfEmpty {
                 next.handle(request)
             }
-
     }
 }

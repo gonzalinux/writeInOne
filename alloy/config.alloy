@@ -1,0 +1,63 @@
+local.file_match "app" {
+  path_targets = [{"__path__" = "/app/logs/app.json.log"}]
+}
+
+loki.source.file "app" {
+  targets    = local.file_match.app.targets
+  forward_to = [loki.process.app.receiver]
+}
+
+loki.process "app" {
+  stage.json {
+    expressions = {
+      level      = "level",
+      logger     = "logger_name",
+      timestamp  = "@timestamp",
+      message    = "message",
+      request_id = "requestId",
+      user_id    = "userId",
+      site       = "site",
+      thread     = "thread_name",
+    }
+  }
+
+  stage.labels {
+    values = {
+      level  = null,
+      logger = null,
+    }
+  }
+
+  stage.static_labels {
+    values = {
+      app    = "writeinone",
+      deploy = coalesce(env("DEPLOY_ENV"), "unknown"),
+    }
+  }
+
+  stage.structured_metadata {
+    values = {
+      request_id = "",
+      user_id    = "",
+      site       = "",
+      thread     = "",
+    }
+  }
+
+  stage.timestamp {
+    source = "timestamp"
+    format = "RFC3339Nano"
+  }
+
+  stage.output {
+    source = "message"
+  }
+
+  forward_to = [loki.write.aggregator.receiver]
+}
+
+loki.write "aggregator" {
+  endpoint {
+    url = coalesce(env("LOG_AGGREGATOR_URL"), "")
+  }
+}

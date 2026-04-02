@@ -2,7 +2,7 @@ package com.gonzalinux.api
 
 import com.gonzalinux.blogs.BlogService
 import com.gonzalinux.blogs.buildRss
-import com.gonzalinux.common.RequestContextHolder.getRequestContext
+import com.gonzalinux.common.RequestContextHolder.getUserId
 import com.gonzalinux.common.SiteContextHolder.getPrefix
 import com.gonzalinux.common.SiteContextHolder.getSite
 import com.gonzalinux.domain.site.LangConfig
@@ -74,7 +74,7 @@ class BlogsHandler(private val blogService: BlogService) {
         val slug = request.pathVariable("slug")
         return Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!
-            val user = ctx.getRequestContext()?.userId
+            val user = ctx.getUserId()
             val prefix = ctx.getPrefix().let { if (it.isNotEmpty()) "/$it" else "" }
             blogService.getBySlug(site.id, lang, slug, user)
                 .flatMap { detail ->

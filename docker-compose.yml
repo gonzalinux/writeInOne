@@ -12,8 +12,23 @@ services:
       DB_PASSWORD: secret
       SPRING_PROFILES_ACTIVE: prod
       MANAGEMENT_PORT: 8081
+      JSON_LOG_PATH: /app/logs/app.json.log
+    volumes:
+      - logs:/app/logs
     depends_on:
       - db
+
+  alloy:
+    image: grafana/alloy:v1.15.0
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - logs:/app/logs:ro
+    command: run /etc/alloy/config.alloy
+    environment:
+      - LOG_AGGREGATOR_URL=${LOG_AGGREGATOR_URL}
+      - DEPLOY_ENV=${DEPLOY_ENV:-home}
+    depends_on:
+      - app
 
   db:
     image: postgres:17
@@ -26,3 +41,6 @@ services:
     volumes:
       - ./postgres_data:/var/lib/postgresql/data:z
     command: -p 5433
+
+volumes:
+  logs:

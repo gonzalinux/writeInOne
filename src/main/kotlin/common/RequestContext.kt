@@ -1,27 +1,20 @@
 package com.gonzalinux.common
 
-import org.springframework.web.reactive.function.server.ServerRequest
+import org.springframework.http.server.reactive.ServerHttpRequest
 import reactor.util.context.Context
 import reactor.util.context.ContextView
-import java.util.UUID
-
-data class RequestContext(
-    val userId: Long,
-    val requestId: String
-)
+import java.util.*
 
 object RequestContextHolder {
-    const val CONTEXT_KEY = "REQUEST_CONTEXT"
-    private const val REQUEST_HEADER = "gon-request-id"
+    const val REQUEST_ID_KEY = "REQUEST_ID"
+    const val USER_ID_KEY = "USER_ID"
+    private const val REQUEST_HEADER = "x-request-id"
     private const val REQUEST_FORMAT = "^rq-[0-9a-fA-F]{32}$"
 
-    fun extractRequestId(request: ServerRequest): String {
-        val requestHeader = request.headers().firstHeader(REQUEST_HEADER)
-        if (requestHeader.isNullOrEmpty()) {
-            return generateRequestId()
-        }
-        if (requestHeader.matches(REQUEST_FORMAT.toRegex())) {
-            return requestHeader
+    fun extractRequestId(request: ServerHttpRequest): String {
+        val header = request.headers.getFirst(REQUEST_HEADER)
+        if (!header.isNullOrEmpty() && header.matches(REQUEST_FORMAT.toRegex())) {
+            return header
         }
         return generateRequestId()
     }
@@ -31,16 +24,9 @@ object RequestContextHolder {
         return "rq-$randomPart"
     }
 
-    fun Context.withRequestContext(requestContext: RequestContext): Context {
-        return put(CONTEXT_KEY, requestContext)
-    }
+    fun Context.withRequestId(requestId: String): Context = put(REQUEST_ID_KEY, requestId)
+    fun Context.withUserId(userId: Long): Context = put(USER_ID_KEY, userId)
 
-    fun ContextView.getRequestContext(): RequestContext? {
-        return getOrDefault(CONTEXT_KEY, null)
-    }
-
-    fun ContextView.hasRequestContext(): Boolean {
-        return hasKey(CONTEXT_KEY)
-    }
+    fun ContextView.getRequestId(): String? = getOrDefault(REQUEST_ID_KEY, null)
+    fun ContextView.getUserId(): Long? = getOrDefault(USER_ID_KEY, null)
 }
-

@@ -1,6 +1,10 @@
 server:
   port: ${SERVER_PORT:8080}
 
+json:
+  log:
+    path: ${JSON_LOG_PATH:}
+
 spring:
   thymeleaf:
     cache: ${THYMELEAF_CACHE:true}

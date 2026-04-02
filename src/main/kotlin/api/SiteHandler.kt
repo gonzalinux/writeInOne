@@ -2,7 +2,7 @@ package com.gonzalinux.api
 
 import com.gonzalinux.api.data.CreateSiteRequest
 import com.gonzalinux.api.data.UpdateSiteRequest
-import com.gonzalinux.common.RequestContextHolder.getRequestContext
+import com.gonzalinux.common.RequestContextHolder.getUserId
 import com.gonzalinux.common.RequestValidator
 import com.gonzalinux.common.pathVariableLong
 import com.gonzalinux.domain.site.Site
@@ -21,21 +21,21 @@ class SiteHandler(private val service: SiteService, private val validator: Reque
         Mono.deferContextual { ctx ->
             request.bodyToMono<CreateSiteRequest>()
                 .map { validator.validate(it) }
-                .flatMap { service.create(ctx.getRequestContext()!!.userId, it) }
+                .flatMap { service.create(ctx.getUserId()!!, it) }
                 .flatMap { ServerResponse.ok().bodyValue(it) }
         }
 
     fun list(request: ServerRequest): Mono<ServerResponse> =
         Mono.deferContextual { ctx ->
             ServerResponse.ok().
-            body<Site>(service.list(ctx.getRequestContext()!!.userId))
+            body<Site>(service.list(ctx.getUserId()!!))
         }
 
     fun update(request: ServerRequest): Mono<ServerResponse> {
         val id = request.pathVariableLong("id")
         return Mono.deferContextual { ctx ->
             request.bodyToMono<UpdateSiteRequest>()
-                .flatMap { service.update(id, ctx.getRequestContext()!!.userId, it) }
+                .flatMap { service.update(id, ctx.getUserId()!!, it) }
                 .flatMap { ServerResponse.ok().bodyValue(it) }
         }
     }
@@ -43,7 +43,7 @@ class SiteHandler(private val service: SiteService, private val validator: Reque
     fun get(request: ServerRequest): Mono<ServerResponse> {
         val id = request.pathVariableLong("id")
         return Mono.deferContextual { ctx ->
-            service.findById(id, ctx.getRequestContext()!!.userId)
+            service.findById(id, ctx.getUserId()!!)
                 .flatMap { ServerResponse.ok().bodyValue(it) }
         }
     }
@@ -51,7 +51,7 @@ class SiteHandler(private val service: SiteService, private val validator: Reque
     fun delete(request: ServerRequest): Mono<ServerResponse> {
         val id = request.pathVariableLong("id")
         return Mono.deferContextual { ctx ->
-            service.delete(id, ctx.getRequestContext()!!.userId)
+            service.delete(id, ctx.getUserId()!!)
                 .then(ServerResponse.ok().build())
         }
     }
