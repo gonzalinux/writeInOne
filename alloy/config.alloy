@@ -12,7 +12,7 @@ loki.process "app" {
     expressions = {
       level      = "level",
       logger     = "logger_name",
-      timestamp  = "@timestamp",
+      timestamp  = "\"@timestamp\"",
       message    = "message",
       request_id = "requestId",
       user_id    = "userId",
