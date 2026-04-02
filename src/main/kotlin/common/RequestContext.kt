@@ -9,7 +9,7 @@ object RequestContextHolder {
     const val REQUEST_ID_KEY = "REQUEST_ID"
     const val USER_ID_KEY = "USER_ID"
     private const val REQUEST_HEADER = "x-request-id"
-    private const val REQUEST_FORMAT = "^rq-[0-9a-fA-F]{32}$"
+    private const val REQUEST_FORMAT = "^GK[0-9a-fA-F]{18}$"
 
     fun extractRequestId(request: ServerHttpRequest): String {
         val header = request.headers.getFirst(REQUEST_HEADER)
@@ -20,8 +20,8 @@ object RequestContextHolder {
     }
 
     fun generateRequestId(): String {
-        val randomPart = UUID.randomUUID().toString().replace("-", "")
-        return "rq-$randomPart"
+        val randomPart = UUID.randomUUID().toString().replace("-", "").substring(0,18)
+        return "GK$randomPart"
     }
 
     fun Context.withRequestId(requestId: String): Context = put(REQUEST_ID_KEY, requestId)
