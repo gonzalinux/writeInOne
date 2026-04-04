@@ -34,6 +34,9 @@ token-scheduler:
 post-scheduler:
   interval-ms: 60000
 
+site-verificator:
+  interval-sec: 120
+
 management:
   server:
     port: ${MANAGEMENT_PORT:8081}

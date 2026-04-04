@@ -4,6 +4,62 @@
    WriteInOne Admin — shared stylesheet
    ============================================================ */
 
+/* ── Domain verification ── */
+.domain-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.domain-row input { flex: 1; }
+
+.badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-family: sans-serif;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+.badge--verified { background: #d4edda; color: #155724; }
+.badge--pending  { background: #fff3cd; color: #856404; }
+.badge--expired  { background: #f8d7da; color: #721c24; }
+.badge--clickable { cursor: pointer; }
+.badge--clickable:hover { filter: brightness(0.92); }
+
+/* ── Modal ── */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+.modal__box {
+    background: #fff;
+    border-radius: 8px;
+    padding: 2rem;
+    max-width: 480px;
+    width: 90%;
+    position: relative;
+}
+.modal__close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    color: #888;
+    line-height: 1;
+}
+.modal__title { margin: 0 0 1rem; font-size: 1.1rem; }
+.modal__body  { margin: 0 0 1.5rem; font-size: 0.9rem; line-height: 1.6; color: #444; }
+.modal__body a { color: inherit; }
+.modal__footer { display: flex; gap: 0.75rem; }
+
 /* ── Base ── */
 body {
     font-family: Georgia, 'Times New Roman', serif;
@@ -296,6 +352,11 @@ textarea {
 .site-card__domain {
     font-size: 0.875rem;
     color: #888;
+    text-decoration: none;
+}
+.site-card__domain:hover {
+    text-decoration: underline;
+    color: #555;
 }
 
 .site-card__actions {

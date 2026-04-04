@@ -26,7 +26,7 @@ class MetricsFilter(private val registry: MeterRegistry) : WebFilter {
             chain.filter(exchange).doFinally {
                 val path =  exchange.request.path.value()
 
-                if (path.startsWith("/actuator")) return@doFinally
+                if (path.startsWith("/metrics")) return@doFinally
 
                 val status = exchange.response.statusCode?.value() ?: 0
                 val method = exchange.request.method.name()

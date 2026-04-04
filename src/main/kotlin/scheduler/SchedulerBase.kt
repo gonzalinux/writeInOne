@@ -16,7 +16,7 @@ abstract class SchedulerBase(private val intervalMs: Long) : ApplicationRunner, 
     abstract fun execute(): Mono<*>
 
     override fun run(args: ApplicationArguments) {
-        subscription = Flux.interval(Duration.ofMillis(intervalMs))
+        subscription = Flux.interval(Duration.ZERO, Duration.ofMillis(intervalMs))
             .concatMap {
                 execute()
                     .onErrorResume { e ->
