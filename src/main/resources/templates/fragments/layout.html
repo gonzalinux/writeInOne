@@ -24,6 +24,8 @@
     <link rel="stylesheet" th:href="${prefix} + '/css/blog.css'"/>
     <!-- Site custom stylesheet loaded after defaults so it can override any class -->
     <link th:if="${site.stylesUrl != null}" rel="stylesheet" th:href="${site.stylesUrl}"/>
+    <!-- Site custom head HTML (analytics, meta tags, etc.) -->
+    <th:block th:if="${site.config.headHtml != null}" th:utext="${site.config.headHtml}"></th:block>
 </th:block>
 
 <!-- HEADER/NAV fragment -->
@@ -54,6 +56,11 @@
             </nav>
         </div>
     </header>
+</th:block>
+
+<!-- BODY START fragment — site custom body HTML (analytics, etc.) -->
+<th:block th:fragment="bodyStart">
+    <th:block th:if="${site.config.bodyHtml != null}" th:utext="${site.config.bodyHtml}"></th:block>
 </th:block>
 
 <!-- FOOTER fragment -->

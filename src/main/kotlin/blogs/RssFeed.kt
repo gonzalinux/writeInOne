@@ -15,7 +15,8 @@ fun buildRss(
     posts: List<BlogPostSummary>,
     prefix: String
 ): String {
-    val baseUrl = "https://$domain/prefix"
+    val prefix= prefix.removePrefix("/").removeSuffix("/")
+    val baseUrl = "https://$domain/$prefix"
     val feedUrl = "$baseUrl/$lang/rss.xml"
     val htmlUrl = "$baseUrl/$lang"
 

@@ -18,10 +18,30 @@ const requestVerificationField = document.getElementById('requestVerificationFie
 const requestVerificationCb    = document.getElementById('requestVerification');
 const englishCb                = document.getElementById('lang-ENGLISH');
 const spanishCb     = document.getElementById('lang-SPANISH');
+const headHtmlInput = document.getElementById('headHtml');
+const bodyHtmlInput = document.getElementById('bodyHtml');
+
+const cmOptions = { mode: 'htmlmixed', lineNumbers: true, indentWithTabs: false, indentUnit: 2, tabSize: 2, lineWrapping: true };
+const headEditor = CodeMirror.fromTextArea(headHtmlInput, cmOptions);
+const bodyEditor = CodeMirror.fromTextArea(bodyHtmlInput, cmOptions);
+headEditor.getWrapperElement().classList.add('html-codemirror');
+bodyEditor.getWrapperElement().classList.add('html-codemirror');
 const enFooter      = document.getElementById('en-footer');
 const esFooter      = document.getElementById('es-footer');
 const enNav         = document.getElementById('en-nav');
 const esNav         = document.getElementById('es-nav');
+
+// ── Tab navigation ────────────────────────────────────────────────────────
+
+document.querySelectorAll('.form-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.form-tab').forEach(t => t.classList.remove('form-tab--active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.hidden = true);
+    tab.classList.add('form-tab--active');
+    document.getElementById('tab-' + tab.dataset.tab).hidden = false;
+    if (tab.dataset.tab === 'code') { headEditor.refresh(); bodyEditor.refresh(); }
+  });
+});
 
 // ── Language toggles ──────────────────────────────────────────────────────
 
@@ -112,6 +132,9 @@ async function loadSite() {
   syncLangConfig(englishCb);
   syncLangConfig(spanishCb);
 
+  headEditor.setValue(site.config?.headHtml || '');
+  bodyEditor.setValue(site.config?.bodyHtml || '');
+
   enFooter.value  = site.config?.en?.footer || '';
   enNav.innerHTML = '';
   (site.config?.en?.nav || []).forEach(link => enNav.appendChild(makeNavRow(link.label, link.url)));
@@ -149,6 +172,8 @@ form.addEventListener('submit', async e => {
     languages,
     config: {
       faviconUrl: faviconInput.value.trim() || null,
+      headHtml:   headEditor.getValue().trim() || null,
+      bodyHtml:   bodyEditor.getValue().trim() || null,
       en: { footer: enFooter.value.trim(), nav: readNavLinks(enNav) },
       es: { footer: esFooter.value.trim(), nav: readNavLinks(esNav) },
     },

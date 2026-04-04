@@ -152,6 +152,11 @@ main.main--compact {
     max-width: 580px;
 }
 
+/* Mid-width layout for tabbed forms */
+main.main--form {
+    max-width: 680px;
+}
+
 /* ── Page header (title + action button row) ── */
 .page-header {
     display: flex;
@@ -280,6 +285,19 @@ textarea {
     min-height: 360px;
     font-size: 0.9rem;
     line-height: 1.6;
+}
+
+.html-codemirror.CodeMirror {
+    font-family: 'Courier New', Consolas, monospace;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    height: 200px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.html-codemirror .CodeMirror-scroll {
+    height: 200px;
 }
 
 .body-codemirror.CodeMirror {
@@ -600,6 +618,34 @@ tr:last-child td {
 .lang-config {
     padding: 1.25rem 1.25rem 0.25rem;
     border-top: 1px solid #e5e5e5;
+}
+
+/* ── Form section tabs (site form) ── */
+.form-tabs {
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 2px solid #e5e5e5;
+    margin-bottom: 1.75rem;
+}
+
+.form-tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    padding: 0.5rem 1.1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.form-tab:hover { color: #1a1a1a; }
+
+.form-tab--active {
+    color: #1a1a1a;
+    border-bottom-color: #1a1a1a;
 }
 
 /* ── Language tabs (post form) ── */
