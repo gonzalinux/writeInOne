@@ -1,11 +1,12 @@
 package com.gonzalinux.domain.tag
 
 import com.gonzalinux.common.SiteNotFoundException
-import com.gonzalinux.domain.site.SiteConfig
-import com.gonzalinux.domain.site.SiteRepository
-import com.gonzalinux.domain.site.Theme
 import com.gonzalinux.domain.Languages
 import com.gonzalinux.domain.site.Site
+import com.gonzalinux.domain.site.SiteConfig
+import com.gonzalinux.domain.site.SiteRepository
+import com.gonzalinux.domain.site.SiteStatus
+import com.gonzalinux.domain.site.Theme
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -24,9 +25,10 @@ class TagServiceTest {
 
     private val site = Site(
         id = 1L, userId = 1L, name = "My Blog", domain = "blog.example.com",
-        description = null, stylesUrl = null, availableThemes = listOf(Theme.LIGHT),
-        languages = listOf(Languages.ENGLISH), config = SiteConfig(),
-        createdAt = OffsetDateTime.now(ZoneOffset.UTC), updatedAt = OffsetDateTime.now(ZoneOffset.UTC)
+        prefix = "", description = null, stylesUrl = null, availableThemes = listOf(Theme.LIGHT),
+        languages = listOf(Languages.ENGLISH), config = SiteConfig(), status = SiteStatus.NOT_VERIFIED,
+        createdAt = OffsetDateTime.now(ZoneOffset.UTC), updatedAt = OffsetDateTime.now(ZoneOffset.UTC),
+        verifyDate = OffsetDateTime.now(ZoneOffset.UTC)
     )
 
     private val tag = Tag(id = 1L, siteId = 1L, name = "kotlin", createdAt = OffsetDateTime.now(ZoneOffset.UTC))

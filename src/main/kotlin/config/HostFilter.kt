@@ -19,7 +19,6 @@ class HostFilter(private val siteRepository: SiteRepository) : HandlerFilterFunc
     override fun filter(request: ServerRequest, next: HandlerFunction<ServerResponse>): Mono<ServerResponse> {
         val domain = (request.headers().firstHeader("X-Site-Host")
             ?: request.headers().firstHeader("Host"))
-            ?.substringBefore(":")  // strip port if present
             ?: return ServerResponse.badRequest().build()
 
 
@@ -35,7 +34,7 @@ class HostFilter(private val siteRepository: SiteRepository) : HandlerFilterFunc
             }
             .switchIfEmpty(
                 Mono.defer {
-                    val isHomeDomain = domain == "writeinone.com" || domain == "localhost"
+                    val isHomeDomain = domain == "writeinone.com" || domain == "localhost" || domain.startsWith("localhost:")
                     if (isHomeDomain) {
                         logger.debug { "Home domain: $domain, showing landing page" }
                         ServerResponse.ok().render("landing")

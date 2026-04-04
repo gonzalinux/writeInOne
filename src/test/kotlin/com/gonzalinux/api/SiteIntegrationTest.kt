@@ -67,6 +67,7 @@ class SiteIntegrationTest {
             .jsonPath("$.name").isEqualTo("Test Blog")
             .jsonPath("$.domain").isEqualTo("testblog-$ts.example.com")
             .jsonPath("$.id").isNumber
+            .jsonPath("$.status").isEqualTo("NOT_VERIFIED")
     }
 
     @Test
@@ -147,7 +148,7 @@ class SiteIntegrationTest {
     fun `update site returns 200 with updated name`() {
         val siteId = createSite("Old Name", "updateblog-$ts.example.com")
 
-        webTestClient.put().uri("/sites/$siteId")
+        webTestClient.patch().uri("/sites/$siteId")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(mapOf("name" to "New Name"))
@@ -155,6 +156,44 @@ class SiteIntegrationTest {
             .expectStatus().isOk
             .expectBody()
             .jsonPath("$.name").isEqualTo("New Name")
+    }
+
+    @Test
+    fun `update site with new domain resets status to NOT_VERIFIED`() {
+        val siteId = createSite("My Blog", "original-$ts.example.com")
+
+        webTestClient.patch().uri("/sites/$siteId")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(mapOf("domain" to "changed-$ts.example.com"))
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.domain").isEqualTo("changed-$ts.example.com")
+            .jsonPath("$.status").isEqualTo("NOT_VERIFIED")
+    }
+
+    @Test
+    fun `update site with requestVerification true resets verifyDate`() {
+        val siteId = createSite("My Blog", "reverify-$ts.example.com")
+
+        // Get the original verifyDate
+        val original = webTestClient.get().uri("/sites/$siteId")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .exchange()
+            .expectBody(Map::class.java)
+            .returnResult().responseBody!!
+        val originalVerifyDate = original["verifyDate"] as String
+
+        webTestClient.patch().uri("/sites/$siteId")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(mapOf("requestVerification" to true))
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.status").isEqualTo("NOT_VERIFIED")
+            .jsonPath("$.verifyDate").isNotEmpty
     }
 
     @Test
@@ -200,7 +239,7 @@ class SiteIntegrationTest {
     fun `update site returns 400 when nav link URL is invalid`() {
         val siteId = createSite("Nav Blog", "navupdate-$ts.example.com")
 
-        webTestClient.put().uri("/sites/$siteId")
+        webTestClient.patch().uri("/sites/$siteId")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(mapOf(

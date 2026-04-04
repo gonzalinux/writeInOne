@@ -11,6 +11,7 @@
     <title>Dashboard — WriteInOne</title>
     <link rel="stylesheet" href="/css/admin.css"/>
     <script src="/js/api.js" defer></script>
+    <script src="/js/admin.js" defer></script>
     <script src="/js/dashboard.js" defer></script>
 </head>
 <body>
@@ -34,5 +35,17 @@
             <a class="btn" href="/admin/sites/new">Create your first site</a>
         </div>
     </main>
+
+    <div id="verificationModal" class="modal" style="display:none">
+        <div class="modal__box">
+            <button class="modal__close" aria-label="Close">×</button>
+            <h2 class="modal__title"></h2>
+            <p class="modal__body"></p>
+            <div class="modal__footer">
+                <button class="btn modal__action"></button>
+                <button class="btn btn-ghost modal__close">Close</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

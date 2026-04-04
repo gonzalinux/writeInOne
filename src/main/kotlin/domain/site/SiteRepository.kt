@@ -48,9 +48,18 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             .map { mapToSite(it) }
 
     fun update(
-        id: Long, userId: Long, name: String?, domain: String?, description: String?,
-        stylesUrl: String?, availableThemes: List<Theme>?,
-        languages: List<Languages>?, config: SiteConfig? = null
+        id: Long,
+        userId: Long,
+        name: String? = null,
+        domain: String? = null,
+        description: String? = null,
+        stylesUrl: String? = null,
+        availableThemes: List<Theme>? = null,
+        languages: List<Languages>? = null,
+        config: SiteConfig? = null,
+        status:  SiteStatus? = null,
+        prefix: String? = null,
+        verifyDate: OffsetDateTime? = null
     ): Mono<Site> =
         client.sql("""
             UPDATE sites SET
@@ -60,7 +69,10 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
                 styles_url       = COALESCE(:stylesUrl, styles_url),
                 available_themes = COALESCE(:availableThemes, available_themes),
                 languages        = COALESCE(:languages, languages),
+                prefix           = COALESCE(:prefix, prefix),
+                status           = COALESCE(:status, status),
                 config           = COALESCE(:config::jsonb, config),
+                verify_date      = COALESCE(:verify_date, verify_date),
                 updated_at       = now()
             WHERE id = :id AND user_id = :userId
             RETURNING *
@@ -71,9 +83,12 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             .bindNullable<String>("domain", domain)
             .bindNullable<String>("description", description)
             .bindNullable<String>("stylesUrl", stylesUrl)
+            .bindNullable<String>("prefix", prefix)
+            .bindNullable<String>("status", status?.toString())
             .bindNullable<Array<String>>("availableThemes", availableThemes?.map { it.value }?.toTypedArray())
             .bindNullable<Array<String>>("languages", languages?.map { it.value }?.toTypedArray())
             .bindNullable<String>("config", config?.let { objectMapper.writeValueAsString(it) })
+            .bindNullable<OffsetDateTime>("verify_date", verifyDate)
             .fetch().first()
             .map { mapToSite(it) }
 
@@ -96,6 +111,14 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             .map { true }
             .defaultIfEmpty(false)
 
+    fun notVerified(): Flux<Site> {
+        val rangeDate = OffsetDateTime.now().minusDays(2)
+
+        return client.sql("SELECT * FROM sites where status = 'NOT_VERIFIED' AND verify_date > :range_date")
+            .bind("range_date", rangeDate)
+            .fetch().all().map { mapToSite(it) }
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun mapToSite(row: Map<String, Any>): Site {
         val languages = (row["languages"] as Array<String>)
@@ -104,7 +127,7 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             is String -> objectMapper.readValue(raw, SiteConfig::class.java)
             is ByteArray -> objectMapper.readValue(raw, SiteConfig::class.java)
             is Json -> objectMapper.readValue(raw.asArray(), SiteConfig::class.java)
-            else -> throw IllegalStateException("Unexpected config type: ${raw?.javaClass}")
+            else ->  error("Unexpected config type: ${raw?.javaClass}")
         }
 
         return Site(
@@ -112,13 +135,16 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             userId = row["user_id"] as Long,
             name = row["name"] as String,
             domain = row["domain"] as String,
+            prefix = row["prefix"] as String,
             description = row["description"] as? String,
             stylesUrl = row["styles_url"] as? String,
             availableThemes = (row["available_themes"] as Array<String>).mapNotNull { Theme.fromValue(it) },
             languages = languages,
             config = config,
+            status = SiteStatus.valueOf(row["status"] as String),
             createdAt = row["created_at"] as OffsetDateTime,
-            updatedAt = row["updated_at"] as OffsetDateTime
+            updatedAt = row["updated_at"] as OffsetDateTime,
+            verifyDate = row["verify_date"] as OffsetDateTime,
         )
     }
 }

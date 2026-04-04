@@ -11,8 +11,12 @@ const stylesInput       = document.getElementById('stylesUrl');
 const defaultThemeSelect = document.getElementById('defaultTheme');
 const enableSwitcherCb  = document.getElementById('enableSwitcher');
 const faviconInput      = document.getElementById('faviconUrl');
-const domainInput   = document.getElementById('domain');
-const englishCb     = document.getElementById('lang-ENGLISH');
+const domainInput              = document.getElementById('domain');
+const prefixInput              = document.getElementById('prefix');
+const verificationBadge        = document.getElementById('verificationBadge');
+const requestVerificationField = document.getElementById('requestVerificationField');
+const requestVerificationCb    = document.getElementById('requestVerification');
+const englishCb                = document.getElementById('lang-ENGLISH');
 const spanishCb     = document.getElementById('lang-SPANISH');
 const enFooter      = document.getElementById('en-footer');
 const esFooter      = document.getElementById('es-footer');
@@ -85,7 +89,23 @@ async function loadSite() {
   enableSwitcherCb.checked = themes.length > 1;
   faviconInput.value = site.config?.faviconUrl || '';
 
-  domainInput.value = site.domain || '';
+  domainInput.value  = site.domain || '';
+  prefixInput.value  = site.prefix || '';
+
+  const verified = site.status === 'VERIFIED';
+  const expired  = !verified && site.verifyDate && (Date.now() - new Date(site.verifyDate).getTime() > 2 * 24 * 60 * 60 * 1000);
+  verificationBadge.textContent  = verified ? '✓ Verified' : expired ? 'Verification expired' : 'Pending verification';
+  verificationBadge.className    = 'badge ' + (verified ? 'badge--verified' : expired ? 'badge--expired' : 'badge--pending');
+  verificationBadge.style.display = '';
+  verificationBadge.classList.add('badge--clickable');
+  verificationBadge.onclick = () => showVerificationModal({
+    domain:     site.domain,
+    prefix:     site.prefix || '',
+    status:     site.status,
+    verifyDate: site.verifyDate || null,
+    siteId,
+  });
+  requestVerificationField.style.display = verified ? 'none' : '';
 
   englishCb.checked = site.languages?.includes('ENGLISH') ?? true;
   spanishCb.checked = site.languages?.includes('SPANISH') ?? false;
@@ -134,10 +154,12 @@ form.addEventListener('submit', async e => {
     },
   };
 
-  body.domain = domainInput.value.trim();
+  body.domain  = domainInput.value.trim();
+  body.prefix  = prefixInput.value.trim() || null;
+  if (siteId && requestVerificationCb.checked) body.requestVerification = true;
 
   const url    = siteId ? `/sites/${siteId}` : '/sites/';
-  const method = siteId ? 'PUT' : 'POST';
+  const method = siteId ? 'PATCH' : 'POST';
 
   const res = await api(url, { method, body: JSON.stringify(body) });
   if (!res) return;

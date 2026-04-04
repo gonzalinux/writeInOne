@@ -46,7 +46,7 @@ class Router(
                 .POST("/", siteHandler::create)
                 .GET("/", siteHandler::list)
                 .GET("/{id}", siteHandler::get)
-                .PUT("/{id}", siteHandler::update)
+                .PATCH("/{id}", siteHandler::update)
                 .DELETE("/{id}", siteHandler::delete)
                 .path("/{siteId}/posts") { posts ->
                     posts
@@ -91,6 +91,7 @@ class Router(
         .GET("/{lang:es|en}/rss.xml", blogsHandler::rss)
         .GET("/blogs/{slug}", blogsHandler::postRoot)
         .GET("/{lang:es|en}/blogs/{slug}", blogsHandler::post)
+        .GET("/_verify", blogsHandler::verify)
         .build()
         .filter(hostFilter)
         .filter(jwtNotEnforcedFilter)
