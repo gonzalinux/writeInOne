@@ -123,6 +123,7 @@ class BlogsHandler(private val blogService: BlogService, private val verifyClien
                         domain = site.domain,
                         lang = lang,
                         posts = result.content,
+                        prefix = ctx.getPrefix()
                     )
                     ServerResponse.ok()
                         .contentType(MediaType.valueOf("application/rss+xml;charset=UTF-8"))
