@@ -18,6 +18,7 @@ class WebClientConfig {
     @Bean
     fun webClient(): WebClient {
         val base = HttpClient.create()
+            .followRedirect(true)
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
             .responseTimeout(Duration.ofMillis(5000))
             .doOnConnected {
