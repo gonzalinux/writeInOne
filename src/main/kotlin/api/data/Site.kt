@@ -30,5 +30,9 @@ data class UpdateSiteRequest(
     val availableThemes: List<Theme>? = null,
     val languages: List<Languages>? = null,
     val config: SiteConfig? = null,
-    val requestVerification: Boolean = false
+    val requestVerification: Boolean = false,
+    @field:Pattern(
+        regexp = "^[a-zA-Z0-9-]{0,20}$",
+        message = "prefix must be alphanumeric with dashes, max 20 chars"
+    ) val prefix: String? = null
 )

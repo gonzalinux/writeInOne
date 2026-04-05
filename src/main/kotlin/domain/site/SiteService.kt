@@ -79,6 +79,7 @@ class SiteService(private val repo: SiteRepository, private val verifyClient: Ve
             request.languages,
             request.config,
             status = if (resetVerification) SiteStatus.NOT_VERIFIED else null,
+            prefix = request.prefix,
             verifyDate = if (resetVerification) OffsetDateTime.now() else null
         )
 
