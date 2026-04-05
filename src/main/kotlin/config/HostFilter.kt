@@ -3,6 +3,7 @@ package com.gonzalinux.config
 import com.gonzalinux.common.SiteContextHolder.withPrefix
 import com.gonzalinux.common.SiteContextHolder.withSite
 import com.gonzalinux.domain.site.SiteRepository
+import com.gonzalinux.domain.site.SiteStatus
 import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.HandlerFilterFunction
@@ -28,13 +29,15 @@ class HostFilter(private val siteRepository: SiteRepository) : HandlerFilterFunc
             ?: ""
 
         return siteRepository.findByDomain(domain)
+            .filter { it.status == SiteStatus.VERIFIED || request.path().endsWith("/_verify") }
             .flatMap { site ->
                 logger.debug { "Resolved site [siteId=${site.id}, domain=$domain, prefix=$prefix]" }
                 next.handle(request).contextWrite { it.withSite(site).withPrefix(prefix) }
             }
             .switchIfEmpty(
                 Mono.defer {
-                    val isHomeDomain = domain == "writeinone.com" || domain == "localhost" || domain.startsWith("localhost:")
+                    val isHomeDomain =
+                        domain == "writeinone.com" || domain == "localhost" || domain.startsWith("localhost:")
                     if (isHomeDomain) {
                         logger.debug { "Home domain: $domain, showing landing page" }
                         ServerResponse.ok().render("landing")

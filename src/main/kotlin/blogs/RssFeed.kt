@@ -21,7 +21,7 @@ fun buildRss(
     val htmlUrl = "$baseUrl/$lang"
 
     val items = posts.joinToString("\n") { item ->
-        val url     = "$baseUrl/$lang/${item.translation.slug}"
+        val url     = "$baseUrl/$lang/articles/${item.translation.slug}"
         val pubDate = item.post.publishedAt
             ?.atZoneSameInstant(ZoneOffset.UTC)
             ?.format(RSS_DATE_FMT) ?: ""
