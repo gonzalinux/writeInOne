@@ -16,7 +16,10 @@ form.addEventListener('submit', async e => {
   });
 
   if (res.ok) {
-    location.href = '/admin';
+    // setTimeout(0) defers the navigation to the next event-loop tick so that
+    // browsers which commit HttpOnly cookies asynchronously (e.g. older Safari)
+    // have time to flush the Set-Cookie headers before the next request fires.
+    setTimeout(() => { location.href = '/admin'; }, 0);
   } else {
     const data = await res.json().catch(() => ({}));
     err.textContent = data.message || 'Invalid credentials';
