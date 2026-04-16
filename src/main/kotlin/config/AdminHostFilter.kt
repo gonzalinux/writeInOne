@@ -13,10 +13,10 @@ class AdminHostFilter : HandlerFilterFunction<ServerResponse, ServerResponse> {
     override fun filter(request: ServerRequest, next: HandlerFunction<ServerResponse>): Mono<ServerResponse> {
         val domain = (request.headers().firstHeader("X-Site-Host")
             ?: request.headers().firstHeader("Host"))
-            ?.substringBefore(":")
             ?: return ServerResponse.notFound().build()
+        val isHomeDomain = domain == "writeinone.com" || domain == "localhost" || domain.startsWith("localhost:")
 
-        return if (domain == "writeinone.com" || domain == "localhost") {
+        return if (isHomeDomain) {
             next.handle(request)
         } else {
             ServerResponse.notFound().build()

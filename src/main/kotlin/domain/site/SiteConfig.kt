@@ -2,6 +2,8 @@ package com.gonzalinux.domain.site
 
 data class SiteConfig(
     val faviconUrl: String? = null,
+    val headHtml: String? = null,
+    val bodyHtml: String? = null,
     val en: LangConfig = LangConfig(),
     val es: LangConfig = LangConfig()
 )

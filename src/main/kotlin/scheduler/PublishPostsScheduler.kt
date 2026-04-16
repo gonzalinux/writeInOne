@@ -17,8 +17,7 @@ class PublishPostsScheduler(
 ) : SchedulerBase(postSchedulerProperties.intervalMs) {
 
     override fun execute(): Mono<*> =
-        Mono.fromCallable { logger.info{"Publishing scheduled if any"} }
-            .flatMap { postRepository.publishScheduled() }
+           postRepository.publishScheduled()
             .doOnNext { count ->
                 if (count > 0) {
                     logger.info { "Published $count scheduled post(s)" }

@@ -7,6 +7,7 @@ import com.gonzalinux.common.SiteContextHolder.getPrefix
 import com.gonzalinux.common.SiteContextHolder.getSite
 import com.gonzalinux.domain.site.LangConfig
 import com.gonzalinux.domain.site.SiteConfig
+import com.gonzalinux.domain.site.VerifyClient
 import com.gonzalinux.utils.Utils
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
@@ -16,7 +17,7 @@ import reactor.core.publisher.Mono
 import kotlin.jvm.optionals.getOrNull
 
 @Component
-class BlogsHandler(private val blogService: BlogService) {
+class BlogsHandler(private val blogService: BlogService, private val verifyClient: VerifyClient) {
 
     fun index(request: ServerRequest): Mono<ServerResponse> =
         Mono.deferContextual { ctx ->
@@ -30,10 +31,10 @@ class BlogsHandler(private val blogService: BlogService) {
     }
 
     private fun langPostList(lang: String, request: ServerRequest): Mono<ServerResponse> {
-        val page = Utils.queryToInt(request.queryParam("page").getOrNull(), default = 0, min= 0)
+        val page = Utils.queryToInt(request.queryParam("page").getOrNull(), default = 0, min = 0)
         val tag = request.queryParam("tag").orElse(null)?.takeIf { it.isNotBlank() }
         val search = request.queryParam("search").orElse(null)?.takeIf { it.isNotBlank() }
-        val size = Utils.queryToInt(request.queryParam("size").getOrNull(), default = 10, min= 1)
+        val size = Utils.queryToInt(request.queryParam("size").getOrNull(), default = 10, min = 1)
         return Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!
             val prefix = ctx.getPrefix().let { if (it.isNotEmpty()) "/$it" else "" }
@@ -67,7 +68,7 @@ class BlogsHandler(private val blogService: BlogService) {
 
     fun post(request: ServerRequest): Mono<ServerResponse> {
         val lang = request.pathVariable("lang")
-       return postLang(lang, request)
+        return postLang(lang, request)
     }
 
     private fun postLang(lang: String, request: ServerRequest): Mono<ServerResponse> {
@@ -122,6 +123,7 @@ class BlogsHandler(private val blogService: BlogService) {
                         domain = site.domain,
                         lang = lang,
                         posts = result.content,
+                        prefix = ctx.getPrefix()
                     )
                     ServerResponse.ok()
                         .contentType(MediaType.valueOf("application/rss+xml;charset=UTF-8"))
@@ -139,7 +141,16 @@ class BlogsHandler(private val blogService: BlogService) {
         return Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!
             blogService.listPublished(site.id, lang, page, size, tag, search)
-                .flatMap { ServerResponse.ok().bodyValue(it) }
+
+        }.flatMap { ServerResponse.ok().bodyValue(it) }
+    }
+
+    fun verify(request: ServerRequest): Mono<ServerResponse> {
+        return Mono.deferContextual { ctx ->
+            val site = ctx.getSite()!!
+            Mono.fromCallable { verifyClient.getToken(site.domain) ?: "No need to verify" }
+        }.flatMap {
+            ServerResponse.ok().bodyValue(it)
         }
     }
 }
@@ -149,4 +160,3 @@ fun SiteConfig.forLang(lang: String): LangConfig = when (lang) {
     "es" -> es
     else -> LangConfig()
 }
-

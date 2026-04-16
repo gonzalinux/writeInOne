@@ -10,7 +10,14 @@
     <link rel="manifest" href="/manifest.json"/>
     <title>Site — WriteInOne</title>
     <link rel="stylesheet" href="/css/admin.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/htmlmixed/htmlmixed.min.js"></script>
     <script src="/js/api.js" defer></script>
+    <script src="/js/admin.js" defer></script>
     <script src="/js/site-form.js" defer></script>
 </head>
 <body>
@@ -19,97 +26,147 @@
         <a href="/admin">← Dashboard</a>
     </header>
 
-    <main class="main--compact">
-        <h1 id="pageTitle">Site</h1>
+    <main class="main--form">
+        <div class="page-header">
+            <h1 id="pageTitle">Site</h1>
+        </div>
+
+        <nav class="form-tabs" role="tablist">
+            <button class="form-tab form-tab--active" data-tab="general"    role="tab">General</button>
+            <button class="form-tab"                  data-tab="appearance" role="tab">Appearance</button>
+            <button class="form-tab"                  data-tab="languages"  role="tab">Languages</button>
+            <button class="form-tab"                  data-tab="code"       role="tab">Code</button>
+        </nav>
+
         <form id="siteForm" onsubmit="return false">
 
-            <!-- Basic -->
-            <h2 class="section-title">Basic</h2>
-            <div class="field">
-                <label for="name">Site name</label>
-                <input id="name" type="text" required placeholder="My Blog"/>
-            </div>
-            <div class="field">
-                <label for="domain">Domain</label>
-                <input id="domain" type="text" required placeholder="blog.example.com"/>
-                <p class="hint">The domain where your blog will be served (e.g. blog.example.com)</p>
-            </div>
-            <div class="field">
-                <label for="description">Description <span style="color:#aaa">(optional)</span></label>
-                <textarea id="description" placeholder="A short description of your blog"></textarea>
+            <!-- General -->
+            <div class="tab-panel" id="tab-general">
+                <div class="field">
+                    <label for="name">Site name</label>
+                    <input id="name" type="text" required placeholder="My Blog"/>
+                </div>
+                <div class="field">
+                    <label for="domain">Domain</label>
+                    <div class="domain-row">
+                        <input id="domain" type="text" required placeholder="blog.example.com"/>
+                        <span id="verificationBadge" style="display:none"></span>
+                    </div>
+                    <p class="hint">The domain where your blog will be served (e.g. blog.example.com)</p>
+                </div>
+                <div class="field">
+                    <label for="prefix">Path prefix <span style="color:#aaa">(optional)</span></label>
+                    <input id="prefix" type="text" placeholder="blog"/>
+                    <p class="hint">If your blog lives at example.com/blog, enter <code>blog</code>. Leave empty if served at the root.</p>
+                </div>
+                <div class="field" id="requestVerificationField" style="display:none">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="requestVerification"/>
+                        <span>Request domain re-verification</span>
+                    </label>
+                </div>
+                <div class="field">
+                    <label for="description">Description <span style="color:#aaa">(optional)</span></label>
+                    <textarea id="description" placeholder="A short description of your blog"></textarea>
+                </div>
             </div>
 
             <!-- Appearance -->
-            <h2 class="section-title">Appearance</h2>
-            <div class="field">
-                <label for="stylesUrl">Styles URL <span style="color:#aaa">(optional)</span></label>
-                <input id="stylesUrl" type="url" placeholder="https://example.com/styles.css"/>
-            </div>
-            <div class="field">
-                <label for="defaultTheme">Default theme</label>
-                <select id="defaultTheme">
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                </select>
-            </div>
-            <div class="field">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="enableSwitcher"/>
-                    <span>Enable theme switcher (support both light and dark)</span>
-                </label>
-            </div>
-            <div class="field">
-                <label for="faviconUrl">Favicon URL <span style="color:#aaa">(optional)</span></label>
-                <input id="faviconUrl" type="url" placeholder="https://example.com/favicon.ico"/>
+            <div class="tab-panel" id="tab-appearance" hidden>
+                <div class="field">
+                    <label for="faviconUrl">Favicon URL <span style="color:#aaa">(optional)</span></label>
+                    <input id="faviconUrl" type="url" placeholder="https://example.com/favicon.ico"/>
+                </div>
+                <div class="field">
+                    <label for="stylesUrl">Styles URL <span style="color:#aaa">(optional)</span></label>
+                    <input id="stylesUrl" type="url" placeholder="https://example.com/styles.css"/>
+                </div>
+                <div class="field">
+                    <label for="defaultTheme">Default theme</label>
+                    <select id="defaultTheme">
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="enableSwitcher"/>
+                        <span>Enable theme switcher (support both light and dark)</span>
+                    </label>
+                </div>
             </div>
 
             <!-- Languages -->
-            <h2 class="section-title">Languages</h2>
-
-            <!-- English -->
-            <div class="lang-block">
-                <label class="lang-toggle">
-                    <input type="checkbox" id="lang-ENGLISH" value="ENGLISH" checked/>
-                    <span>English</span>
-                </label>
-                <div class="lang-config" id="config-ENGLISH">
-                    <div class="field">
-                        <label for="en-footer">Footer text <span style="color:#aaa">(optional)</span></label>
-                        <textarea id="en-footer" rows="2" placeholder="Footer content for the English version"></textarea>
+            <div class="tab-panel" id="tab-languages" hidden>
+                <div class="lang-block">
+                    <label class="lang-toggle">
+                        <input type="checkbox" id="lang-ENGLISH" value="ENGLISH" checked/>
+                        <span>English</span>
+                    </label>
+                    <div class="lang-config" id="config-ENGLISH">
+                        <div class="field">
+                            <label for="en-footer">Footer text <span style="color:#aaa">(optional)</span></label>
+                            <textarea id="en-footer" rows="2" placeholder="Footer content for the English version"></textarea>
+                        </div>
+                        <div class="field">
+                            <label>Navigation links</label>
+                            <div id="en-nav"></div>
+                            <button type="button" class="btn btn-ghost btn--small" data-add-nav="en-nav">+ Add link</button>
+                        </div>
                     </div>
-                    <div class="field">
-                        <label>Navigation links</label>
-                        <div id="en-nav"></div>
-                        <button type="button" class="btn btn-ghost btn--small" data-add-nav="en-nav">+ Add link</button>
+                </div>
+                <div class="lang-block">
+                    <label class="lang-toggle">
+                        <input type="checkbox" id="lang-SPANISH" value="SPANISH"/>
+                        <span>Spanish</span>
+                    </label>
+                    <div class="lang-config" id="config-SPANISH">
+                        <div class="field">
+                            <label for="es-footer">Footer text <span style="color:#aaa">(optional)</span></label>
+                            <textarea id="es-footer" rows="2" placeholder="Footer content for the Spanish version"></textarea>
+                        </div>
+                        <div class="field">
+                            <label>Navigation links</label>
+                            <div id="es-nav"></div>
+                            <button type="button" class="btn btn-ghost btn--small" data-add-nav="es-nav">+ Add link</button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Spanish -->
-            <div class="lang-block">
-                <label class="lang-toggle">
-                    <input type="checkbox" id="lang-SPANISH" value="SPANISH"/>
-                    <span>Spanish</span>
-                </label>
-                <div class="lang-config" id="config-SPANISH">
-                    <div class="field">
-                        <label for="es-footer">Footer text <span style="color:#aaa">(optional)</span></label>
-                        <textarea id="es-footer" rows="2" placeholder="Footer content for the Spanish version"></textarea>
-                    </div>
-                    <div class="field">
-                        <label>Navigation links</label>
-                        <div id="es-nav"></div>
-                        <button type="button" class="btn btn-ghost btn--small" data-add-nav="es-nav">+ Add link</button>
-                    </div>
+            <!-- Code -->
+            <div class="tab-panel" id="tab-code" hidden>
+                <div class="field">
+                    <label for="headHtml">Head HTML <span style="color:#aaa">(optional)</span></label>
+                    <textarea id="headHtml" rows="6" placeholder="<!-- Scripts or tags injected before </head> on every page -->"></textarea>
+                    <p class="hint">Injected at the end of <code>&lt;head&gt;</code> on every page. Use for analytics, meta tags, custom fonts, etc.</p>
+                </div>
+                <div class="field">
+                    <label for="bodyHtml">Body HTML <span style="color:#aaa">(optional)</span></label>
+                    <textarea id="bodyHtml" rows="6" placeholder="<!-- Scripts or tags injected before </body> on every page -->"></textarea>
+                    <p class="hint">Injected at the start of <code>&lt;body&gt;</code> on every page.</p>
                 </div>
             </div>
 
             <p id="error" style="display:none;color:#c00;font-size:0.875rem;margin-top:0.75rem;"></p>
+
             <div class="actions">
                 <button class="btn" type="submit" id="submitBtn">Submit</button>
                 <a class="btn btn-ghost" href="/admin">Cancel</a>
             </div>
         </form>
     </main>
+
+    <div id="verificationModal" class="modal" style="display:none">
+        <div class="modal__box">
+            <button class="modal__close" aria-label="Close">×</button>
+            <h2 class="modal__title"></h2>
+            <p class="modal__body"></p>
+            <div class="modal__footer">
+                <button class="btn modal__action"></button>
+                <button class="btn btn-ghost modal__close">Close</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

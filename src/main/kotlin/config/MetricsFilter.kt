@@ -22,11 +22,11 @@ class MetricsFilter(private val registry: MeterRegistry) : WebFilter {
         val start = System.currentTimeMillis()
         val req = exchange.request
         return Mono.deferContextual { _ ->
-            logger.info { "${req.method} ${req.uri.path}" }
+            val path = exchange.request.path.value()
+            if (!path.startsWith("/metrics"))
+                logger.info { "${req.method} ${req.uri.path}" }
             chain.filter(exchange).doFinally {
-                val path =  exchange.request.path.value()
-
-                if (path.startsWith("/actuator")) return@doFinally
+                if (path.startsWith("/metrics")) return@doFinally
 
                 val status = exchange.response.statusCode?.value() ?: 0
                 val method = exchange.request.method.name()

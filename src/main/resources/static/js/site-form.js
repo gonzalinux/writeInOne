@@ -11,13 +11,37 @@ const stylesInput       = document.getElementById('stylesUrl');
 const defaultThemeSelect = document.getElementById('defaultTheme');
 const enableSwitcherCb  = document.getElementById('enableSwitcher');
 const faviconInput      = document.getElementById('faviconUrl');
-const domainInput   = document.getElementById('domain');
-const englishCb     = document.getElementById('lang-ENGLISH');
+const domainInput              = document.getElementById('domain');
+const prefixInput              = document.getElementById('prefix');
+const verificationBadge        = document.getElementById('verificationBadge');
+const requestVerificationField = document.getElementById('requestVerificationField');
+const requestVerificationCb    = document.getElementById('requestVerification');
+const englishCb                = document.getElementById('lang-ENGLISH');
 const spanishCb     = document.getElementById('lang-SPANISH');
+const headHtmlInput = document.getElementById('headHtml');
+const bodyHtmlInput = document.getElementById('bodyHtml');
+
+const cmOptions = { mode: 'htmlmixed', lineNumbers: true, indentWithTabs: false, indentUnit: 2, tabSize: 2, lineWrapping: true };
+const headEditor = CodeMirror.fromTextArea(headHtmlInput, cmOptions);
+const bodyEditor = CodeMirror.fromTextArea(bodyHtmlInput, cmOptions);
+headEditor.getWrapperElement().classList.add('html-codemirror');
+bodyEditor.getWrapperElement().classList.add('html-codemirror');
 const enFooter      = document.getElementById('en-footer');
 const esFooter      = document.getElementById('es-footer');
 const enNav         = document.getElementById('en-nav');
 const esNav         = document.getElementById('es-nav');
+
+// ── Tab navigation ────────────────────────────────────────────────────────
+
+document.querySelectorAll('.form-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.form-tab').forEach(t => t.classList.remove('form-tab--active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.hidden = true);
+    tab.classList.add('form-tab--active');
+    document.getElementById('tab-' + tab.dataset.tab).hidden = false;
+    if (tab.dataset.tab === 'code') { headEditor.refresh(); bodyEditor.refresh(); }
+  });
+});
 
 // ── Language toggles ──────────────────────────────────────────────────────
 
@@ -85,12 +109,31 @@ async function loadSite() {
   enableSwitcherCb.checked = themes.length > 1;
   faviconInput.value = site.config?.faviconUrl || '';
 
-  domainInput.value = site.domain || '';
+  domainInput.value  = site.domain || '';
+  prefixInput.value  = site.prefix || '';
+
+  const verified = site.status === 'VERIFIED';
+  const expired  = !verified && site.verifyDate && (Date.now() - new Date(site.verifyDate).getTime() > 2 * 24 * 60 * 60 * 1000);
+  verificationBadge.textContent  = verified ? '✓ Verified' : expired ? 'Verification expired' : 'Pending verification';
+  verificationBadge.className    = 'badge ' + (verified ? 'badge--verified' : expired ? 'badge--expired' : 'badge--pending');
+  verificationBadge.style.display = '';
+  verificationBadge.classList.add('badge--clickable');
+  verificationBadge.onclick = () => showVerificationModal({
+    domain:     site.domain,
+    prefix:     site.prefix || '',
+    status:     site.status,
+    verifyDate: site.verifyDate || null,
+    siteId,
+  });
+  requestVerificationField.style.display = verified ? 'none' : '';
 
   englishCb.checked = site.languages?.includes('ENGLISH') ?? true;
   spanishCb.checked = site.languages?.includes('SPANISH') ?? false;
   syncLangConfig(englishCb);
   syncLangConfig(spanishCb);
+
+  headEditor.setValue(site.config?.headHtml || '');
+  bodyEditor.setValue(site.config?.bodyHtml || '');
 
   enFooter.value  = site.config?.en?.footer || '';
   enNav.innerHTML = '';
@@ -129,15 +172,19 @@ form.addEventListener('submit', async e => {
     languages,
     config: {
       faviconUrl: faviconInput.value.trim() || null,
+      headHtml:   headEditor.getValue().trim() || null,
+      bodyHtml:   bodyEditor.getValue().trim() || null,
       en: { footer: enFooter.value.trim(), nav: readNavLinks(enNav) },
       es: { footer: esFooter.value.trim(), nav: readNavLinks(esNav) },
     },
   };
 
-  body.domain = domainInput.value.trim();
+  body.domain  = domainInput.value.trim();
+  body.prefix  = prefixInput.value.trim() || null;
+  if (siteId && requestVerificationCb.checked) body.requestVerification = true;
 
   const url    = siteId ? `/sites/${siteId}` : '/sites/';
-  const method = siteId ? 'PUT' : 'POST';
+  const method = siteId ? 'PATCH' : 'POST';
 
   const res = await api(url, { method, body: JSON.stringify(body) });
   if (!res) return;

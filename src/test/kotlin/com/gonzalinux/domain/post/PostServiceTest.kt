@@ -6,11 +6,11 @@ import com.gonzalinux.api.data.UpdatePostRequest
 import com.gonzalinux.common.PostNotFoundException
 import com.gonzalinux.common.SiteNotFoundException
 import com.gonzalinux.common.SlugAlreadyExistsException
-import org.springframework.dao.DataIntegrityViolationException
 import com.gonzalinux.domain.Languages
 import com.gonzalinux.domain.site.Site
 import com.gonzalinux.domain.site.SiteConfig
 import com.gonzalinux.domain.site.SiteRepository
+import com.gonzalinux.domain.site.SiteStatus
 import com.gonzalinux.domain.site.Theme
 import com.gonzalinux.domain.tag.Tag
 import com.gonzalinux.domain.tag.TagRepository
@@ -19,6 +19,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import org.springframework.dao.DataIntegrityViolationException
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -37,9 +38,9 @@ class PostServiceTest {
 
     private val site = Site(
         id = 1L, userId = 1L, name = "My Blog", domain = "blog.example.com",
-        description = null, stylesUrl = null, availableThemes = listOf(Theme.LIGHT),
-        languages = listOf(Languages.ENGLISH), config = SiteConfig(),
-        createdAt = now, updatedAt = now
+        prefix = "", description = null, stylesUrl = null, availableThemes = listOf(Theme.LIGHT),
+        languages = listOf(Languages.ENGLISH), config = SiteConfig(), status = SiteStatus.NOT_VERIFIED,
+        createdAt = now, updatedAt = now, verifyDate = now
     )
 
     private val post = Post(

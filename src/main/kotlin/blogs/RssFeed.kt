@@ -2,7 +2,7 @@ package com.gonzalinux.blogs
 
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.util.Locale
+import java.util.*
 
 private val RSS_DATE_FMT = DateTimeFormatter
     .ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH)
@@ -13,13 +13,15 @@ fun buildRss(
     domain: String,
     lang: String,
     posts: List<BlogPostSummary>,
+    prefix: String
 ): String {
-    val baseUrl = "https://$domain"
-    val feedUrl = "$baseUrl/$lang/rss.xml"
-    val htmlUrl = "$baseUrl/$lang"
+    val prefix= prefix.removePrefix("/").removeSuffix("/")
+    val baseUrl = "https://$domain/$prefix"
+    val feedUrl = "$baseUrl/articles/$lang/rss.xml"
+    val htmlUrl = "$baseUrl/articles/$lang"
 
     val items = posts.joinToString("\n") { item ->
-        val url     = "$baseUrl/$lang/${item.translation.slug}"
+        val url     = "$baseUrl/$lang/articles/${item.translation.slug}"
         val pubDate = item.post.publishedAt
             ?.atZoneSameInstant(ZoneOffset.UTC)
             ?.format(RSS_DATE_FMT) ?: ""

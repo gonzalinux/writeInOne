@@ -14,3 +14,8 @@ data class TokenCleanerProperties (
     val limitDeleted: Int,
 )
 
+@ConfigurationProperties(prefix = "site-verificator")
+data class SiteVerificatorProperties (
+    val intervalSec: Long
+)
+

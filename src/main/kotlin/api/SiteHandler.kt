@@ -55,4 +55,5 @@ class SiteHandler(private val service: SiteService, private val validator: Reque
                 .then(ServerResponse.ok().build())
         }
     }
+
 }

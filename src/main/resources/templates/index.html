@@ -19,6 +19,7 @@
     <meta name="twitter:description" th:if="${site.description != null}" th:content="${site.description}"/>
 </head>
 <body>
+    <th:block th:replace="~{fragments/layout :: bodyStart}"/>
     <th:block th:replace="~{fragments/layout :: nav}"/>
 
     <main class="container">

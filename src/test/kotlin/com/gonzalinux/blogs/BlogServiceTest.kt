@@ -7,6 +7,7 @@ import com.gonzalinux.domain.post.PostTranslation
 import com.gonzalinux.domain.site.Site
 import com.gonzalinux.domain.site.SiteConfig
 import com.gonzalinux.domain.site.SiteRepository
+import com.gonzalinux.domain.site.SiteStatus
 import com.gonzalinux.domain.tag.TagRepository
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
@@ -30,9 +31,9 @@ class BlogServiceTest {
 
     private val site = Site(
         id = 1L, userId = 42L, name = "Test Site", domain = "test.example.com",
-        description = null, stylesUrl = null, availableThemes = emptyList(),
-        languages = emptyList(), config = SiteConfig(),
-        createdAt = now, updatedAt = now
+        prefix = "", description = null, stylesUrl = null, availableThemes = emptyList(),
+        languages = emptyList(), config = SiteConfig(), status = SiteStatus.NOT_VERIFIED,
+        createdAt = now, updatedAt = now, verifyDate = now
     )
 
     private val post = Post(
