@@ -306,6 +306,26 @@ class PostRepository(private val client: DatabaseClient) {
             .fetch().first()
             .map { mapToPostAndTranslation(it) }
 
+    fun findAllPublishedForSitemap(siteId: Long): Flux<SitemapEntry> =
+        client.sql(
+            """
+            SELECT pt.lang, pt.slug, GREATEST(p.updated_at, pt.updated_at) AS last_mod
+            FROM posts p
+            JOIN post_translations pt ON pt.post_id = p.id AND pt.site_id = :siteId
+            WHERE p.site_id = :siteId AND p.status = 'published'
+            ORDER BY p.published_at DESC
+        """
+        )
+            .bind("siteId", siteId)
+            .fetch().all()
+            .map {
+                SitemapEntry(
+                    lang = it["lang"] as String,
+                    slug = it["slug"] as String,
+                    lastMod = it["last_mod"] as OffsetDateTime
+                )
+            }
+
     fun incrementViewCount(postId: Long): Mono<Void> =
         client.sql("UPDATE posts SET view_count = view_count + 1 WHERE id = :id")
             .bind("id", postId)

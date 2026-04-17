@@ -49,3 +49,9 @@ data class PostSummary(
     val tags: List<Tag>
 )
 
+data class SitemapEntry(
+    val lang: String,
+    val slug: String,
+    val lastMod: OffsetDateTime
+)
+

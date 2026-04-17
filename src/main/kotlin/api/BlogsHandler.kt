@@ -2,6 +2,7 @@ package com.gonzalinux.api
 
 import com.gonzalinux.blogs.BlogService
 import com.gonzalinux.blogs.buildRss
+import com.gonzalinux.blogs.buildSitemap
 import com.gonzalinux.common.RequestContextHolder.getUserId
 import com.gonzalinux.common.SiteContextHolder.getPrefix
 import com.gonzalinux.common.SiteContextHolder.getSite
@@ -117,9 +118,10 @@ class BlogsHandler(private val blogService: BlogService, private val verifyClien
             val site = ctx.getSite()!!
             blogService.listPublished(site.id, lang, 0, 20)
                 .flatMap { result ->
+                    val langConfig = site.config.forLang(lang)
                     val xml = buildRss(
-                        siteTitle = site.name,
-                        siteDescription = site.description ?: site.name,
+                        siteTitle = langConfig.title ?: site.name,
+                        siteDescription = langConfig.description ?: site.description ?: site.name,
                         domain = site.domain,
                         lang = lang,
                         posts = result.content,
@@ -144,6 +146,18 @@ class BlogsHandler(private val blogService: BlogService, private val verifyClien
 
         }.flatMap { ServerResponse.ok().bodyValue(it) }
     }
+
+    fun sitemap(request: ServerRequest): Mono<ServerResponse> =
+        Mono.deferContextual { ctx ->
+            val site = ctx.getSite()!!
+            blogService.listAllForSitemap(site.id).collectList()
+                .flatMap { entries ->
+                    val xml = buildSitemap(site.domain, site.prefix, site.languages, entries)
+                    ServerResponse.ok()
+                        .contentType(MediaType.valueOf("application/xml;charset=UTF-8"))
+                        .bodyValue(xml)
+                }
+        }
 
     fun verify(request: ServerRequest): Mono<ServerResponse> {
         return Mono.deferContextual { ctx ->

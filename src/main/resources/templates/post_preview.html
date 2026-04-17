@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en" th:lang="${lang}">
 <head>
-    <th:block th:replace="~{fragments/layout :: head(${translation.title + ' — ' + site.name})}"/>
+    <th:block th:replace="~{fragments/layout :: head(${translation.title + ' — ' + (langConfig?.title ?: site.name)})}"/>
 
     <!-- Primary meta -->
     <meta th:if="${translation.excerpt != null}" name="description" th:content="${translation.excerpt}"/>

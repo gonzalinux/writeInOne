@@ -3,6 +3,7 @@ package com.gonzalinux.blogs
 import com.gonzalinux.common.Page
 import com.gonzalinux.common.PostNotFoundException
 import com.gonzalinux.domain.post.PostRepository
+import com.gonzalinux.domain.post.SitemapEntry
 import com.gonzalinux.domain.site.SiteRepository
 import com.gonzalinux.domain.tag.TagRepository
 import com.vladsch.flexmark.html.HtmlRenderer
@@ -12,6 +13,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import org.jsoup.Jsoup
 import org.jsoup.safety.Safelist
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.util.function.component1
 import reactor.kotlin.core.util.function.component2
@@ -56,6 +58,9 @@ class BlogService(
             .map { (total, content) ->
                 Page(content, page, size, total, ((total + size - 1) / size).toInt())
             }
+
+    fun listAllForSitemap(siteId: Long): Flux<SitemapEntry> =
+        postRepo.findAllPublishedForSitemap(siteId)
 
     fun getBySlug(siteId: Long, lang: String, slug: String, user: Long?): Mono<BlogPostDetail> =
         postRepo.findPublishedBySlug(siteId, lang, slug, user)

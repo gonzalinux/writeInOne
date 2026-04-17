@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en" th:lang="${lang}">
-<head>
-    <th:block th:replace="~{fragments/layout :: head(${site.name})}"/>
+<head th:with="effectiveTitle=${langConfig?.title ?: site.name}, effectiveDesc=${langConfig?.description ?: site.description}">
+    <th:block th:replace="~{fragments/layout :: head(${effectiveTitle})}"/>
 
     <!-- Primary meta -->
-    <meta th:if="${site.description != null}" name="description" th:content="${site.description}"/>
+    <meta th:if="${effectiveDesc != null}" name="description" th:content="${effectiveDesc}"/>
 
     <!-- Open Graph -->
     <meta property="og:type"        content="website"/>
     <meta property="og:site_name"   th:content="${site.name}"/>
-    <meta property="og:title"       th:content="${site.name}"/>
-    <meta property="og:description" th:if="${site.description != null}" th:content="${site.description}"/>
+    <meta property="og:title"       th:content="${effectiveTitle}"/>
+    <meta property="og:description" th:if="${effectiveDesc != null}" th:content="${effectiveDesc}"/>
     <meta property="og:url"         th:content="'https://' + ${site.domain} + ${prefix} + '/' + ${lang}"/>
 
     <!-- Twitter / X -->
     <meta name="twitter:card"        content="summary"/>
-    <meta name="twitter:title"       th:content="${site.name}"/>
-    <meta name="twitter:description" th:if="${site.description != null}" th:content="${site.description}"/>
+    <meta name="twitter:title"       th:content="${effectiveTitle}"/>
+    <meta name="twitter:description" th:if="${effectiveDesc != null}" th:content="${effectiveDesc}"/>
 </head>
 <body>
     <th:block th:replace="~{fragments/layout :: bodyStart}"/>
@@ -24,8 +24,8 @@
 
     <main class="container">
         <div class="site-hero">
-            <h1 class="site-hero__title" th:text="${site.name}">Site Name</h1>
-            <p class="site-description" th:if="${site.description != null}" th:text="${site.description}">Site description</p>
+            <h1 class="site-hero__title" th:text="${langConfig?.title ?: site.name}">Site Name</h1>
+            <p class="site-description" th:if="${(langConfig?.description ?: site.description) != null}" th:text="${langConfig?.description ?: site.description}">Site description</p>
         </div>
 
         <form id="search-form" class="search-bar" method="get"

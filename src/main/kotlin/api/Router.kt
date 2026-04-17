@@ -86,6 +86,7 @@ class Router(
 
     private fun blogUiRoutes(): RouterFunction<ServerResponse> = route()
         .GET("/", blogsHandler::index)
+        .GET("/sitemap.xml", blogsHandler::sitemap)
         .GET("/rss.xml", blogsHandler::rssRoot)
         .GET("/{lang:es|en}", blogsHandler::postList)
         .GET("/{lang:es|en}/rss.xml", blogsHandler::rss)

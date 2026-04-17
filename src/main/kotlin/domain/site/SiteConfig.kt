@@ -10,7 +10,9 @@ data class SiteConfig(
 
 data class LangConfig(
     val footer: String = "",
-    val nav: List<NavLink> = emptyList()
+    val nav: List<NavLink> = emptyList(),
+    val title: String? = null,
+    val description: String? = null
 )
 
 data class NavLink(

@@ -26,9 +26,13 @@ const headEditor = CodeMirror.fromTextArea(headHtmlInput, cmOptions);
 const bodyEditor = CodeMirror.fromTextArea(bodyHtmlInput, cmOptions);
 headEditor.getWrapperElement().classList.add('html-codemirror');
 bodyEditor.getWrapperElement().classList.add('html-codemirror');
+const enTitle       = document.getElementById('en-title');
+const enDescription = document.getElementById('en-description');
 const enFooter      = document.getElementById('en-footer');
-const esFooter      = document.getElementById('es-footer');
 const enNav         = document.getElementById('en-nav');
+const esTitle       = document.getElementById('es-title');
+const esDescription = document.getElementById('es-description');
+const esFooter      = document.getElementById('es-footer');
 const esNav         = document.getElementById('es-nav');
 
 // ── Tab navigation ────────────────────────────────────────────────────────
@@ -135,12 +139,16 @@ async function loadSite() {
   headEditor.setValue(site.config?.headHtml || '');
   bodyEditor.setValue(site.config?.bodyHtml || '');
 
-  enFooter.value  = site.config?.en?.footer || '';
-  enNav.innerHTML = '';
+  enTitle.value       = site.config?.en?.title       || '';
+  enDescription.value = site.config?.en?.description || '';
+  enFooter.value      = site.config?.en?.footer      || '';
+  enNav.innerHTML     = '';
   (site.config?.en?.nav || []).forEach(link => enNav.appendChild(makeNavRow(link.label, link.url)));
 
-  esFooter.value  = site.config?.es?.footer || '';
-  esNav.innerHTML = '';
+  esTitle.value       = site.config?.es?.title       || '';
+  esDescription.value = site.config?.es?.description || '';
+  esFooter.value      = site.config?.es?.footer      || '';
+  esNav.innerHTML     = '';
   (site.config?.es?.nav || []).forEach(link => esNav.appendChild(makeNavRow(link.label, link.url)));
 }
 
@@ -174,8 +182,8 @@ form.addEventListener('submit', async e => {
       faviconUrl: faviconInput.value.trim() || null,
       headHtml:   headEditor.getValue().trim() || null,
       bodyHtml:   bodyEditor.getValue().trim() || null,
-      en: { footer: enFooter.value.trim(), nav: readNavLinks(enNav) },
-      es: { footer: esFooter.value.trim(), nav: readNavLinks(esNav) },
+      en: { title: enTitle.value.trim() || null, description: enDescription.value.trim() || null, footer: enFooter.value.trim(), nav: readNavLinks(enNav) },
+      es: { title: esTitle.value.trim() || null, description: esDescription.value.trim() || null, footer: esFooter.value.trim(), nav: readNavLinks(esNav) },
     },
   };
 
