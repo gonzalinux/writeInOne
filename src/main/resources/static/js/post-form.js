@@ -202,13 +202,6 @@ async function init() {
 
   buildUI(siteLanguages);
 
-  if (site.stylesUrl) {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = site.stylesUrl;
-    document.head.appendChild(link);
-  }
-
   if (postId) {
     await loadPost();
   } else {
