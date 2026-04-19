@@ -31,7 +31,7 @@ A multi-tenant blogging platform. Each site runs on its own domain, has its own 
 ### Public Blog
 - `GET /` — redirects to default language
 - `GET /{lang}` — paginated post list with search and tag filtering
-- `GET /{lang}/blogs/{slug}` — single post (rendered Markdown)
+- `GET /{lang}/articles/{slug}` — single post (rendered Markdown)
 - `GET /{lang}/rss.xml` — RSS feed per language
 - `GET /{lang}/posts` — JSON post list API
 - OG and Twitter meta tags on post pages

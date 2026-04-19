@@ -159,6 +159,16 @@ class BlogsHandler(private val blogService: BlogService, private val verifyClien
                 }
         }
 
+    fun mainSitemap(request: ServerRequest): Mono<ServerResponse> {
+        val xml = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url><loc>https://writeinone.com/</loc></url>
+</urlset>"""
+        return ServerResponse.ok()
+            .contentType(MediaType.valueOf("application/xml;charset=UTF-8"))
+            .bodyValue(xml)
+    }
+
     fun verify(request: ServerRequest): Mono<ServerResponse> {
         return Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!

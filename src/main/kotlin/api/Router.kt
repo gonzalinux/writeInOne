@@ -78,6 +78,7 @@ class Router(
         .filter(adminExceptionFilter)
 
     private fun adminRoutes(): RouterFunction<ServerResponse> = route()
+        .GET("/sitemap.xml", blogsHandler::mainSitemap)
         .GET("/admin", adminHandler::serve)
         .GET("/admin/**", adminHandler::serve)
         .build()

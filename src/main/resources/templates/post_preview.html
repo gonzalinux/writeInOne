@@ -12,7 +12,7 @@
     <meta property="og:title"               th:content="${translation.title}"/>
     <meta property="og:description"         th:if="${translation.excerpt != null}" th:content="${translation.excerpt}"/>
     <meta property="og:image"               th:if="${post.coverUrl != null}" th:content="${post.coverUrl}"/>
-    <meta property="og:url"                 th:content="'https://' + ${site.domain} + ${prefix} + '/' + ${lang} + '/blogs/' + ${translation.slug}"/>
+    <meta property="og:url"                 th:content="'https://' + ${site.domain} + ${prefix} + '/' + ${lang} + '/articles/' + ${translation.slug}"/>
     <meta property="article:published_time" th:if="${post.publishedAt != null}" th:content="${post.publishedAt}"/>
 
     <!-- Twitter / X -->
