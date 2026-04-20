@@ -18,10 +18,7 @@ services:
       JSON_LOG_PATH: /app/logs/app.json.log
     volumes:
       - logs:/app/logs
-    depends_on:
-      db:
-        condition: service_started
-        required: false
+
     extra_hosts:
       - database:host-gateway
 
