@@ -36,7 +36,7 @@
          th:data-lang="${lang}"
          th:data-status="${post.status.name().toLowerCase()}"
          th:data-scheduled-at="${post.scheduledAt}"
-         data-admin-url="/admin"
+         th:data-admin-url="'/admin/sites/' + ${post.siteId} + '/posts'"
          hidden>
     </div>
 
@@ -48,7 +48,7 @@
             <span id="unsaved-badge" class="unsaved-badge" hidden>● not saved</span>
         </div>
         <div class="preview-bar__right">
-            <a href="/admin" class="preview-bar__btn">← Admin</a>
+            <a th:href="'/admin/sites/' + ${post.siteId} + '/posts'" class="preview-bar__btn">← Admin</a>
             <button th:if="${#lists.contains(site.availableThemes, T(com.gonzalinux.domain.site.Theme).LIGHT)
                          and #lists.contains(site.availableThemes, T(com.gonzalinux.domain.site.Theme).DARK)}"
                     class="preview-bar__btn" onclick="toggleTheme()" aria-label="Toggle theme">&#9789;</button>
