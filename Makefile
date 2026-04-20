@@ -28,10 +28,15 @@ test:
 docker-test:
 	docker compose run --rm app ./gradlew test
 
-## prod: Load .env and start app + db via Docker Compose
+## prod: Load .env and start app + alloy via Docker Compose (uses external DB)
 prod:
 	git pull
-	mkdir -p postgres_data && docker compose --env-file $(ENV_FILE) up --build -d --remove-orphans
+	docker compose --env-file $(ENV_FILE) up --build -d --remove-orphans app alloy
+
+## prod-db: Load .env and start app + alloy + db via Docker Compose
+prod-db:
+	git pull
+	mkdir -p postgres_data && docker compose --env-file $(ENV_FILE) up --build -d --remove-orphans app alloy db
 
 logs:
 	docker compose logs  -f
