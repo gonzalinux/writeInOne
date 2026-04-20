@@ -8,11 +8,11 @@ services:
     env_file:
       - .env
     environment:
-      DB_HOST: db
-      DB_PORT: 5433
-      DB_NAME: writeinone
-      DB_USER: postgres
-      DB_PASSWORD: secret
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-5433}
+      DB_NAME: ${DB_NAME:-writeinone}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
       SPRING_PROFILES_ACTIVE: prod
       MANAGEMENT_PORT: 8081
       JSON_LOG_PATH: /app/logs/app.json.log
@@ -22,6 +22,8 @@ services:
       db:
         condition: service_started
         required: false
+    extra_hosts:
+      - database:host-gateway
 
   alloy:
     image: grafana/alloy:v1.15.0
