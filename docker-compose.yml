@@ -19,7 +19,9 @@ services:
     volumes:
       - logs:/app/logs
     depends_on:
-      - db
+      db:
+        condition: service_started
+        required: false
 
   alloy:
     image: grafana/alloy:v1.15.0
@@ -35,6 +37,7 @@ services:
       - app
 
   db:
+    profiles: [local-db]
     image: postgres:17
     restart: unless-stopped
     environment:
