@@ -100,8 +100,10 @@ btnPreviewMode.addEventListener('click', () => setMode('preview'));
 // ── Auto-grow textarea ────────────────────────────────────
 const bodyEditor = document.getElementById('edit-body');
 function autoGrow() {
+  const scrollY = window.scrollY;
   bodyEditor.style.height = 'auto';
   bodyEditor.style.height = bodyEditor.scrollHeight + 'px';
+  window.scrollTo(0, scrollY);
 }
 bodyEditor.addEventListener('input', () => {
   autoGrow();
