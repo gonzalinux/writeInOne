@@ -6,6 +6,7 @@ import com.gonzalinux.api.data.RegisterRequest
 import com.gonzalinux.common.RequestValidator
 import com.gonzalinux.common.UnauthorizedException
 import com.gonzalinux.common.isSecureContext
+import com.gonzalinux.config.JwtProperties
 import com.gonzalinux.domain.user.UserService
 import org.springframework.http.ResponseCookie
 import org.springframework.stereotype.Component
@@ -16,7 +17,11 @@ import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toMono
 
 @Component
-class AuthHandler(private val service: UserService, private val validator: RequestValidator) {
+class AuthHandler(
+    private val service: UserService,
+    private val validator: RequestValidator,
+    private val jwtProperties: JwtProperties
+) {
 
     companion object {
         const val REFRESH_TOKEN_COOKIE = "refresh_token"
@@ -91,6 +96,7 @@ class AuthHandler(private val service: UserService, private val validator: Reque
             .secure(secure)
             .sameSite("Strict")
             .path("/")
+            .maxAge(jwtProperties.accessTokenExpiryMinutes * 60)
             .build()
 
     private fun refreshTokenCookie(value: String, secure: Boolean): ResponseCookie =
@@ -100,5 +106,6 @@ class AuthHandler(private val service: UserService, private val validator: Reque
             .secure(secure)
             .sameSite("Strict")
             .path("/auth")
+            .maxAge(jwtProperties.refreshTokenExpiryDays * 24 * 60 * 60)
             .build()
 }

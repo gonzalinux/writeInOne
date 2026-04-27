@@ -1,6 +1,7 @@
 package com.gonzalinux.scheduler
 
 import com.gonzalinux.config.PostSchedulerProperties
+import com.gonzalinux.config.SchedulersProperties
 import com.gonzalinux.domain.post.PostRepository
 import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
@@ -12,9 +13,10 @@ private val logger = KotlinLogging.logger {}
 @Component
 class PublishPostsScheduler(
     postSchedulerProperties: PostSchedulerProperties,
+    schedulersProperties: SchedulersProperties,
     private val postRepository: PostRepository,
     private val registry: MeterRegistry
-) : SchedulerBase(postSchedulerProperties.intervalMs) {
+) : SchedulerBase(postSchedulerProperties.intervalMs, schedulersProperties.enabled) {
 
     override fun execute(): Mono<*> =
            postRepository.publishScheduled()

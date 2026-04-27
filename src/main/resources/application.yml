@@ -27,6 +27,9 @@ jwt:
   access-token-expiry-minutes: 15
   refresh-token-expiry-days: 30
 
+schedulers:
+  enabled: ${SCHEDULERS_ENABLED:true}
+
 token-scheduler:
   interval-min: 30
   limit-deleted: 100
