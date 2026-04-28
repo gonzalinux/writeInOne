@@ -3,6 +3,7 @@ package com.gonzalinux.api
 import com.gonzalinux.config.*
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.web.reactive.function.server.RequestPredicates
 import org.springframework.web.reactive.function.server.RouterFunction
 import org.springframework.web.reactive.function.server.RouterFunctions.route
 import org.springframework.web.reactive.function.server.ServerResponse
@@ -78,7 +79,10 @@ class Router(
         .filter(adminExceptionFilter)
 
     private fun adminRoutes(): RouterFunction<ServerResponse> = route()
-        .GET("/sitemap.xml", blogsHandler::mainSitemap)
+        .GET("/sitemap.xml", RequestPredicates.headers { h ->
+            val host = h.firstHeader("X-Site-Host") ?: h.firstHeader("Host") ?: ""
+            host == "writeinone.com" || host == "localhost" || host.startsWith("localhost:")
+        }, blogsHandler::mainSitemap)
         .GET("/admin", adminHandler::serve)
         .GET("/admin/**", adminHandler::serve)
         .build()

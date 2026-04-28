@@ -3,6 +3,9 @@
 <head>
     <th:block th:replace="~{fragments/layout :: head(${translation.title + ' — ' + (langConfig?.title ?: site.name)})}"/>
 
+    <!-- Canonical -->
+    <link rel="canonical" th:href="'https://' + ${site.domain} + ${prefix} + '/' + ${lang} + '/articles/' + ${translation.slug}"/>
+
     <!-- Primary meta -->
     <meta th:if="${translation.excerpt != null}" name="description" th:content="${translation.excerpt}"/>
 

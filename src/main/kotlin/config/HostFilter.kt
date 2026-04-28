@@ -26,6 +26,7 @@ class HostFilter(private val siteRepository: SiteRepository) : HandlerFilterFunc
         val prefix = request.headers().firstHeader("X-Forwarded-Prefix")
             ?.trimStart('/')
             ?.takeIf { it.matches(Regex("^[a-zA-Z0-9-]{1,20}$")) }
+            ?.let { "/$it" }
             ?: ""
 
         return siteRepository.findByDomain(domain)

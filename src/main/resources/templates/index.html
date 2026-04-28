@@ -3,6 +3,9 @@
 <head th:with="effectiveTitle=${langConfig?.title ?: site.name}, effectiveDesc=${langConfig?.description ?: site.description}">
     <th:block th:replace="~{fragments/layout :: head(${effectiveTitle})}"/>
 
+    <!-- Canonical — always strip tag/search/page query params -->
+    <link rel="canonical" th:href="'https://' + ${site.domain} + ${prefix} + '/' + ${lang}"/>
+
     <!-- Primary meta -->
     <meta th:if="${effectiveDesc != null}" name="description" th:content="${effectiveDesc}"/>
 

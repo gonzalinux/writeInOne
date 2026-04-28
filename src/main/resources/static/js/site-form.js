@@ -1,39 +1,46 @@
-const parts  = location.pathname.split('/');
+const parts = location.pathname.split('/');
 const siteId = parts[4] === 'edit' ? parts[3] : null;
 
-const form          = document.getElementById('siteForm');
-const err           = document.getElementById('error');
-const pageTitle     = document.getElementById('pageTitle');
-const submitBtn     = document.getElementById('submitBtn');
-const nameInput     = document.getElementById('name');
-const descInput     = document.getElementById('description');
-const stylesInput       = document.getElementById('stylesUrl');
+const form = document.getElementById('siteForm');
+const err = document.getElementById('error');
+const pageTitle = document.getElementById('pageTitle');
+const submitBtn = document.getElementById('submitBtn');
+const nameInput = document.getElementById('name');
+const descInput = document.getElementById('description');
+const stylesInput = document.getElementById('stylesUrl');
 const defaultThemeSelect = document.getElementById('defaultTheme');
-const enableSwitcherCb  = document.getElementById('enableSwitcher');
-const faviconInput      = document.getElementById('faviconUrl');
-const domainInput              = document.getElementById('domain');
-const prefixInput              = document.getElementById('prefix');
-const verificationBadge        = document.getElementById('verificationBadge');
+const enableSwitcherCb = document.getElementById('enableSwitcher');
+const faviconInput = document.getElementById('faviconUrl');
+const domainInput = document.getElementById('domain');
+const prefixInput = document.getElementById('prefix');
+const verificationBadge = document.getElementById('verificationBadge');
 const requestVerificationField = document.getElementById('requestVerificationField');
-const requestVerificationCb    = document.getElementById('requestVerification');
-const englishCb                = document.getElementById('lang-ENGLISH');
-const spanishCb     = document.getElementById('lang-SPANISH');
+const requestVerificationCb = document.getElementById('requestVerification');
+const englishCb = document.getElementById('lang-ENGLISH');
+const spanishCb = document.getElementById('lang-SPANISH');
 const headHtmlInput = document.getElementById('headHtml');
 const bodyHtmlInput = document.getElementById('bodyHtml');
 
-const cmOptions = { mode: 'htmlmixed', lineNumbers: true, indentWithTabs: false, indentUnit: 2, tabSize: 2, lineWrapping: true };
+const cmOptions = {
+  mode: 'htmlmixed',
+  lineNumbers: true,
+  indentWithTabs: false,
+  indentUnit: 2,
+  tabSize: 2,
+  lineWrapping: true
+};
 const headEditor = CodeMirror.fromTextArea(headHtmlInput, cmOptions);
 const bodyEditor = CodeMirror.fromTextArea(bodyHtmlInput, cmOptions);
 headEditor.getWrapperElement().classList.add('html-codemirror');
 bodyEditor.getWrapperElement().classList.add('html-codemirror');
-const enTitle       = document.getElementById('en-title');
+const enTitle = document.getElementById('en-title');
 const enDescription = document.getElementById('en-description');
-const enFooter      = document.getElementById('en-footer');
-const enNav         = document.getElementById('en-nav');
-const esTitle       = document.getElementById('es-title');
+const enFooter = document.getElementById('en-footer');
+const enNav = document.getElementById('en-nav');
+const esTitle = document.getElementById('es-title');
 const esDescription = document.getElementById('es-description');
-const esFooter      = document.getElementById('es-footer');
-const esNav         = document.getElementById('es-nav');
+const esFooter = document.getElementById('es-footer');
+const esNav = document.getElementById('es-nav');
 
 // ── Tab navigation ────────────────────────────────────────────────────────
 
@@ -43,7 +50,10 @@ document.querySelectorAll('.form-tab').forEach(tab => {
     document.querySelectorAll('.tab-panel').forEach(p => p.hidden = true);
     tab.classList.add('form-tab--active');
     document.getElementById('tab-' + tab.dataset.tab).hidden = false;
-    if (tab.dataset.tab === 'code') { headEditor.refresh(); bodyEditor.refresh(); }
+    if (tab.dataset.tab === 'code') {
+      headEditor.refresh();
+      bodyEditor.refresh();
+    }
   });
 });
 
@@ -75,7 +85,7 @@ function readNavLinks(container) {
   return Array.from(container.querySelectorAll('.nav-link-row'))
     .map(row => ({
       label: row.querySelector('.nav-label').value.trim(),
-      url:   row.querySelector('.nav-url').value.trim(),
+      url: row.querySelector('.nav-url').value.trim(),
     }))
     .filter(link => link.label || link.url);
 }
@@ -102,30 +112,30 @@ async function loadSite() {
   const site = await res.json();
 
   pageTitle.textContent = 'Edit site';
-  document.title        = 'Edit site — WriteInOne';
+  document.title = 'Edit site — WriteInOne';
   submitBtn.textContent = 'Save changes';
 
-  nameInput.value    = site.name        || '';
-  descInput.value    = site.description || '';
-  stylesInput.value  = site.stylesUrl   || '';
+  nameInput.value = site.name || '';
+  descInput.value = site.description || '';
+  stylesInput.value = site.stylesUrl || '';
   const themes = site.availableThemes || ['LIGHT'];
   defaultThemeSelect.value = themes[0].toLowerCase();
   enableSwitcherCb.checked = themes.length > 1;
   faviconInput.value = site.config?.faviconUrl || '';
 
-  domainInput.value  = site.domain || '';
-  prefixInput.value  = site.prefix || '';
+  domainInput.value = site.domain || '';
+  prefixInput.value = site.prefix || '';
 
   const verified = site.status === 'VERIFIED';
-  const expired  = !verified && site.verifyDate && (Date.now() - new Date(site.verifyDate).getTime() > 2 * 24 * 60 * 60 * 1000);
-  verificationBadge.textContent  = verified ? '✓ Verified' : expired ? 'Verification expired' : 'Pending verification';
-  verificationBadge.className    = 'badge ' + (verified ? 'badge--verified' : expired ? 'badge--expired' : 'badge--pending');
+  const expired = !verified && site.verifyDate && (Date.now() - new Date(site.verifyDate).getTime() > 2 * 24 * 60 * 60 * 1000);
+  verificationBadge.textContent = verified ? '✓ Verified' : expired ? 'Verification expired' : 'Pending verification';
+  verificationBadge.className = 'badge ' + (verified ? 'badge--verified' : expired ? 'badge--expired' : 'badge--pending');
   verificationBadge.style.display = '';
   verificationBadge.classList.add('badge--clickable');
   verificationBadge.onclick = () => showVerificationModal({
-    domain:     site.domain,
-    prefix:     site.prefix || '',
-    status:     site.status,
+    domain: site.domain,
+    prefix: site.prefix || '',
+    status: site.status,
     verifyDate: site.verifyDate || null,
     siteId,
   });
@@ -139,16 +149,16 @@ async function loadSite() {
   headEditor.setValue(site.config?.headHtml || '');
   bodyEditor.setValue(site.config?.bodyHtml || '');
 
-  enTitle.value       = site.config?.en?.title       || '';
+  enTitle.value = site.config?.en?.title || '';
   enDescription.value = site.config?.en?.description || '';
-  enFooter.value      = site.config?.en?.footer      || '';
-  enNav.innerHTML     = '';
+  enFooter.value = site.config?.en?.footer || '';
+  enNav.innerHTML = '';
   (site.config?.en?.nav || []).forEach(link => enNav.appendChild(makeNavRow(link.label, link.url)));
 
-  esTitle.value       = site.config?.es?.title       || '';
+  esTitle.value = site.config?.es?.title || '';
   esDescription.value = site.config?.es?.description || '';
-  esFooter.value      = site.config?.es?.footer      || '';
-  esNav.innerHTML     = '';
+  esFooter.value = site.config?.es?.footer || '';
+  esNav.innerHTML = '';
   (site.config?.es?.nav || []).forEach(link => esNav.appendChild(makeNavRow(link.label, link.url)));
 }
 
@@ -156,7 +166,7 @@ if (siteId) {
   loadSite();
 } else {
   pageTitle.textContent = 'New site';
-  document.title        = 'New site — WriteInOne';
+  document.title = 'New site — WriteInOne';
   submitBtn.textContent = 'Create site';
 }
 
@@ -169,39 +179,51 @@ form.addEventListener('submit', async e => {
   const languages = ['ENGLISH', 'SPANISH'].filter(lang => document.getElementById(`lang-${lang}`)?.checked);
 
   const defaultT = defaultThemeSelect.value.toUpperCase();
-  const otherT   = defaultT === 'LIGHT' ? 'DARK' : 'LIGHT';
+  const otherT = defaultT === 'LIGHT' ? 'DARK' : 'LIGHT';
   const availableThemes = enableSwitcherCb.checked ? [defaultT, otherT] : [defaultT];
 
   const body = {
-    name:        nameInput.value.trim(),
+    name: nameInput.value.trim(),
     description: descInput.value.trim() || null,
-    stylesUrl:   stylesInput.value.trim() || null,
+    stylesUrl: stylesInput.value.trim() || null,
     availableThemes,
     languages,
     config: {
       faviconUrl: faviconInput.value.trim() || null,
-      headHtml:   headEditor.getValue().trim() || null,
-      bodyHtml:   bodyEditor.getValue().trim() || null,
-      en: { title: enTitle.value.trim() || null, description: enDescription.value.trim() || null, footer: enFooter.value.trim(), nav: readNavLinks(enNav) },
-      es: { title: esTitle.value.trim() || null, description: esDescription.value.trim() || null, footer: esFooter.value.trim(), nav: readNavLinks(esNav) },
+      headHtml: headEditor.getValue().trim() || null,
+      bodyHtml: bodyEditor.getValue().trim() || null,
+      en: {
+        title: enTitle.value.trim() || null,
+        description: enDescription.value.trim() || null,
+        footer: enFooter.value.trim(),
+        nav: readNavLinks(enNav)
+      },
+      es: {
+        title: esTitle.value.trim() || null,
+        description: esDescription.value.trim() || null,
+        footer: esFooter.value.trim(),
+        nav: readNavLinks(esNav)
+      },
     },
   };
 
-  body.domain  = domainInput.value.trim();
-  body.prefix  = prefixInput.value.trim() || null;
+  body.domain = domainInput.value.trim();
+  body.prefix = prefixInput.value.trim() || null;
+  if(body.prefix?.startsWith("/"))
+    body.prefix = body.prefix.substring(1);
   if (siteId && requestVerificationCb.checked) body.requestVerification = true;
 
-  const url    = siteId ? `/sites/${siteId}` : '/sites/';
+  const url = siteId ? `/sites/${siteId}` : '/sites/';
   const method = siteId ? 'PATCH' : 'POST';
 
-  const res = await api(url, { method, body: JSON.stringify(body) });
+  const res = await api(url, {method, body: JSON.stringify(body)});
   if (!res) return;
 
   if (res.ok) {
     location.href = '/admin';
   } else {
     const data = await res.json().catch(() => ({}));
-    err.textContent   = data.message || 'Something went wrong';
+    err.textContent = data.message || 'Something went wrong';
     err.style.display = 'block';
   }
 });
