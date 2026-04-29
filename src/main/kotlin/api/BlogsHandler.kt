@@ -38,7 +38,7 @@ class BlogsHandler(private val blogService: BlogService, private val verifyClien
         val size = Utils.queryToInt(request.queryParam("size").getOrNull(), default = 10, min = 1)
         return Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!
-            val prefix = ctx.getPrefix().let { if (it.isNotEmpty()) "/$it" else "" }
+            val prefix = ctx.getPrefix().let { if (it.isNotEmpty()) it else "" }
             blogService.listPublished(site.id, lang, page, size, tag, search)
                 .flatMap { result ->
                     ServerResponse.ok().contentType(MediaType.TEXT_HTML)
