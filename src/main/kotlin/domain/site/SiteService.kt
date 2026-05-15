@@ -79,7 +79,7 @@ class SiteService(private val repo: SiteRepository, private val verifyClient: Ve
             request.languages,
             request.config,
             status = if (resetVerification) SiteStatus.NOT_VERIFIED else null,
-            prefix = request.prefix,
+            prefix = request.prefix?.let { if (it.isNotEmpty() && !it.startsWith("/")) "/$it" else it },
             verifyDate = if (resetVerification) OffsetDateTime.now() else null
         )
 
