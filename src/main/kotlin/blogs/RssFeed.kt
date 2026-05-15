@@ -15,10 +15,10 @@ fun buildRss(
     posts: List<BlogPostSummary>,
     prefix: String
 ): String {
-    val prefix= prefix.removePrefix("/").removeSuffix("/")
-    val baseUrl = "https://$domain/$prefix"
-    val feedUrl = "$baseUrl/articles/$lang/rss.xml"
-    val htmlUrl = "$baseUrl/articles/$lang"
+    val cleanPrefix = prefix.removePrefix("/")
+    val baseUrl = "https://$domain/$cleanPrefix".removeSuffix("/")
+    val feedUrl = "$baseUrl/$lang/rss.xml"
+    val htmlUrl = "$baseUrl/$lang"
 
     val items = posts.joinToString("\n") { item ->
         val url     = "$baseUrl/$lang/articles/${item.translation.slug}"
