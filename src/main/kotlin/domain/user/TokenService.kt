@@ -30,14 +30,12 @@ class TokenService(jwtProperties: JwtProperties) {
 
     fun generateAccessToken(userId: Long): AccessToken {
         val now = Date()
-
         val token = Jwts.builder()
             .subject(userId.toString())
             .issuedAt(now)
             .expiration(Date(now.time + accessTokenExpiryMs))
             .signWith(signingKey)
             .compact()
-
         return AccessToken(token)
     }
 
@@ -65,7 +63,6 @@ class TokenService(jwtProperties: JwtProperties) {
             .build()
             .parseSignedClaims(token)
             .payload
-
         return claims.subject.toLong()
     }
 }

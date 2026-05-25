@@ -24,9 +24,9 @@ class UserService(
     private val registry: MeterRegistry
 ) {
 
-    fun register(email: String, displayName: String, password: String): Mono<AuthTokens> {
+    fun register(email: String, displayName: String, password: String): Mono<Void> {
         return repo.findByEmail(email)
-            .flatMap<AuthTokens> { existing ->
+            .flatMap<Void> { existing ->
                 if (existing.emailVerified) {
                     Mono.error(UserAlreadyExistsException(email))
                 } else {
@@ -39,12 +39,8 @@ class UserService(
                     displayName = displayName,
                     passwordHash = encoder.encode(password)
                 ).flatMap { user ->
-                    issueTokens(user.id)
-                        .flatMap { tokens ->
-                            sendVerificationEmail(user.id, user.email, user.displayName)
-                                .onErrorComplete()
-                                .thenReturn(tokens)
-                        }
+                    sendVerificationEmail(user.id, user.email, user.displayName)
+                        .onErrorComplete()
                 }.doOnSuccess { registry.counter("auth.registrations").increment() }
             )
     }
@@ -77,9 +73,7 @@ class UserService(
     fun refreshToken(refreshToken: String): Mono<AuthTokens> {
         val hashedToken = tokenService.hashToken(refreshToken)
         return repo.findRefreshToken(hashedToken)
-            .switchIfEmpty {
-                Mono.error(UnauthorizedException())
-            }
+            .switchIfEmpty { Mono.error(UnauthorizedException()) }
             .flatMap { stored ->
                 issueTokens(stored.userId)
                     .flatMap { token ->
@@ -100,7 +94,7 @@ class UserService(
             .doOnSuccess { logger.info { "Verification email sent [userId=$userId]" } }
     }
 
-    fun verifyEmail(email: String, code: String): Mono<Void> {
+    fun verifyEmail(email: String, code: String): Mono<AuthTokens> {
         val tokenHash = tokenService.hashToken(code)
         return repo.findByEmail(email)
             .switchIfEmpty { Mono.error(BadRequestException("Invalid or expired code")) }
@@ -110,6 +104,7 @@ class UserService(
                     .flatMap { stored ->
                         repo.updateEmailVerified(stored.userId)
                             .then(repo.deleteEmailVerificationToken(tokenHash))
+                            .then(issueTokens(stored.userId))
                             .doOnSuccess { logger.info { "Email verified [userId=${stored.userId}]" } }
                     }
             }
@@ -125,7 +120,6 @@ class UserService(
                     .then(emailClient.sendPasswordResetEmail(user.email, otp.value))
                     .doOnSuccess { logger.info { "Password reset email sent [userId=${user.id}]" } }
             }
-            // always succeed — don't leak whether email exists
             .then()
     }
 
@@ -144,22 +138,17 @@ class UserService(
             }
     }
 
-    fun resendVerificationEmail(userId: Long): Mono<Void> {
-        return repo.findByUserId(userId)
-            .flatMap { user ->
-                if (user.emailVerified) {
-                    Mono.error(BadRequestException("Email is already verified"))
-                } else {
-                    sendVerificationEmail(user.id, user.email, user.displayName)
-                }
-            }
+    fun resendVerificationEmail(email: String): Mono<Void> {
+        return repo.findByEmail(email)
+            .filter { !it.emailVerified }
+            .flatMap { user -> sendVerificationEmail(user.id, user.email, user.displayName) }
+            .then()
     }
 
     private fun issueTokens(userId: Long): Mono<AuthTokens> {
         val accessToken = tokenService.generateAccessToken(userId)
         val refreshToken = tokenService.generateRefreshToken()
         val tokenHash = tokenService.hashToken(refreshToken.value)
-
         return repo.saveRefreshToken(userId, tokenHash, refreshToken.expiresAt)
             .thenReturn(AuthTokens(accessToken, refreshToken))
     }

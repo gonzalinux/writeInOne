@@ -39,13 +39,12 @@ class Router(
         .POST("/auth/refresh", authHandler::refresh)
         .POST("/auth/logout", authHandler::logout)
         .POST("/auth/verify-email", authHandler::verifyEmail)
+        .POST("/auth/resend-verification", authHandler::resendVerification)
         .POST("/auth/forgot-password", authHandler::forgotPassword)
         .POST("/auth/reset-password", authHandler::resetPassword)
         .build()
 
     private fun protectedRoutes(): RouterFunction<ServerResponse> = route()
-
-        .POST("/auth/resend-verification", authHandler::resendVerification)
 
         .path("/sites") { sites ->
             sites

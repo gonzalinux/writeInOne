@@ -6,7 +6,6 @@ import com.gonzalinux.api.data.LoginRequest
 import com.gonzalinux.api.data.RegisterRequest
 import com.gonzalinux.api.data.ResetPasswordRequest
 import com.gonzalinux.api.data.VerifyEmailRequest
-import com.gonzalinux.common.RequestContextHolder.getUserId
 import com.gonzalinux.common.RequestValidator
 import com.gonzalinux.common.UnauthorizedException
 import com.gonzalinux.common.isSecureContext
@@ -32,18 +31,11 @@ class AuthHandler(
         const val ACCESS_TOKEN_COOKIE = "access_token"
     }
 
-    fun register(request: ServerRequest): Mono<ServerResponse> {
-        val secure = request.isSecureContext()
-        return request.bodyToMono<RegisterRequest>()
+    fun register(request: ServerRequest): Mono<ServerResponse> =
+        request.bodyToMono<RegisterRequest>()
             .map { validator.validate(it) }
             .flatMap { service.register(it.email, it.displayName, it.password) }
-            .flatMap { tokens ->
-                ServerResponse.ok()
-                    .cookie(accessTokenCookie(tokens.accessToken.value, secure))
-                    .cookie(refreshTokenCookie(tokens.refreshToken.value, secure))
-                    .bodyValue(AuthResponse(message = "SUCCESS"))
-            }
-    }
+            .then(ServerResponse.ok().bodyValue(AuthResponse(message = "VERIFY_EMAIL")))
 
     fun login(request: ServerRequest): Mono<ServerResponse> {
         val secure = request.isSecureContext()
@@ -71,18 +63,24 @@ class AuthHandler(
             )
     }
 
-    fun verifyEmail(request: ServerRequest): Mono<ServerResponse> =
-        request.bodyToMono<VerifyEmailRequest>()
+    fun verifyEmail(request: ServerRequest): Mono<ServerResponse> {
+        val secure = request.isSecureContext()
+        return request.bodyToMono<VerifyEmailRequest>()
             .map { validator.validate(it) }
             .flatMap { service.verifyEmail(it.email, it.code) }
-            .then(ServerResponse.ok().bodyValue(AuthResponse(message = "EMAIL_VERIFIED")))
+            .flatMap { tokens ->
+                ServerResponse.ok()
+                    .cookie(accessTokenCookie(tokens.accessToken.value, secure))
+                    .cookie(refreshTokenCookie(tokens.refreshToken.value, secure))
+                    .bodyValue(AuthResponse(message = "EMAIL_VERIFIED"))
+            }
+    }
 
     fun resendVerification(request: ServerRequest): Mono<ServerResponse> =
-        Mono.deferContextual { ctx ->
-            val userId = ctx.getUserId() ?: return@deferContextual Mono.error(UnauthorizedException())
-            service.resendVerificationEmail(userId)
-                .then(ServerResponse.ok().bodyValue(AuthResponse(message = "VERIFICATION_SENT")))
-        }
+        request.bodyToMono<ForgotPasswordRequest>()
+            .map { validator.validate(it) }
+            .flatMap { service.resendVerificationEmail(it.email) }
+            .then(ServerResponse.ok().bodyValue(AuthResponse(message = "VERIFICATION_SENT")))
 
     fun forgotPassword(request: ServerRequest): Mono<ServerResponse> =
         request.bodyToMono<ForgotPasswordRequest>()

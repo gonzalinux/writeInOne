@@ -20,6 +20,7 @@ class TokenServiceTest {
         email = "test@test.com",
         passwordHash = "hash",
         displayName = "Test User",
+        emailVerified = true,
         createdAt = OffsetDateTime.now(ZoneOffset.UTC),
         updatedAt = OffsetDateTime.now(ZoneOffset.UTC)
     )
