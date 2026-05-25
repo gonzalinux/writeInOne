@@ -15,7 +15,8 @@
 <body class="auth-layout">
     <div class="card">
         <a class="brand--muted" href="https://WriteInOne.com"><img src="/img/logoWriteInOneGrey.png" alt="" class="brand__img"/>WriteInOne</a>
-        <h1>Log in</h1>
+        <h1 id="pageTitle">Log in</h1>
+
         <form id="loginForm" onsubmit="return false">
             <div class="field">
                 <label for="email">Email</label>
@@ -27,8 +28,37 @@
             </div>
             <p id="error" style="display:none;color:#c00;font-size:0.875rem;margin-top:0.75rem;"></p>
             <button class="btn btn--full" type="submit">Log in</button>
+            <p class="footer-link"><a href="#" id="forgotLink">Forgot password?</a></p>
+            <p class="footer-link">No account? <a href="/admin/register">Create one</a></p>
         </form>
-        <p class="footer-link">No account? <a href="/admin/register">Create one</a></p>
+
+        <form id="forgotForm" style="display:none">
+            <p class="hint" style="margin-bottom:1.25rem">Enter your email and we'll send you a reset code.</p>
+            <div class="field">
+                <label for="forgotEmail">Email</label>
+                <input id="forgotEmail" name="forgotEmail" type="email" autocomplete="email" required/>
+            </div>
+            <p id="forgotError" style="display:none;color:#c00;font-size:0.875rem;margin-top:0.75rem;"></p>
+            <button class="btn btn--full" type="submit">Send reset code</button>
+            <button type="button" id="backToLoginBtn" class="btn btn--ghost btn--full" style="margin-top:0.5rem">Back to log in</button>
+        </form>
+
+        <form id="resetForm" style="display:none">
+            <p class="hint" style="margin-bottom:1.25rem">Enter the 6-digit code sent to <strong id="resetEmailDisplay"></strong> and choose a new password. Check your spam folder if you don't see it.</p>
+            <div class="field">
+                <label for="resetCode">Verification code</label>
+                <input id="resetCode" name="resetCode" type="text" inputmode="numeric" maxlength="6" placeholder="123456" required autocomplete="one-time-code"/>
+            </div>
+            <div class="field">
+                <label for="newPassword">New password</label>
+                <input id="newPassword" name="newPassword" type="password" autocomplete="new-password" required/>
+                <p class="hint">At least 4 characters</p>
+            </div>
+            <p id="resetError" style="display:none;color:#c00;font-size:0.875rem;margin-top:0.75rem;"></p>
+            <button class="btn btn--full" type="submit">Reset password</button>
+            <button type="button" id="resendResetBtn" class="btn btn--ghost btn--full" style="margin-top:0.5rem">Resend code</button>
+            <button type="button" id="backToForgotBtn" class="btn btn--ghost btn--full" style="margin-top:0.25rem">Use a different email</button>
+        </form>
     </div>
 </body>
 </html>

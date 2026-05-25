@@ -32,11 +32,11 @@
             </div>
             <p id="error" style="display:none;color:#c00;font-size:0.875rem;margin-top:0.75rem;"></p>
             <button class="btn btn--full" type="submit">Create account</button>
+            <p class="footer-link">Already have an account? <a href="/admin/login">Log in</a></p>
         </form>
-        <p class="footer-link">Already have an account? <a href="/admin/login">Log in</a></p>
 
         <form id="otpForm" style="display:none">
-            <p class="hint" style="margin-bottom:1.25rem">We sent a 6-digit code to <strong id="emailDisplay"></strong></p>
+            <p class="hint" style="margin-bottom:1.25rem">We sent a 6-digit code to <strong id="emailDisplay"></strong>. Check your spam folder if you don't see it.</p>
             <div class="field">
                 <label for="code">Verification code</label>
                 <input id="code" name="code" type="text" inputmode="numeric" maxlength="6" placeholder="123456" required autocomplete="one-time-code"/>
