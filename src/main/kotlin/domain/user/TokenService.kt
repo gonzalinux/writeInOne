@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
+import java.security.SecureRandom
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.*
@@ -25,6 +26,7 @@ class TokenService(jwtProperties: JwtProperties) {
     private val signingKey = Keys.hmacShaKeyFor(jwtProperties.secret.toByteArray())
     private val accessTokenExpiryMs = jwtProperties.accessTokenExpiryMinutes * 60 * 1000
     private val refreshTokenExpiryDays = jwtProperties.refreshTokenExpiryDays
+    private val secureRandom = SecureRandom()
 
     fun generateAccessToken(userId: Long): AccessToken {
         val now = Date()
@@ -43,6 +45,12 @@ class TokenService(jwtProperties: JwtProperties) {
         val value = UUID.randomUUID().toString() + UUID.randomUUID().toString()
         val expiresAt = OffsetDateTime.now(ZoneOffset.UTC).plusDays(refreshTokenExpiryDays)
         return RefreshToken(value, expiresAt)
+    }
+
+    fun generateOtp(expiryMinutes: Long): OpaqueToken {
+        val code = (secureRandom.nextInt(900000) + 100000).toString()
+        val expiresAt = OffsetDateTime.now(ZoneOffset.UTC).plusMinutes(expiryMinutes)
+        return OpaqueToken(code, expiresAt)
     }
 
     fun hashToken(token: String): String {

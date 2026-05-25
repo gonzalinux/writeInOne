@@ -24,3 +24,9 @@ data class SiteVerificatorProperties (
     val intervalSec: Long
 )
 
+@ConfigurationProperties(prefix = "email-token-scheduler")
+data class EmailTokenCleanerProperties (
+    val intervalMin: Long,
+    val limitDeleted: Int,
+)
+

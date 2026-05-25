@@ -1,8 +1,12 @@
 package com.gonzalinux.api
 
 import com.gonzalinux.api.data.AuthResponse
+import com.gonzalinux.api.data.ForgotPasswordRequest
 import com.gonzalinux.api.data.LoginRequest
 import com.gonzalinux.api.data.RegisterRequest
+import com.gonzalinux.api.data.ResetPasswordRequest
+import com.gonzalinux.api.data.VerifyEmailRequest
+import com.gonzalinux.common.RequestContextHolder.getUserId
 import com.gonzalinux.common.RequestValidator
 import com.gonzalinux.common.UnauthorizedException
 import com.gonzalinux.common.isSecureContext
@@ -66,6 +70,31 @@ class AuthHandler(
                     .build()
             )
     }
+
+    fun verifyEmail(request: ServerRequest): Mono<ServerResponse> =
+        request.bodyToMono<VerifyEmailRequest>()
+            .map { validator.validate(it) }
+            .flatMap { service.verifyEmail(it.email, it.code) }
+            .then(ServerResponse.ok().bodyValue(AuthResponse(message = "EMAIL_VERIFIED")))
+
+    fun resendVerification(request: ServerRequest): Mono<ServerResponse> =
+        Mono.deferContextual { ctx ->
+            val userId = ctx.getUserId() ?: return@deferContextual Mono.error(UnauthorizedException())
+            service.resendVerificationEmail(userId)
+                .then(ServerResponse.ok().bodyValue(AuthResponse(message = "VERIFICATION_SENT")))
+        }
+
+    fun forgotPassword(request: ServerRequest): Mono<ServerResponse> =
+        request.bodyToMono<ForgotPasswordRequest>()
+            .map { validator.validate(it) }
+            .flatMap { service.requestPasswordReset(it.email) }
+            .then(ServerResponse.ok().bodyValue(AuthResponse(message = "RESET_SENT")))
+
+    fun resetPassword(request: ServerRequest): Mono<ServerResponse> =
+        request.bodyToMono<ResetPasswordRequest>()
+            .map { validator.validate(it) }
+            .flatMap { service.resetPassword(it.email, it.code, it.password) }
+            .then(ServerResponse.ok().bodyValue(AuthResponse(message = "PASSWORD_RESET")))
 
     fun refresh(request: ServerRequest): Mono<ServerResponse> {
         val secure = request.isSecureContext()

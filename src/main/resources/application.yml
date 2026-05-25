@@ -27,11 +27,21 @@ jwt:
   access-token-expiry-minutes: 15
   refresh-token-expiry-days: 30
 
+gonemail:
+  base-url: ${GONEMAIL_URL:http://localhost:7777}
+  app-name: ${GONEMAIL_APP:writeinone}
+  verification-template: email-verification
+  password-reset-template: password-reset
+
 schedulers:
   enabled: ${SCHEDULERS_ENABLED:true}
 
 token-scheduler:
   interval-min: 30
+  limit-deleted: 100
+
+email-token-scheduler:
+  interval-min: 5
   limit-deleted: 100
 
 post-scheduler:

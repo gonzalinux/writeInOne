@@ -9,3 +9,7 @@ data class RefreshToken(val value: String, val expiresAt: OffsetDateTime)
 data class AuthTokens(val accessToken: AccessToken, val refreshToken: RefreshToken)
 
 data class StoredRefreshToken(val userId: Long, val tokenHash: String, val expiresAt: OffsetDateTime)
+
+data class OpaqueToken(val value: String, val expiresAt: OffsetDateTime)
+
+data class StoredEmailToken(val userId: Long, val tokenHash: String, val expiresAt: OffsetDateTime)

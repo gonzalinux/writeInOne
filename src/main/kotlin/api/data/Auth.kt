@@ -18,3 +18,16 @@ data class RegisterRequest(
 data class AuthResponse(
     val message: String? = null,
 )
+
+data class VerifyEmailRequest(
+    @field:Email val email: String,
+    @field:NotBlank val code: String
+)
+
+data class ForgotPasswordRequest(@field:Email val email: String)
+
+data class ResetPasswordRequest(
+    @field:Email val email: String,
+    @field:NotBlank val code: String,
+    @field:Size(min = 4) val password: String
+)

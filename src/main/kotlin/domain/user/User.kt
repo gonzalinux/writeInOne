@@ -7,6 +7,7 @@ data class User(
     val email: String,
     val passwordHash: String,
     val displayName: String,
+    val emailVerified: Boolean,
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime
 )
