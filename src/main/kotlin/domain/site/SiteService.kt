@@ -86,8 +86,8 @@ class SiteService(private val repo: SiteRepository, private val verifyClient: Ve
         )
 
     private fun validateCustomCss(css: String?) {
-        if (css != null && css.length > 10_240)
-            throw BadRequestException("Custom CSS exceeds the 10 KB limit")
+        if (css != null && css.length > 25_000)
+            throw BadRequestException("Custom CSS exceeds the 25000 character limit")
     }
 
     private fun validateNavLinks(config: SiteConfig?) {

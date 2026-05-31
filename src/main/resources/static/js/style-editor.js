@@ -515,8 +515,8 @@
 
   saveBtn.addEventListener('click', async () => {
     const css = editor.getValue();
-    if (css.length > 10240) {
-      alert('CSS exceeds the 10 KB limit. Please reduce it before saving.');
+    if (css.length > 25000) {
+      alert('CSS exceeds the 25000 character limit. Please reduce it before saving.');
       return;
     }
     saveBtn.textContent = 'Saving…';
@@ -538,8 +538,8 @@
 
   function updateCharCount() {
     const len = editor.getValue().length;
-    charCount.textContent = `${len} / 10240 characters`;
-    charCount.style.color = len > 10240 ? '#c00' : '';
+    charCount.textContent = `${len} / 25000 characters`;
+    charCount.style.color = len > 25000 ? '#c00' : '';
   }
 
   editor.on('change', debounce(updateCssOnly, 250));
