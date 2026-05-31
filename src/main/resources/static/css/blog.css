@@ -374,6 +374,29 @@ footer {
     margin-top: 2rem;
 }
 
+/* ── 404 page ── */
+.not-found {
+    padding: 4rem 0 2rem;
+}
+
+.not-found__code {
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--border);
+    line-height: 1;
+    margin-bottom: 1rem;
+}
+
+.not-found__title {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.not-found__message {
+    color: var(--muted-2);
+    margin-bottom: 2rem;
+}
+
 /* ── Post detail page ── */
 .post-header {
     margin-bottom: 2.5rem;
