@@ -14,6 +14,7 @@ data class CreateSiteRequest(
     ) val domain: String,
     val description: String? = null,
     val stylesUrl: String? = null,
+    val customCss: String? = null,
     val availableThemes: List<Theme> = listOf(Theme.LIGHT),
     val languages: List<Languages> = listOf(Languages.ENGLISH),
     val config: SiteConfig = SiteConfig()
@@ -27,6 +28,7 @@ data class UpdateSiteRequest(
     ) val domain: String? = null,
     val description: String? = null,
     val stylesUrl: String? = null,
+    val customCss: String? = null,
     val availableThemes: List<Theme>? = null,
     val languages: List<Languages>? = null,
     val config: SiteConfig? = null,

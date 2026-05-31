@@ -1,0 +1,1 @@
+ALTER TABLE sites ADD COLUMN custom_css TEXT NOT NULL DEFAULT '';

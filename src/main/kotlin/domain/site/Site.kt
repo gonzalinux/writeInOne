@@ -11,6 +11,7 @@ data class Site(
     val prefix: String,
     val description: String?,
     val stylesUrl: String?,
+    val customCss: String?,
     val availableThemes: List<Theme>,
     val languages: List<Languages>,
     val config: SiteConfig,

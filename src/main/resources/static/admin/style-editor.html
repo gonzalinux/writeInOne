@@ -8,11 +8,14 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png"/>
     <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png"/>
     <link rel="manifest" href="/manifest.json"/>
-    <title>Style Tester — WriteInOne</title>
+    <title>Style Editor — WriteInOne</title>
     <link rel="stylesheet" href="/css/admin.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/hint/show-hint.min.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/hint/css-hint.min.js"></script>
     <style>
         html, body {
             height: 100%;
@@ -171,12 +174,12 @@
         }
     </style>
     <script src="/js/api.js" defer></script>
-    <script src="/js/style-tester.js" defer></script>
+    <script src="/js/style-editor.js" defer></script>
 </head>
 <body>
     <div class="tester-header">
         <a href="/admin">&larr; Dashboard</a>
-        <span class="tester-header__title" id="siteName">Style Tester</span>
+        <span class="tester-header__title" id="siteName">Style Editor</span>
     </div>
 
     <div class="tester-layout">
@@ -184,6 +187,7 @@
             <div class="preview-tabs">
                 <button class="preview-tab active" data-view="index">Index view</button>
                 <button class="preview-tab" data-view="post">Post view</button>
+                <button class="preview-tab" data-view="not-found">404</button>
             </div>
             <iframe id="previewFrame" title="Blog preview"></iframe>
         </div>
@@ -191,11 +195,18 @@
         <div class="editor-panel">
             <div class="editor-toolbar">
                 <h2 id="editorSiteName">Custom CSS</h2>
-                <button class="btn btn-ghost" id="loadBtn" title="Load CSS from stylesUrl">Load from site</button>
+                <button class="btn btn-ghost" id="loadBtn" title="Load CSS from stylesUrl">Load from URL</button>
                 <button class="btn btn-ghost" id="copyBtn">Copy</button>
+                <button class="btn" id="saveBtn">Save</button>
+            </div>
+            <div class="preview-tabs" style="background:var(--bg)">
+                <button class="preview-tab active" id="tabCustom">Custom CSS</button>
+                <button class="preview-tab" id="tabDefaults">Defaults</button>
             </div>
             <textarea id="cssEditor" placeholder="/* Type your CSS here — the preview updates in real time */&#10;&#10;/* Example:&#10;body { font-family: sans-serif; }&#10;.site-name { color: #c00; }&#10;*/"></textarea>
+            <textarea id="defaultsEditor" hidden></textarea>
             <div class="editor-status" id="editorStatus">Hover an element in the preview to see its selector</div>
+            <div class="editor-status" id="charCount" style="border-top:none">0 / 10240 characters</div>
         </div>
     </div>
 

@@ -1,19 +1,30 @@
 (() => {
   // ── Site ID from URL ──────────────────────────────────────────────────
-  const siteId = location.pathname.match(/\/sites\/([^/]+)\/style-tester/)?.[1];
+  const siteId = location.pathname.match(/\/sites\/([^/]+)\/style-editor/)?.[1];
 
   // ── DOM refs ──────────────────────────────────────────────────────────
-  const frame        = document.getElementById('previewFrame');
-  const cssTextarea  = document.getElementById('cssEditor');
-  const copyBtn      = document.getElementById('copyBtn');
-  const loadBtn      = document.getElementById('loadBtn');
-  const editorStatus = document.getElementById('editorStatus');
-  const tooltip      = document.getElementById('selectorTooltip');
-  const siteName     = document.getElementById('siteName');
-  const editorTitle  = document.getElementById('editorSiteName');
-  const tabs         = document.querySelectorAll('.preview-tab');
+  const frame          = document.getElementById('previewFrame');
+  const cssTextarea    = document.getElementById('cssEditor');
+  const defaultsArea   = document.getElementById('defaultsEditor');
+  const copyBtn        = document.getElementById('copyBtn');
+  const loadBtn        = document.getElementById('loadBtn');
+  const saveBtn        = document.getElementById('saveBtn');
+  const charCount      = document.getElementById('charCount');
+  const editorStatus   = document.getElementById('editorStatus');
+  const tooltip        = document.getElementById('selectorTooltip');
+  const siteName       = document.getElementById('siteName');
+  const editorTitle    = document.getElementById('editorSiteName');
+  const tabCustom      = document.getElementById('tabCustom');
+  const tabDefaults    = document.getElementById('tabDefaults');
+  const tabs           = document.querySelectorAll('.preview-tab[data-view]');
 
   // ── CodeMirror editor ─────────────────────────────────────────────────
+  const SITE_VARS = [
+    '--bg','--fg','--border','--muted','--muted-2','--muted-3','--surface',
+    '--tag-bg','--tag-fg','--blockquote-border','--blockquote-fg',
+    '--code-bg','--inline-code-bg','--copy-btn-bg','--copy-btn-border','--copy-btn-fg',
+  ];
+
   const editor = CodeMirror.fromTextArea(cssTextarea, {
     mode: 'css',
     lineNumbers: true,
@@ -22,6 +33,60 @@
     tabSize: 2,
     lineWrapping: false,
     autofocus: false,
+    extraKeys: { 'Ctrl-Space': cm => cm.showHint({ completeSingle: false }) },
+  });
+
+  const defaultsViewer = CodeMirror.fromTextArea(defaultsArea, {
+    mode: 'css',
+    lineNumbers: true,
+    readOnly: true,
+    lineWrapping: false,
+  });
+  defaultsViewer.getWrapperElement().style.display = 'none';
+  defaultsViewer.getWrapperElement().style.flex = '1';
+  defaultsViewer.getWrapperElement().style.height = '0';
+
+  tabCustom.addEventListener('click', () => {
+    tabCustom.classList.add('active');
+    tabDefaults.classList.remove('active');
+    editor.getWrapperElement().style.display = '';
+    defaultsViewer.getWrapperElement().style.display = 'none';
+    charCount.style.display = '';
+    copyBtn.onclick = () => copyText(editor.getValue());
+    editor.refresh();
+  });
+
+  tabDefaults.addEventListener('click', () => {
+    tabDefaults.classList.add('active');
+    tabCustom.classList.remove('active');
+    editor.getWrapperElement().style.display = 'none';
+    defaultsViewer.getWrapperElement().style.display = '';
+    charCount.style.display = 'none';
+    copyBtn.onclick = () => copyText(defaultsViewer.getValue());
+    defaultsViewer.refresh();
+  });
+
+  editor.on('inputRead', (cm, change) => {
+    if (change.origin === '+input' && /[\w-]/.test(change.text[0])) {
+      const cursor = cm.getCursor();
+      const token = cm.getTokenAt(cursor);
+      if (token.string.startsWith('--')) {
+        const typed = token.string;
+        const list = SITE_VARS.filter(v => v.startsWith(typed));
+        if (list.length) {
+          cm.showHint({
+            completeSingle: false,
+            hint: () => ({
+              list,
+              from: CodeMirror.Pos(cursor.line, token.start),
+              to:   CodeMirror.Pos(cursor.line, token.end),
+            }),
+          });
+        }
+        return;
+      }
+      cm.showHint({ completeSingle: false });
+    }
   });
 
   // ── State ─────────────────────────────────────────────────────────────
@@ -44,11 +109,14 @@
 </head>
 <body data-selector="body">
 <header data-selector="header">
-  <div class="container">
+  <div class="container" data-selector=".container">
     <nav data-selector="nav">
       <a class="site-name" href="#" data-selector=".site-name">My Blog</a>
-      <div class="nav-right">
-        <button class="theme-btn" onclick="document.documentElement.classList.toggle('dark')" title="Toggle dark mode">&#9680;</button>
+      <div class="nav-right" data-selector=".nav-right">
+        <a class="rss-btn" href="#" data-selector=".rss-btn" title="RSS feed">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="6.18" cy="17.82" r="2.18"/><path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"/></svg>
+        </a>
+        <button class="theme-btn" onclick="document.documentElement.classList.toggle('dark')" title="Toggle dark mode" data-selector=".theme-btn">&#9680;</button>
       </div>
     </nav>
   </div>
@@ -111,7 +179,7 @@
   </nav>
 </main>
 <footer data-selector="footer">
-  <div class="container">
+  <div class="container" data-selector=".container">
     <p>© My Blog</p>
   </div>
 </footer>
@@ -129,11 +197,14 @@
 </head>
 <body data-selector="body">
 <header data-selector="header">
-  <div class="container">
+  <div class="container" data-selector=".container">
     <nav data-selector="nav">
       <a class="site-name" href="#" data-selector=".site-name">My Blog</a>
-      <div class="nav-right">
-        <button class="theme-btn" onclick="document.documentElement.classList.toggle('dark')" title="Toggle dark mode">&#9680;</button>
+      <div class="nav-right" data-selector=".nav-right">
+        <a class="rss-btn" href="#" data-selector=".rss-btn" title="RSS feed">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="6.18" cy="17.82" r="2.18"/><path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"/></svg>
+        </a>
+        <button class="theme-btn" onclick="document.documentElement.classList.toggle('dark')" title="Toggle dark mode" data-selector=".theme-btn">&#9680;</button>
       </div>
     </nav>
   </div>
@@ -167,7 +238,7 @@
         <p data-selector=".post-body p">
           Configuring the database driver took a bit of experimentation. Here's what eventually worked:
         </p>
-        <div class="code-block">
+        <div class="code-block" data-selector=".code-block">
           <pre data-selector=".post-body pre"><code data-selector=".post-body pre code">spring:
   r2dbc:
     url: r2dbc:postgresql://localhost:5433/writeinone
@@ -228,7 +299,46 @@
     </article>
 </main>
 <footer data-selector="footer">
-  <div class="container">
+  <div class="container" data-selector=".container">
+    <p>© My Blog</p>
+  </div>
+</footer>
+</body>
+</html>`;
+
+  const NOT_FOUND_MOCK_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>404 — My Blog</title>
+<style id="blog-css">__BLOG_CSS__</style>
+<style id="user-css">__USER_CSS__</style>
+</head>
+<body data-selector="body">
+<header data-selector="header">
+  <div class="container" data-selector=".container">
+    <nav data-selector="nav">
+      <a class="site-name" href="#" data-selector=".site-name">My Blog</a>
+      <div class="nav-right" data-selector=".nav-right">
+        <a class="rss-btn" href="#" data-selector=".rss-btn" title="RSS feed">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="6.18" cy="17.82" r="2.18"/><path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"/></svg>
+        </a>
+        <button class="theme-btn" onclick="document.documentElement.classList.toggle('dark')" title="Toggle dark mode" data-selector=".theme-btn">&#9680;</button>
+      </div>
+    </nav>
+  </div>
+</header>
+<main class="container" data-selector=".container">
+  <div class="not-found" data-selector=".not-found">
+    <p class="not-found__code" data-selector=".not-found__code">404</p>
+    <h1 class="not-found__title" data-selector=".not-found__title">Page not found</h1>
+    <p class="not-found__message" data-selector=".not-found__message">The page you're looking for doesn't exist or has been moved.</p>
+    <a class="not-found__back post-header__back" href="#" data-selector=".not-found__back">&larr; All posts</a>
+  </div>
+</main>
+<footer data-selector="footer">
+  <div class="container" data-selector=".container">
     <p>© My Blog</p>
   </div>
 </footer>
@@ -238,7 +348,7 @@
   // ── Helpers ───────────────────────────────────────────────────────────
 
   function buildSrcdoc(view, userCss) {
-    const template = view === 'post' ? POST_MOCK_HTML : INDEX_MOCK_HTML;
+    const template = view === 'post' ? POST_MOCK_HTML : view === 'not-found' ? NOT_FOUND_MOCK_HTML : INDEX_MOCK_HTML;
     return template
       .replace('__BLOG_CSS__', blogCssText)
       .replace('__USER_CSS__', userCss);
@@ -263,9 +373,35 @@
       const doc = frame.contentDocument;
       if (!doc) return;
 
+      doc.querySelectorAll('a').forEach(a => {
+        a.addEventListener('click', e => e.preventDefault());
+      });
+
+      function fullSelector(el) {
+        const parts = [];
+        let cur = el;
+        while (cur && cur !== doc.documentElement) {
+          if (cur.dataset && cur.dataset.selector && cur.dataset.selector !== 'body') parts.unshift(cur.dataset.selector);
+          cur = cur.parentElement;
+        }
+        return parts.join(' ');
+      }
+
       doc.querySelectorAll('[data-selector]').forEach(el => {
-        el.addEventListener('mouseenter', e => {
+        el.addEventListener('click', e => {
+          e.preventDefault();
+          e.stopPropagation();
           const sel = el.dataset.selector;
+          const current = editor.getValue();
+          const block = `\n\n${sel} {\n  \n}`;
+          editor.setValue(current + block);
+          const line = editor.lineCount() - 2;
+          editor.setCursor({ line, ch: 2 });
+          editor.focus();
+        });
+
+        el.addEventListener('mouseenter', e => {
+          const sel = fullSelector(el);
           tooltip.textContent = sel;
           tooltip.style.display = 'block';
           editorStatus.textContent = sel;
@@ -304,6 +440,7 @@
     try {
       const res = await fetch('/css/blog.css');
       blogCssText = res.ok ? await res.text() : '';
+      defaultsViewer.setValue(blogCssText);
     } catch (_) {
       blogCssText = '';
     }
@@ -321,11 +458,11 @@
     frame.srcdoc = buildSrcdoc(currentView, editor.getValue());
   }
 
-  // ── Copy button ───────────────────────────────────────────────────────
+  // ── Copy helper ───────────────────────────────────────────────────────
 
-  copyBtn.addEventListener('click', async () => {
+  async function copyText(text) {
     try {
-      await navigator.clipboard.writeText(editor.getValue());
+      await navigator.clipboard.writeText(text);
     } catch (_) {
       editor.execCommand('selectAll');
       document.execCommand('copy');
@@ -333,7 +470,9 @@
     const orig = copyBtn.textContent;
     copyBtn.textContent = 'Copied!';
     setTimeout(() => { copyBtn.textContent = orig; }, 2000);
-  });
+  }
+
+  copyBtn.onclick = () => copyText(editor.getValue());
 
   // ── Load button ───────────────────────────────────────────────────────
 
@@ -372,9 +511,39 @@
     });
   });
 
+  // ── Save button ───────────────────────────────────────────────────────
+
+  saveBtn.addEventListener('click', async () => {
+    const css = editor.getValue();
+    if (css.length > 10240) {
+      alert('CSS exceeds the 10 KB limit. Please reduce it before saving.');
+      return;
+    }
+    saveBtn.textContent = 'Saving…';
+    saveBtn.disabled = true;
+    try {
+      const res = await api(`/sites/${siteId}`, { method: 'PATCH', body: JSON.stringify({ customCss: css }) });
+      if (!res || !res.ok) throw new Error();
+      saveBtn.textContent = 'Saved!';
+      setTimeout(() => { saveBtn.textContent = 'Save'; }, 2000);
+    } catch (_) {
+      alert('Failed to save CSS. Please try again.');
+      saveBtn.textContent = 'Save';
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+
   // ── Editor input ──────────────────────────────────────────────────────
 
+  function updateCharCount() {
+    const len = editor.getValue().length;
+    charCount.textContent = `${len} / 10240 characters`;
+    charCount.style.color = len > 10240 ? '#c00' : '';
+  }
+
   editor.on('change', debounce(updateCssOnly, 250));
+  editor.on('change', updateCharCount);
 
   // ── Frame load — re-attach tooltip listeners ──────────────────────────
 
@@ -389,8 +558,12 @@
       site = await fetchSite();
       if (site) {
         const name = site.name || 'Untitled';
-        siteName.textContent   = `Style Tester — ${name}`;
+        siteName.textContent    = `Style Editor — ${name}`;
         editorTitle.textContent = name;
+        if (site.customCss) {
+          editor.setValue(site.customCss);
+          updateCharCount();
+        }
         if (!site.stylesUrl) {
           loadBtn.title = 'No stylesUrl configured for this site';
         }

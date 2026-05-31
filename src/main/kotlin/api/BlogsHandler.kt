@@ -169,6 +169,14 @@ class BlogsHandler(private val blogService: BlogService, private val verifyClien
             .bodyValue(xml)
     }
 
+    fun customCss(request: ServerRequest): Mono<ServerResponse> =
+        Mono.deferContextual { ctx ->
+            val css = ctx.getSite()!!.customCss ?: ""
+            ServerResponse.ok()
+                .contentType(MediaType.valueOf("text/css;charset=UTF-8"))
+                .bodyValue(css)
+        }
+
     fun verify(request: ServerRequest): Mono<ServerResponse> {
         return Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!

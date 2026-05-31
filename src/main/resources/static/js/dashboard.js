@@ -43,7 +43,7 @@ async function loadDashboard() {
             <div class="site-card__actions">
                 <a class="btn btn-ghost" href="/admin/sites/${site.id}/posts">Posts</a>
                 <a class="btn btn-ghost" href="/admin/sites/${site.id}/edit">Edit</a>
-                <a class="btn btn-ghost" href="/admin/sites/${site.id}/style-tester">Style Tester</a>
+                <a class="btn btn-ghost" href="/admin/sites/${site.id}/style-editor">Style Editor</a>
                 <button class="btn btn-ghost btn--danger" data-delete-site="${site.id}" data-site-name="${escHtml(site.name)}">Delete</button>
             </div>`;
     siteList.appendChild(card);

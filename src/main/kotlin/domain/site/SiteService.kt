@@ -18,7 +18,7 @@ class SiteService(private val repo: SiteRepository, private val verifyClient: Ve
 
     fun create(userId: Long, request: CreateSiteRequest): Mono<Site> {
         return request.toMono()
-            .map { validateNavLinks(it.config) }
+            .map { validateNavLinks(it.config); validateCustomCss(it.customCss); it }
             .flatMap { repo.existsByDomain(request.domain) }
             .flatMap { exists ->
                 if (exists) Mono.error(SiteDomainTakenException(request.domain))
@@ -28,6 +28,7 @@ class SiteService(private val repo: SiteRepository, private val verifyClient: Ve
                     request.domain,
                     request.description,
                     request.stylesUrl,
+                    request.customCss?.trim() ?: "",
                     request.availableThemes,
                     request.languages,
                     request.config
@@ -44,7 +45,7 @@ class SiteService(private val repo: SiteRepository, private val verifyClient: Ve
 
     fun update(id: Long, userId: Long, request: UpdateSiteRequest): Mono<Site> {
         return request.toMono()
-            .map { validateNavLinks(it.config) }
+            .map { validateNavLinks(it.config); validateCustomCss(it.customCss); it }
             .flatMap {
                 if (request.domain != null) {
                     repo.findById(id, userId)
@@ -75,6 +76,7 @@ class SiteService(private val repo: SiteRepository, private val verifyClient: Ve
             request.domain,
             request.description,
             request.stylesUrl,
+            request.customCss?.trim()?.ifBlank { "" },
             request.availableThemes,
             request.languages,
             request.config,
@@ -82,6 +84,11 @@ class SiteService(private val repo: SiteRepository, private val verifyClient: Ve
             prefix = request.prefix?.let { if (it.isNotEmpty() && !it.startsWith("/")) "/$it" else it },
             verifyDate = if (resetVerification) OffsetDateTime.now() else null
         )
+
+    private fun validateCustomCss(css: String?) {
+        if (css != null && css.length > 10_240)
+            throw BadRequestException("Custom CSS exceeds the 10 KB limit")
+    }
 
     private fun validateNavLinks(config: SiteConfig?) {
         config ?: return

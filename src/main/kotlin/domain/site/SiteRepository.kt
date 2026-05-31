@@ -28,12 +28,12 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
 
     fun create(
         userId: Long, name: String, domain: String,
-        description: String?, stylesUrl: String?, availableThemes: List<Theme>,
+        description: String?, stylesUrl: String?, customCss: String?, availableThemes: List<Theme>,
         languages: List<Languages>, config: SiteConfig
     ): Mono<Site> =
         client.sql("""
-            INSERT INTO sites (user_id, name, domain, description, styles_url, available_themes, languages, config)
-            VALUES (:userId, :name, :domain, :description, :stylesUrl, :availableThemes, :languages, :config::jsonb)
+            INSERT INTO sites (user_id, name, domain, description, styles_url, custom_css, available_themes, languages, config)
+            VALUES (:userId, :name, :domain, :description, :stylesUrl, :customCss, :availableThemes, :languages, :config::jsonb)
             RETURNING *
         """)
             .bind("userId", userId)
@@ -41,6 +41,7 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             .bind("domain", domain)
             .bindNullable<String>("description", description)
             .bindNullable<String>("stylesUrl", stylesUrl)
+            .bindNullable<String>("customCss", customCss)
             .bind("availableThemes", availableThemes.map { it.value }.toTypedArray())
             .bind("languages", languages.map { it.value }.toTypedArray())
             .bind("config", objectMapper.writeValueAsString(config))
@@ -54,10 +55,11 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
         domain: String? = null,
         description: String? = null,
         stylesUrl: String? = null,
+        customCss: String? = null,
         availableThemes: List<Theme>? = null,
         languages: List<Languages>? = null,
         config: SiteConfig? = null,
-        status:  SiteStatus? = null,
+        status: SiteStatus? = null,
         prefix: String? = null,
         verifyDate: OffsetDateTime? = null
     ): Mono<Site> =
@@ -67,6 +69,7 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
                 domain           = COALESCE(:domain, domain),
                 description      = COALESCE(:description, description),
                 styles_url       = COALESCE(:stylesUrl, styles_url),
+                custom_css       = COALESCE(:customCss, custom_css),
                 available_themes = COALESCE(:availableThemes, available_themes),
                 languages        = COALESCE(:languages, languages),
                 prefix           = COALESCE(:prefix, prefix),
@@ -83,6 +86,7 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             .bindNullable<String>("domain", domain)
             .bindNullable<String>("description", description)
             .bindNullable<String>("stylesUrl", stylesUrl)
+            .bindNullable<String>("customCss", customCss)
             .bindNullable<String>("prefix", prefix)
             .bindNullable<String>("status", status?.toString())
             .bindNullable<Array<String>>("availableThemes", availableThemes?.map { it.value }?.toTypedArray())
@@ -138,6 +142,7 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             prefix = row["prefix"] as String,
             description = row["description"] as? String,
             stylesUrl = row["styles_url"] as? String,
+            customCss = row["custom_css"] as? String,
             availableThemes = (row["available_themes"] as Array<String>).mapNotNull { Theme.fromValue(it) },
             languages = languages,
             config = config,

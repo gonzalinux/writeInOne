@@ -20,7 +20,6 @@ const englishCb = document.getElementById('lang-ENGLISH');
 const spanishCb = document.getElementById('lang-SPANISH');
 const headHtmlInput = document.getElementById('headHtml');
 const bodyHtmlInput = document.getElementById('bodyHtml');
-
 const cmOptions = {
   mode: 'htmlmixed',
   lineNumbers: true,
@@ -33,6 +32,7 @@ const headEditor = CodeMirror.fromTextArea(headHtmlInput, cmOptions);
 const bodyEditor = CodeMirror.fromTextArea(bodyHtmlInput, cmOptions);
 headEditor.getWrapperElement().classList.add('html-codemirror');
 bodyEditor.getWrapperElement().classList.add('html-codemirror');
+
 const enTitle = document.getElementById('en-title');
 const enDescription = document.getElementById('en-description');
 const enFooter = document.getElementById('en-footer');
@@ -164,6 +164,8 @@ async function loadSite() {
 
 if (siteId) {
   loadSite();
+  const styleEditorLink = document.getElementById('styleEditorLink');
+  styleEditorLink.outerHTML = `<a href="/admin/sites/${siteId}/style-editor">Style Editor</a>`;
 } else {
   pageTitle.textContent = 'New site';
   document.title = 'New site — WriteInOne';

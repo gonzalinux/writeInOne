@@ -25,7 +25,7 @@ class AdminHandler(
             path.matches(Regex(".*/sites/[^/]+/posts")) -> "post-list.html"
             path.matches(Regex(".*/sites/[^/]+/edit")) -> "site-form.html"
             path == "/admin/sites/new" -> "site-form.html"
-            path.matches(Regex(".*/sites/[^/]+/style-tester")) -> "style-tester.html"
+            path.matches(Regex(".*/sites/[^/]+/style-editor")) -> "style-editor.html"
             else -> "index.html"
         }
         val resource = ClassPathResource("static/admin/$file")
