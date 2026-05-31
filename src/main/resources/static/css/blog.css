@@ -170,6 +170,23 @@ nav {
     cursor: default;
 }
 
+/* ── RSS button ── */
+.rss-btn {
+    display: flex;
+    align-items: center;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.25rem 0.4rem;
+    line-height: 1;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.rss-btn:hover {
+    border-color: var(--muted-2);
+    color: var(--fg);
+}
+
 /* ── Footer ── */
 footer {
     border-top: 1px solid var(--border);

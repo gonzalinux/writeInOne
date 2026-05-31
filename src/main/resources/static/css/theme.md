@@ -79,6 +79,8 @@ The header appears at the top of every page.
 | `.nav-links a:hover` | Nav link hover state                            |
 | `.theme-btn`         | The light/dark toggle button in the nav bar     |
 | `.theme-btn:hover`   | Theme button hover state                        |
+| `.rss-btn`           | The RSS feed icon link in the nav bar           |
+| `.rss-btn:hover`     | RSS button hover state                          |
 
 ---
 
