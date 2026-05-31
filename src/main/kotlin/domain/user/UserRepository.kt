@@ -2,6 +2,7 @@ package com.gonzalinux.domain.user
 
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Repository
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.time.OffsetDateTime
 
@@ -159,6 +160,17 @@ class UserRepository(private val client: DatabaseClient) {
         client.sql("DELETE FROM password_reset_tokens WHERE ctid IN (SELECT ctid FROM password_reset_tokens WHERE expires_at < now() LIMIT :limit)")
             .bind("limit", limit)
             .then()
+
+    fun findRecent(limit: Int): Flux<User> =
+        client.sql("SELECT * FROM users ORDER BY created_at DESC LIMIT :limit")
+            .bind("limit", limit)
+            .fetch().all()
+            .map { mapToUser(it) }
+
+    fun countAll(): Mono<Long> =
+        client.sql("SELECT COUNT(*) as count FROM users")
+            .fetch().first()
+            .map { it["count"] as Long }
 
     private fun mapToUser(row: Map<String, Any>): User =
         User(

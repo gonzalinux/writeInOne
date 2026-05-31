@@ -123,6 +123,33 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             .fetch().all().map { mapToSite(it) }
     }
 
+    fun findAll(): Flux<Site> =
+        client.sql("SELECT * FROM sites ORDER BY created_at DESC")
+            .fetch().all()
+            .map { mapToSite(it) }
+
+    fun countAll(): Mono<Long> =
+        client.sql("SELECT COUNT(*) as count FROM sites")
+            .fetch().first()
+            .map { it["count"] as Long }
+
+    fun findRecentSites(limit: Int): Flux<Site> =
+        client.sql("SELECT * FROM sites ORDER BY created_at DESC LIMIT :limit")
+            .bind("limit", limit)
+            .fetch().all()
+            .map { mapToSite(it) }
+
+    fun updateStatus(siteId: Long, status: SiteStatus): Mono<Site> =
+        client.sql("""
+            UPDATE sites SET status = :status, updated_at = now()
+            WHERE id = :id
+            RETURNING *
+        """)
+            .bind("id", siteId)
+            .bind("status", status.toString())
+            .fetch().first()
+            .map { mapToSite(it) }
+
     @Suppress("UNCHECKED_CAST")
     private fun mapToSite(row: Map<String, Any>): Site {
         val languages = (row["languages"] as Array<String>)

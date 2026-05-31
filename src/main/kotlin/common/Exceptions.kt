@@ -45,3 +45,8 @@ class BadRequestException(details: String) : ApiException(
     details = details
 )
 
+class NotFoundException : ApiException(
+    status = HttpStatus.NOT_FOUND,
+    error = "NOT_FOUND"
+)
+
