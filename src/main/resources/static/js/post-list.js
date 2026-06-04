@@ -162,6 +162,7 @@ async function loadPosts() {
       <td>${tags}</td>
       <td><span class="status status--${status}">${status}</span></td>
       <td>${dateDisplay}</td>
+      <td>${item.post.viewCount ?? 0}</td>
       <td class="td-actions">
         <a class="action-btn action-btn--edit" href="/admin/sites/${siteId}/posts/${item.post.id}/edit">Edit</a>
         ${viewBtn}

@@ -55,3 +55,14 @@ data class SitemapEntry(
     val lastMod: OffsetDateTime
 )
 
+data class PostViewStat(
+    val postId: Long,
+    val viewCount: Long,
+    val siteId: Long,
+    val siteName: String,
+    val domain: String,
+    val title: String,
+    val lang: String,
+    val slug: String
+)
+

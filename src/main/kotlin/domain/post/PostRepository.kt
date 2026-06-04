@@ -331,6 +331,38 @@ class PostRepository(private val client: DatabaseClient) {
             .bind("id", postId)
             .then()
 
+    fun findTopByViews(limit: Int): Flux<PostViewStat> =
+        client.sql(
+            """
+            SELECT p.id, p.view_count, p.site_id,
+                   s.name AS site_name, s.domain,
+                   pt.title, pt.lang, pt.slug
+            FROM posts p
+            JOIN sites s ON s.id = p.site_id
+            LEFT JOIN LATERAL (
+                SELECT title, lang, slug FROM post_translations
+                WHERE post_id = p.id ORDER BY lang LIMIT 1
+            ) pt ON true
+            WHERE p.status = 'published'
+            ORDER BY p.view_count DESC
+            LIMIT :limit
+            """
+        )
+            .bind("limit", limit)
+            .fetch().all()
+            .map {
+                PostViewStat(
+                    postId    = it["id"] as Long,
+                    viewCount = it["view_count"] as Long,
+                    siteId    = it["site_id"] as Long,
+                    siteName  = it["site_name"] as String,
+                    domain    = it["domain"] as String,
+                    title     = it["title"] as? String ?: "(untitled)",
+                    lang      = it["lang"] as? String ?: "",
+                    slug      = it["slug"] as? String ?: ""
+                )
+            }
+
     private fun mapToPost(row: Map<String, Any>): Post = Post(
         id = row["id"] as Long,
         siteId = row["site_id"] as Long,

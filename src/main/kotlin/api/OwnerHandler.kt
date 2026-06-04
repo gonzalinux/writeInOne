@@ -17,7 +17,8 @@ class OwnerHandler(private val ownerService: OwnerService) {
                         "userCount" to stats.userCount,
                         "siteCount" to stats.siteCount,
                         "users" to stats.recentUsers,
-                        "sites" to stats.recentSites
+                        "sites" to stats.recentSites,
+                        "topPosts" to stats.topPosts
                     )
                 )
             }

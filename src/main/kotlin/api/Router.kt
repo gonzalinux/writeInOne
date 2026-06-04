@@ -110,6 +110,7 @@ class Router(
 
     private fun blogApiRoutes(): RouterFunction<ServerResponse> = route()
         .GET("/{lang:es|en}/posts", blogsHandler::postListJson)
+        .POST("/{lang:es|en}/posts/{slug}/event", blogsHandler::recordEvent)
         .build()
         .filter(hostFilter)
 }

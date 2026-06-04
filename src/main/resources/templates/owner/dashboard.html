@@ -55,6 +55,31 @@
     </section>
 
     <section class="dashboard-section">
+        <h2>Top Posts by Views</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Title</th>
+                <th>Site</th>
+                <th>Domain</th>
+                <th>Views</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="p : ${topPosts}">
+                <td>
+                    <a th:href="'https://' + ${p.domain} + '/' + ${p.lang} + '/articles/' + ${p.slug}"
+                       target="_blank" rel="noopener" th:text="${p.title}">Post title</a>
+                </td>
+                <td th:text="${p.siteName}">Site</td>
+                <td th:text="${p.domain}">example.com</td>
+                <td th:text="${p.viewCount}">0</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="dashboard-section">
         <h2>Recent Sites</h2>
         <table>
             <thead>

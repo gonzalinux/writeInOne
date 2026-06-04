@@ -14,6 +14,7 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
+import org.springframework.web.reactive.function.server.bodyToMono
 import reactor.core.publisher.Mono
 import kotlin.jvm.optionals.getOrNull
 
@@ -145,6 +146,27 @@ class BlogsHandler(private val blogService: BlogService, private val verifyClien
             blogService.listPublished(site.id, lang, page, size, tag, search)
 
         }.flatMap { ServerResponse.ok().bodyValue(it) }
+    }
+
+    fun recordEvent(request: ServerRequest): Mono<ServerResponse> {
+        val lang = request.pathVariable("lang")
+        val slug = request.pathVariable("slug")
+        val ip = request.headers().firstHeader("X-Forwarded-For")
+            ?.split(",")?.firstOrNull()?.trim()
+            ?: request.remoteAddress().orElse(null)?.address?.hostAddress ?: ""
+        val ua = request.headers().firstHeader("User-Agent") ?: ""
+
+        return request.bodyToMono<Map<String, String>>()
+            .flatMap { body ->
+                when (body["type"]) {
+                    "view" -> Mono.deferContextual { ctx ->
+                        val site = ctx.getSite()!!
+                        blogService.recordView(site.id, lang, slug, ip, ua)
+                            .then(ServerResponse.noContent().build())
+                    }
+                    else -> ServerResponse.badRequest().build()
+                }
+            }
     }
 
     fun sitemap(request: ServerRequest): Mono<ServerResponse> =

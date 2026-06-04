@@ -2,6 +2,7 @@ package com.gonzalinux.blogs
 
 import com.gonzalinux.common.Page
 import com.gonzalinux.common.PostNotFoundException
+import com.gonzalinux.domain.post.PostEventService
 import com.gonzalinux.domain.post.PostRepository
 import com.gonzalinux.domain.post.SitemapEntry
 import com.gonzalinux.domain.site.SiteRepository
@@ -24,6 +25,7 @@ class BlogService(
     private val postRepo: PostRepository,
     private val tagRepo: TagRepository,
     private val siteRepo: SiteRepository,
+    private val postEventService: PostEventService,
     private val registry: MeterRegistry
 ) {
     private val mdParser: Parser
@@ -73,11 +75,15 @@ class BlogService(
                         BlogPostDetail(post, translation, tags, rendered, extractCodeLanguages(rendered), allTranslations)
                     }
             }
-            .flatMap { detail ->
-                postRepo.incrementViewCount(detail.post.id)
+            .flatMap { detail -> Mono.just(detail) }
+
+    fun recordView(siteId: Long, lang: String, slug: String, ip: String, userAgent: String): Mono<Void> =
+        postRepo.findPublishedBySlug(siteId, lang, slug)
+            .flatMap { (post, _) ->
+                postEventService.recordView(post.id, ip, userAgent)
                     .doOnSuccess { registry.counter("blog.post.views", "lang", lang).increment() }
-                    .thenReturn(detail)
             }
+            .then()
 
     fun getPreviewPost(siteId: Long, userId: Long, lang: String, slug: String): Mono<PreviewContext> =
         siteRepo.findById(siteId, userId)
