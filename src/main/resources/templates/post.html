@@ -71,9 +71,10 @@
         const _hljsLangs = /*[[${codeLanguages}]]*/ [];
         const _postLang  = /*[[${lang}]]*/ 'en';
         const _postSlug  = /*[[${translation.slug}]]*/ '';
+        const _prefix    = /*[[${prefix}]]*/ '';
     </script>
     <script>
-        fetch(`/${_postLang}/posts/${_postSlug}/event`, {
+        fetch(`${_prefix}/${_postLang}/posts/${_postSlug}/event`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type: 'view' }),
