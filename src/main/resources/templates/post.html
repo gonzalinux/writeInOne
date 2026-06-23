@@ -67,6 +67,11 @@
     </main>
 
     <th:block th:replace="~{fragments/layout :: footer}"/>
+    <script th:inline="javascript">
+        const _hljsLangs = /*[[${codeLanguages}]]*/ [];
+        const _postLang  = /*[[${lang}]]*/ 'en';
+        const _postSlug  = /*[[${translation.slug}]]*/ '';
+    </script>
     <script>
         fetch(`/${_postLang}/posts/${_postSlug}/event`, {
             method: 'POST',
@@ -74,11 +79,6 @@
             body: JSON.stringify({ type: 'view' }),
             keepalive: true
         }).catch(() => {});
-    </script>
-    <script th:inline="javascript">
-        const _hljsLangs = /*[[${codeLanguages}]]*/ [];
-        const _postLang  = /*[[${lang}]]*/ 'en';
-        const _postSlug  = /*[[${translation.slug}]]*/ '';
     </script>
     <script type="module">
         import hljs from 'https://esm.sh/highlight.js@11.11.1/lib/core';
