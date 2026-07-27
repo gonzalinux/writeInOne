@@ -11,7 +11,7 @@ data class Site(
     val prefix: String,
     val description: String?,
     val stylesUrl: String?,
-    val customCss: String?,
+    val customCss: String? =null,
     val availableThemes: List<Theme>,
     val languages: List<Languages>,
     val config: SiteConfig,
@@ -25,3 +25,10 @@ enum class SiteStatus {
     NOT_VERIFIED,
     VERIFIED;
 }
+
+/** A subdomain label parked for its previous owner after a rename or a site deletion. */
+data class SubdomainReservation(
+    val label: String,
+    val userId: Long,
+    val releasedAt: OffsetDateTime
+)

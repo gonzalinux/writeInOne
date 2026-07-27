@@ -14,26 +14,55 @@ import java.time.OffsetDateTime
 
 private val logger = KotlinLogging.logger {}
 @Service
-class SiteService(private val repo: SiteRepository, private val verifyClient: VerifyClient) {
+class SiteService(
+    private val repo: SiteRepository,
+    private val verifyClient: VerifyClient,
+    private val subdomainService: SubdomainService
+) {
 
     fun create(userId: Long, request: CreateSiteRequest): Mono<Site> {
+        val domain = subdomainService.normalizeDomain(request.domain)
         return request.toMono()
             .map { validateNavLinks(it.config); validateCustomCss(it.customCss); it }
-            .flatMap { repo.existsByDomain(request.domain) }
-            .flatMap { exists ->
-                if (exists) Mono.error(SiteDomainTakenException(request.domain))
-                else repo.create(
+            .flatMap { claimDomain(userId, domain) }
+            .flatMap { status ->
+                repo.create(
                     userId,
                     request.name,
-                    request.domain,
+                    domain,
                     request.description,
                     request.stylesUrl,
                     request.customCss?.trim() ?: "",
                     request.availableThemes,
                     request.languages,
-                    request.config
+                    request.config,
+                    status
                 )
             }
+    }
+
+    fun subdomainInfo(): SubdomainInfo = subdomainService.info()
+
+    fun checkSubdomain(name: String, userId: Long): Mono<SubdomainInfo> = subdomainService.check(name, userId)
+
+    /**
+     * Validates [domain] for [userId] and returns the status a site on it starts in.
+     * Subdomains of our own base domain need no DNS proof, so they go live immediately;
+     * taking one also consumes any reservation the user was holding on the label.
+     */
+    private fun claimDomain(userId: Long, domain: String): Mono<SiteStatus> {
+        if (subdomainService.isHomeDomain(domain))
+            return Mono.error(BadRequestException("$domain is not available"))
+
+        if (!subdomainService.isManaged(domain))
+            return repo.existsByDomain(domain).flatMap { exists ->
+                if (exists) Mono.error(SiteDomainTakenException(domain))
+                else Mono.just(SiteStatus.NOT_VERIFIED)
+            }
+
+        return Mono.fromCallable { subdomainService.requireLabel(domain) }
+            .flatMap { label -> subdomainService.ensureAvailable(label, userId) }
+            .flatMap { label -> subdomainService.claim(label).thenReturn(SiteStatus.VERIFIED) }
     }
 
     fun list(userId: Long): Flux<Site> =
@@ -46,44 +75,63 @@ class SiteService(private val repo: SiteRepository, private val verifyClient: Ve
     fun update(id: Long, userId: Long, request: UpdateSiteRequest): Mono<Site> {
         return request.toMono()
             .map { validateNavLinks(it.config); validateCustomCss(it.customCss); it }
-            .flatMap {
-                if (request.domain != null) {
-                    repo.findById(id, userId)
-                        .switchIfEmpty(Mono.error(SiteNotFoundException(id)))
-                        .flatMap { existing ->
-                            if (existing.domain == request.domain) {
-                                performUpdate(id, userId, request, resetVerification = request.requestVerification)
-                            } else {
-                                repo.existsByDomain(request.domain)
-                                    .flatMap { exists ->
-                                        if (exists) Mono.error(SiteDomainTakenException(request.domain))
-                                        else performUpdate(id, userId, request, resetVerification = true)
-                                    }
-                            }
-                        }
+            .flatMap { repo.findById(id, userId) }
+            .switchIfEmpty(Mono.error(SiteNotFoundException(id)))
+            .flatMap { existing ->
+                val newDomain = request.domain?.let { subdomainService.normalizeDomain(it) }
+                if (newDomain == null || newDomain == existing.domain) {
+                    // A managed subdomain is always verified, so re-verification is meaningless there.
+                    val reset = request.requestVerification && !subdomainService.isManaged(existing.domain)
+                    performUpdate(
+                        id, userId, request,
+                        domain = null,
+                        status = if (reset) SiteStatus.NOT_VERIFIED else null,
+                        prefix = prefixFor(existing.domain, request)
+                    )
                 } else {
-                    performUpdate(id, userId, request, resetVerification = request.requestVerification)
-                        .switchIfEmpty(Mono.error(SiteNotFoundException(id)))
+                    claimDomain(userId, newDomain)
+                        .flatMap { status ->
+                            performUpdate(
+                                id, userId, request,
+                                domain = newDomain,
+                                status = status,
+                                prefix = prefixFor(newDomain, request)
+                            )
+                        }
+                        // The old label stays parked so its owner can move back to it.
+                        .flatMap { updated -> subdomainService.park(existing.domain, userId).thenReturn(updated) }
                 }
             }
     }
 
-    private fun performUpdate(id: Long, userId: Long, request: UpdateSiteRequest, resetVerification: Boolean = false): Mono<Site> =
+    private fun performUpdate(
+        id: Long,
+        userId: Long,
+        request: UpdateSiteRequest,
+        domain: String?,
+        status: SiteStatus?,
+        prefix: String?
+    ): Mono<Site> =
         repo.update(
             id,
             userId,
             request.name,
-            request.domain,
+            domain,
             request.description,
             request.stylesUrl,
             request.customCss?.trim()?.ifBlank { "" },
             request.availableThemes,
             request.languages,
             request.config,
-            status = if (resetVerification) SiteStatus.NOT_VERIFIED else null,
-            prefix = request.prefix?.let { if (it.isNotEmpty() && !it.startsWith("/")) "/$it" else it },
-            verifyDate = if (resetVerification) OffsetDateTime.now() else null
+            status = status,
+            prefix = prefix,
+            verifyDate = if (status == SiteStatus.NOT_VERIFIED) OffsetDateTime.now() else null
         )
+
+    /** Managed subdomains are served at the root — a proxy prefix would only corrupt their URLs. */
+    private fun prefixFor(domain: String, request: UpdateSiteRequest): String? =
+        if (subdomainService.isManaged(domain)) ""
+        else request.prefix?.let { if (it.isNotEmpty() && !it.startsWith("/")) "/$it" else it }
 
     private fun validateCustomCss(css: String?) {
         if (css != null && css.length > 25_000)
@@ -122,5 +170,6 @@ class SiteService(private val repo: SiteRepository, private val verifyClient: Ve
     fun delete(id: Long, userId: Long): Mono<Void> =
         repo.findById(id, userId)
             .switchIfEmpty(Mono.error(SiteNotFoundException(id)))
-            .flatMap { repo.delete(id, userId) }
+            // Park the label too, otherwise deleting a site frees the handle instantly.
+            .flatMap { site -> repo.delete(id, userId).then(subdomainService.park(site.domain, userId)) }
 }

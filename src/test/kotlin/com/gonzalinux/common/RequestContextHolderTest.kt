@@ -9,10 +9,10 @@ import org.springframework.mock.http.server.reactive.MockServerHttpRequest
 class RequestContextHolderTest {
 
     @Test
-    fun `generateRequestId returns rq- prefixed 32-char hex string`() {
+    fun `generateRequestId returns GK- prefixed 18-char hex string`() {
         val id = generateRequestId()
 
-        assertTrue(id.matches("^rq-[0-9a-f]{32}$".toRegex()), "Got: $id")
+        assertTrue(id.matches("^GK[0-9a-fA-F]{18}$".toRegex()), "Got: $id")
     }
 
     @Test
@@ -39,7 +39,7 @@ class RequestContextHolderTest {
 
         val id = extractRequestId(request)
 
-        assertTrue(id.matches("^rq-[0-9a-f]{32}$".toRegex()))
+        assertTrue(id.matches("^GK[0-9a-fA-F]{18}$".toRegex()))
     }
 
     @Test
@@ -50,7 +50,7 @@ class RequestContextHolderTest {
 
         val id = extractRequestId(request)
 
-        assertTrue(id.matches("^rq-[0-9a-f]{32}$".toRegex()))
+        assertTrue(id.matches("^GK[0-9a-fA-F]{18}$".toRegex()))
         assertNotEquals("not-valid-format", id)
     }
 }

@@ -1,6 +1,7 @@
 package com.gonzalinux.common
 
 import org.springframework.http.HttpStatus
+import java.time.LocalDate
 
 
 class UserAlreadyExistsException(email: String) : ApiException(
@@ -25,6 +26,18 @@ class SiteDomainTakenException(domain: String) : ApiException(
     status = HttpStatus.CONFLICT,
     error = "SITE_DOMAIN_TAKEN",
     details = "Domain $domain is already taken"
+)
+
+class SubdomainNotAllowedException(label: String) : ApiException(
+    status = HttpStatus.CONFLICT,
+    error = "SUBDOMAIN_NOT_ALLOWED",
+    details = "The subdomain '$label' is reserved and cannot be registered"
+)
+
+class SubdomainHeldException(label: String, until: LocalDate) : ApiException(
+    status = HttpStatus.CONFLICT,
+    error = "SUBDOMAIN_HELD",
+    details = "The subdomain '$label' was recently released and stays reserved for its previous owner until $until"
 )
 
 class PostNotFoundException(id: Long? = null, slug: String? = null) : ApiException(

@@ -29,16 +29,17 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
     fun create(
         userId: Long, name: String, domain: String,
         description: String?, stylesUrl: String?, customCss: String?, availableThemes: List<Theme>,
-        languages: List<Languages>, config: SiteConfig
+        languages: List<Languages>, config: SiteConfig, status: SiteStatus = SiteStatus.NOT_VERIFIED
     ): Mono<Site> =
         client.sql("""
-            INSERT INTO sites (user_id, name, domain, description, styles_url, custom_css, available_themes, languages, config)
-            VALUES (:userId, :name, :domain, :description, :stylesUrl, :customCss, :availableThemes, :languages, :config::jsonb)
+            INSERT INTO sites (user_id, name, domain, description, styles_url, custom_css, available_themes, languages, config, status)
+            VALUES (:userId, :name, :domain, :description, :stylesUrl, :customCss, :availableThemes, :languages, :config::jsonb, :status)
             RETURNING *
         """)
             .bind("userId", userId)
             .bind("name", name)
             .bind("domain", domain)
+            .bind("status", status.toString())
             .bindNullable<String>("description", description)
             .bindNullable<String>("stylesUrl", stylesUrl)
             .bindNullable<String>("customCss", customCss)

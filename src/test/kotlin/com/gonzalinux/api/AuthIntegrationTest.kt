@@ -59,11 +59,31 @@ class AuthIntegrationTest {
         verifyEmail(email)
     }
 
+    private fun loginCookies(email: String, password: String = "password123") =
+        webTestClient.post().uri("/auth/login")
+            .bodyValue(mapOf("email" to email, "password" to password))
+            .exchange()
+            .expectStatus().isOk
+            .returnResult(String::class.java).responseCookies
+
     // --- register ---
 
     @Test
-    fun `register returns 200 and sets cookies`() {
+    fun `register returns 200 without issuing cookies until the email is verified`() {
         register("user@integrationtest.com")
+            .expectStatus().isOk
+            .expectCookie().doesNotExist(ACCESS_TOKEN_COOKIE)
+            .expectCookie().doesNotExist(REFRESH_TOKEN_COOKIE)
+    }
+
+    @Test
+    fun `verify-email sets cookies`() {
+        register("verifycookies@integrationtest.com")
+        val code = emailClient.getVerificationCode("verifycookies@integrationtest.com")!!
+
+        webTestClient.post().uri("/auth/verify-email")
+            .bodyValue(mapOf("email" to "verifycookies@integrationtest.com", "code" to code))
+            .exchange()
             .expectStatus().isOk
             .expectCookie().exists(ACCESS_TOKEN_COOKIE)
             .expectCookie().exists(REFRESH_TOKEN_COOKIE)
@@ -210,9 +230,8 @@ class AuthIntegrationTest {
 
     @Test
     fun `logout returns 200 and clears cookies`() {
-        val cookies = register("logout@integrationtest.com")
-            .returnResult(String::class.java).responseCookies
-        val refreshToken = cookies.getFirst(REFRESH_TOKEN_COOKIE)?.value ?: ""
+        registerAndVerify("logout@integrationtest.com")
+        val refreshToken = loginCookies("logout@integrationtest.com").getFirst(REFRESH_TOKEN_COOKIE)?.value ?: ""
 
         webTestClient.post().uri("/auth/logout")
             .cookie(REFRESH_TOKEN_COOKIE, refreshToken)
@@ -224,9 +243,8 @@ class AuthIntegrationTest {
 
     @Test
     fun `refresh returns 200 and rotates tokens`() {
-        val cookies = register("refresh@integrationtest.com")
-            .returnResult(String::class.java).responseCookies
-        val refreshToken = cookies.getFirst(REFRESH_TOKEN_COOKIE)?.value ?: ""
+        registerAndVerify("refresh@integrationtest.com")
+        val refreshToken = loginCookies("refresh@integrationtest.com").getFirst(REFRESH_TOKEN_COOKIE)?.value ?: ""
 
         webTestClient.post().uri("/auth/refresh")
             .cookie(REFRESH_TOKEN_COOKIE, refreshToken)

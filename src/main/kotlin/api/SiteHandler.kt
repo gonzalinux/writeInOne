@@ -13,6 +13,7 @@ import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.body
 import org.springframework.web.reactive.function.server.bodyToMono
 import reactor.core.publisher.Mono
+import kotlin.jvm.optionals.getOrNull
 
 @Component
 class SiteHandler(private val service: SiteService, private val validator: RequestValidator) {
@@ -23,6 +24,16 @@ class SiteHandler(private val service: SiteService, private val validator: Reque
                 .map { validator.validate(it) }
                 .flatMap { service.create(ctx.getUserId()!!, it) }
                 .flatMap { ServerResponse.ok().bodyValue(it) }
+        }
+
+    /** Without `name`, describes the subdomain rules; with one, reports whether it can be taken. */
+    fun subdomain(request: ServerRequest): Mono<ServerResponse> =
+        Mono.deferContextual { ctx ->
+            val name = request.queryParam("name").getOrNull()?.takeIf { it.isNotBlank() }
+            val result =
+                if (name == null) Mono.just(service.subdomainInfo())
+                else service.checkSubdomain(name, ctx.getUserId()!!)
+            result.flatMap { ServerResponse.ok().bodyValue(it) }
         }
 
     fun list(request: ServerRequest): Mono<ServerResponse> =

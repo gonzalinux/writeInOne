@@ -9,6 +9,13 @@ function escHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
+let baseDomain = '';
+
+async function loadSubdomainConfig() {
+  const res = await api('/sites/subdomain');
+  if (res && res.ok) baseDomain = (await res.json()).baseDomain;
+}
+
 async function loadDashboard() {
   const res = await api('/sites/');
   if (!res) return;
@@ -28,16 +35,20 @@ async function loadDashboard() {
     const badgeClass = verified ? 'badge--verified' : expired ? 'badge--expired' : 'badge--pending';
     const badgeText  = verified ? '✓ Verified' : expired ? 'Verification expired' : 'Pending verification';
 
-    const card = document.createElement('div');
-    card.className = 'site-card';
-    card.innerHTML = `
-            <div class="site-card__info">
-                <div class="site-card__name">${escHtml(site.name)} <span class="badge ${badgeClass} badge--clickable"
+    // Subdomains of our own base domain never go through DNS verification.
+    const managed = Boolean(baseDomain) && site.domain.endsWith('.' + baseDomain);
+    const badge   = managed ? '' : `<span class="badge ${badgeClass} badge--clickable"
                      data-verify-domain="${escHtml(site.domain)}"
                      data-verify-prefix="${escHtml(site.prefix || '')}"
                      data-verify-status="${escHtml(site.status)}"
                      data-verify-date="${escHtml(site.verifyDate || '')}"
-                     data-verify-site-id="${site.id}">${badgeText}</span></div>
+                     data-verify-site-id="${site.id}">${badgeText}</span>`;
+
+    const card = document.createElement('div');
+    card.className = 'site-card';
+    card.innerHTML = `
+            <div class="site-card__info">
+                <div class="site-card__name">${escHtml(site.name)} ${badge}</div>
                 <a class="site-card__domain" href="${siteUrl}" target="_blank" rel="noopener">${escHtml(site.domain)}${prefix}</a>
             </div>
             <div class="site-card__actions">
@@ -73,4 +84,4 @@ async function loadDashboard() {
   });
 }
 
-loadDashboard();
+loadSubdomainConfig().then(loadDashboard);

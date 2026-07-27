@@ -21,7 +21,8 @@ class Router(
     private val hostFilter: HostFilter,
     private val adminHostFilter: AdminHostFilter,
     private val blogExceptionFilter: BlogExceptionFilter,
-    private val adminExceptionFilter: AdminExceptionFilter
+    private val adminExceptionFilter: AdminExceptionFilter,
+    private val subdomainProperties: SubdomainProperties
 ) {
 
     @Bean
@@ -50,6 +51,8 @@ class Router(
             sites
                 .POST("/", siteHandler::create)
                 .GET("/", siteHandler::list)
+                // Must precede /{id}, which would otherwise swallow it.
+                .GET("/subdomain", siteHandler::subdomain)
                 .GET("/{id}", siteHandler::get)
                 .PATCH("/{id}", siteHandler::update)
                 .DELETE("/{id}", siteHandler::delete)
@@ -85,7 +88,7 @@ class Router(
     private fun adminRoutes(): RouterFunction<ServerResponse> = route()
         .GET("/sitemap.xml", RequestPredicates.headers { h ->
             val host = h.firstHeader("X-Site-Host") ?: h.firstHeader("Host") ?: ""
-            host == "writeinone.com" || host == "localhost" || host.startsWith("localhost:")
+            subdomainProperties.isHomeDomain(host)
         }, blogsHandler::mainSitemap)
         .GET("/admin", adminHandler::serve)
         .GET("/admin/**", adminHandler::serve)

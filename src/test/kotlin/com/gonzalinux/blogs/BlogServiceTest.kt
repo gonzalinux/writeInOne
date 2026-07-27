@@ -1,6 +1,7 @@
 package com.gonzalinux.blogs
 
 import com.gonzalinux.domain.post.Post
+import com.gonzalinux.domain.post.PostEventService
 import com.gonzalinux.domain.post.PostRepository
 import com.gonzalinux.domain.post.PostStatus
 import com.gonzalinux.domain.post.PostTranslation
@@ -25,7 +26,8 @@ class BlogServiceTest {
     private val tagRepo = mockk<TagRepository>()
     private val siteRepo = mockk<SiteRepository>()
     private val registry = mockk<MeterRegistry>(relaxed = true)
-    private val service = BlogService(postRepo, tagRepo, siteRepo, registry)
+    private val postEventService = mockk<PostEventService>()
+    private val service = BlogService(postRepo, tagRepo, siteRepo, postEventService, registry)
 
     private val now = OffsetDateTime.now(ZoneOffset.UTC)
 
@@ -33,7 +35,7 @@ class BlogServiceTest {
         id = 1L, userId = 42L, name = "Test Site", domain = "test.example.com",
         prefix = "", description = null, stylesUrl = null, availableThemes = emptyList(),
         languages = emptyList(), config = SiteConfig(), status = SiteStatus.NOT_VERIFIED,
-        createdAt = now, updatedAt = now, verifyDate = now
+        createdAt = now, updatedAt = now, verifyDate = now, customCss = null
     )
 
     private val post = Post(

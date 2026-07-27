@@ -50,6 +50,48 @@ post-scheduler:
 site-verificator:
   interval-sec: 120
 
+subdomains:
+  base-domain: ${BASE_DOMAIN:writeinone.com}
+  min-length: 3
+  max-length: 30
+  reservation-days: 7
+  purge-interval-min: 60
+  reserved:
+    - www
+    - blog
+    - mail
+    - email
+    - smtp
+    - imap
+    - verify
+    - admin
+    - api
+    - app
+    - auth
+    - login
+    - owner
+    - dashboard
+    - static
+    - cdn
+    - assets
+    - img
+    - css
+    - js
+    - docs
+    - help
+    - support
+    - status
+    - dev
+    - staging
+    - test
+    - demo
+    - ns1
+    - ns2
+    - ftp
+    - root
+    - billing
+    - account
+
 management:
   server:
     port: ${MANAGEMENT_PORT:8081}

@@ -2,6 +2,7 @@ package com.gonzalinux.config
 
 import com.gonzalinux.common.SiteContextHolder.withPrefix
 import com.gonzalinux.common.SiteContextHolder.withSite
+import com.gonzalinux.config.SubdomainProperties
 import com.gonzalinux.domain.site.SiteRepository
 import com.gonzalinux.domain.site.SiteStatus
 import mu.KotlinLogging
@@ -15,11 +16,16 @@ import reactor.core.publisher.Mono
 private val logger = KotlinLogging.logger {}
 
 @Component
-class HostFilter(private val siteRepository: SiteRepository) : HandlerFilterFunction<ServerResponse, ServerResponse> {
+class HostFilter(
+    private val siteRepository: SiteRepository,
+    private val subdomainProperties: SubdomainProperties
+) : HandlerFilterFunction<ServerResponse, ServerResponse> {
 
     override fun filter(request: ServerRequest, next: HandlerFunction<ServerResponse>): Mono<ServerResponse> {
+        // The port is kept: dev sites are stored as `localhost:8080`.
         val domain = (request.headers().firstHeader("X-Site-Host")
             ?: request.headers().firstHeader("Host"))
+            ?.let { subdomainProperties.normalizeHost(it) }
             ?: return ServerResponse.badRequest().build()
 
 
@@ -37,9 +43,7 @@ class HostFilter(private val siteRepository: SiteRepository) : HandlerFilterFunc
             }
             .switchIfEmpty(
                 Mono.defer {
-                    val isHomeDomain =
-                        domain == "writeinone.com" || domain == "localhost" || domain.startsWith("localhost:")
-                    if (isHomeDomain) {
+                    if (subdomainProperties.isHomeDomain(domain)) {
                         logger.debug { "Home domain: $domain, showing landing page" }
                         ServerResponse.ok().render("landing")
                     } else {

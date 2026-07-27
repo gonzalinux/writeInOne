@@ -1,6 +1,7 @@
 package com.gonzalinux.api
 
 import com.gonzalinux.api.AuthHandler.Companion.ACCESS_TOKEN_COOKIE
+import com.gonzalinux.client.TestEmailClient
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -25,6 +26,9 @@ class PostIntegrationTest {
     @Autowired
     lateinit var db: DatabaseClient
 
+    @Autowired
+    lateinit var emailClient: TestEmailClient
+
     private var accessTokenCookie: String = ""
     private var siteId: Long = 0L
     private lateinit var testEmail: String
@@ -35,17 +39,7 @@ class PostIntegrationTest {
         testEmail = "posttest-$ts@integrationtest.com"
         webTestClient = WebTestClient.bindToServer().baseUrl("http://localhost:$port").build()
 
-        val result = webTestClient.post().uri("/auth/register")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(mapOf(
-                "email" to testEmail,
-                "displayName" to "Test User",
-                "password" to "password123"
-            ))
-            .exchange()
-            .expectBody(Map::class.java)
-            .returnResult()
-        accessTokenCookie = result.responseCookies.getFirst(ACCESS_TOKEN_COOKIE)?.value ?: ""
+        accessTokenCookie = webTestClient.registerVerifiedUser(emailClient, testEmail)
 
         siteId = createSite("Post Test Blog", "posttest-$ts.example.com")
     }
@@ -53,6 +47,7 @@ class PostIntegrationTest {
     @AfterEach
     fun cleanup() {
         db.sql("DELETE FROM users WHERE email LIKE '%@integrationtest.com'").then().block()
+        emailClient.clear()
     }
 
     @Test
