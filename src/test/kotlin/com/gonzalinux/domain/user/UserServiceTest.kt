@@ -49,6 +49,24 @@ class UserServiceTest {
         every { repo.saveRefreshToken(userId, "hashed-refresh", refreshToken.expiresAt) } returns Mono.empty()
     }
 
+    // Relaxed mocks answer a Mono-returning call with a mock Mono that never signals, so every hop
+    // of an OTP-email chain has to be stubbed or the chain simply never completes.
+    private fun mockVerificationEmail(userId: Long) {
+        every { tokenService.generateOtp(any()) } returns otp
+        every { tokenService.hashToken("123456") } returns "hashed-otp"
+        every { repo.deleteEmailVerificationTokensByUserId(userId) } returns Mono.empty()
+        every { repo.saveEmailVerificationToken(userId, "hashed-otp", otp.expiresAt) } returns Mono.empty()
+        every { emailClient.sendVerificationEmail(any(), any(), any()) } returns Mono.empty()
+    }
+
+    private fun mockPasswordResetEmail(userId: Long) {
+        every { tokenService.generateOtp(any()) } returns otp
+        every { tokenService.hashToken("123456") } returns "hashed-otp"
+        every { repo.deletePasswordResetTokensByUserId(userId) } returns Mono.empty()
+        every { repo.savePasswordResetToken(userId, "hashed-otp", otp.expiresAt) } returns Mono.empty()
+        every { emailClient.sendPasswordResetEmail(any(), any()) } returns Mono.empty()
+    }
+
     // --- register ---
 
     @Test
@@ -56,8 +74,7 @@ class UserServiceTest {
         every { repo.findByEmail("test@test.com") } returns Mono.empty()
         every { encoder.encode("password") } returns "hashed"
         every { repo.create("test@test.com", "Test User", "hashed") } returns Mono.just(verifiedUser)
-        every { tokenService.generateOtp(any()) } returns otp
-        every { tokenService.hashToken("123456") } returns "hashed-otp"
+        mockVerificationEmail(verifiedUser.id)
 
         StepVerifier.create(service.register("test@test.com", "Test User", "password"))
             .verifyComplete()
@@ -80,8 +97,7 @@ class UserServiceTest {
         every { repo.deleteById(unverifiedUser.id) } returns Mono.empty()
         every { encoder.encode("password") } returns "hashed"
         every { repo.create("test@test.com", "Test User", "hashed") } returns Mono.just(verifiedUser)
-        every { tokenService.generateOtp(any()) } returns otp
-        every { tokenService.hashToken("123456") } returns "hashed-otp"
+        mockVerificationEmail(verifiedUser.id)
 
         StepVerifier.create(service.register("test@test.com", "Test User", "password"))
             .verifyComplete()
@@ -157,8 +173,7 @@ class UserServiceTest {
     @Test
     fun `requestPasswordReset sends email for verified user`() {
         every { repo.findVerifiedByEmail("test@test.com") } returns Mono.just(verifiedUser)
-        every { tokenService.generateOtp(any()) } returns otp
-        every { tokenService.hashToken("123456") } returns "hashed-otp"
+        mockPasswordResetEmail(verifiedUser.id)
 
         StepVerifier.create(service.requestPasswordReset("test@test.com"))
             .verifyComplete()
