@@ -62,6 +62,19 @@ Access them inside a handler with `Mono.deferContextual { ctx -> ctx.getRequestC
 
 Sites are user-owned and domain-isolated. `HostFilter` resolves the incoming domain to a `Site` at the start of every blog request. All post and tag queries are scoped by `site_id`. The REST API scopes by `userId` via site ownership.
 
+### Hosting modes
+
+A site is reachable in one of two ways, both stored the same way — as `sites.domain` plus `sites.prefix`:
+
+1. **Managed subdomain** — `myblog.writeinone.com`. Covered by the wildcard cert and DNS we control, so it needs no ownership proof: it is created `VERIFIED` with `prefix = ''`, and the verification scheduler never sees it.
+2. **The user's own domain, behind their reverse proxy** — `example.com/blog`. The proxy sends `X-Site-Host` (which domain to resolve) and `X-Forwarded-Prefix` (the path the blog is mounted at). `HostFilter` reads both, and every template builds links from `${prefix}`. Requires DNS verification via `/_verify` before going live.
+
+There is no support for subdomains of a *user's* domain — that would need per-site cert provisioning at the gateway.
+
+`SubdomainProperties` (`subdomains.*` in `application.yml`) owns the base domain, the length bounds, the reservation window and the reserved-label list. It is also the single source of truth for "is this host our own front door?" — `HostFilter`, `AdminHostFilter` and the main-sitemap predicate all call `isHomeDomain()` rather than comparing hosts themselves.
+
+`SubdomainService` validates a label **by value, not by which form field it arrived in**, so a reserved label cannot be smuggled through the custom-domain input. Renaming or deleting a site parks its label in `subdomain_reservations` for `reservationDays`: the previous owner can reclaim it, nobody else can.
+
 ### Multi-language
 
 Posts have one `PostTranslation` per language (`en` / `es`). Site config (JSONB) stores per-language nav links and footer text. Blog routes are prefixed with `/{lang:es|en}`.
@@ -74,15 +87,16 @@ The entire stack is non-blocking (Spring WebFlux + R2DBC). Never use blocking ca
 
 Migrations are in `src/main/resources/db/migration/` (Flyway). R2DBC is used for runtime queries; a separate JDBC datasource is configured only for Flyway.
 
-Key tables: `users`, `sites`, `posts`, `post_translations`, `tags`, `post_tags`, `refresh_tokens`.
+Key tables: `users`, `sites`, `posts`, `post_translations`, `tags`, `post_tags`, `refresh_tokens`, `subdomain_reservations`.
 
 `sites.config` is a JSONB column mapped to `SiteConfig` (favicon URL, per-language nav/footer).
 `sites.styles_url` is the user-provided CSS URL loaded by public blog pages.
 
 ## Frontend
 
-Admin UI uses **Thymeleaf** server-rendered templates (`src/main/resources/templates/admin/`).
-Public blog uses Thymeleaf fragments (`templates/fragments/layout.html`) with a shared default stylesheet (`/css/blog.css`).
+Admin UI is a **static HTML app** in `src/main/resources/static/admin/`, with its JS in `static/js/`. It is not server-rendered: `AdminHandler.serve` maps every `/admin/**` path to one of those files and returns it as a `ClassPathResource`; the page then fetches its data from the JSON API through the `api()` helper in `static/js/api.js`.
+
+Public blog uses **Thymeleaf** fragments (`templates/fragments/layout.html`) with a shared default stylesheet (`/css/blog.css`).
 
 The blog stylesheet loads first, then the site's custom `stylesUrl` after it — so user-provided CSS can override any class. All overridable selectors are documented in `src/main/resources/static/css/THEME.md`.
 
@@ -102,6 +116,8 @@ Integration tests clean up after themselves in `@AfterEach` using direct SQL del
 
 ## Adding a new admin page
 
-1. Add handler method in `AdminHandler.kt`
-2. Register the route in `adminProtectedRoutes()` in `Router.kt`
-3. Create the Thymeleaf template in `templates/admin/`, importing `/css/admin.css`
+1. Create the HTML file in `static/admin/`, importing `/css/admin.css` and `/js/api.js`
+2. Add its page script to `static/js/`
+3. Map the URL path to the file in the `when` block of `AdminHandler.serve`
+
+`/admin/**` is already routed, so no new route is needed unless the page needs its own handler (as `preview` does).

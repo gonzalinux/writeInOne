@@ -14,6 +14,7 @@ import reactor.test.StepVerifier
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
+@Suppress("ReactiveStreamsUnusedPublisher")
 class UserServiceTest {
 
     private val repo = mockk<UserRepository>(relaxed = true)
