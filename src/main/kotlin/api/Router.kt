@@ -16,6 +16,7 @@ class Router(
     private val tagHandler: TagHandler,
     private val blogsHandler: BlogsHandler,
     private val adminHandler: AdminHandler,
+    private val docsHandler: DocsHandler,
     private val jwtAuthFilter: JwtAuthFilter,
     private val jwtNotEnforcedFilter: JwtNotEnforcedFilter,
     private val hostFilter: HostFilter,
@@ -30,6 +31,7 @@ class Router(
         publicRoutes()
             .and(adminPreviewRoute())
             .and(adminRoutes())
+            .and(docsRoutes())
             .and(protectedRoutes())
             .and(blogUiRoutes())
             .and(blogApiRoutes())
@@ -95,6 +97,12 @@ class Router(
         .build()
         .filter(adminHostFilter)
         .filter(adminExceptionFilter)
+
+    private fun docsRoutes(): RouterFunction<ServerResponse> = route()
+        .GET("/docs", docsHandler::index)
+        .GET("/docs/**", docsHandler::page)
+        .build()
+        .filter(adminHostFilter)
 
     private fun blogUiRoutes(): RouterFunction<ServerResponse> = route()
         .GET("/", blogsHandler::index)

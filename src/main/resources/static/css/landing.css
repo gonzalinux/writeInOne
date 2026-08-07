@@ -87,6 +87,20 @@ p {
 
 .btn-secondary:hover { border-color: #aaa; color: #1a1a1a; }
 
+.docs-link {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    font-size: 0.85rem;
+    color: #555;
+    text-decoration: none;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 0.4rem 0.9rem;
+}
+
+.docs-link:hover { border-color: #aaa; color: #1a1a1a; }
+
 footer {
     position: fixed;
     bottom: 1.5rem;

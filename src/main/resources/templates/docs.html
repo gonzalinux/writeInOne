@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${page.title + ' — WriteInOne Docs'}">Docs</title>
+    <!-- Expose available themes to JS before it runs -->
+    <script>window.SITE_THEMES = ['LIGHT', 'DARK'];</script>
+    <!-- Theme script — sync (no defer) so html.dark class is set before first paint -->
+    <script src="/js/theme.js"></script>
+    <link rel="stylesheet" href="/css/docs.css"/>
+</head>
+<body>
+<div class="docs-layout">
+    <aside class="docs-sidebar">
+        <a class="docs-sidebar__brand" href="/docs">WriteInOne Docs</a>
+        <nav>
+            <div class="docs-group" th:each="group : ${groups}">
+                <details th:open="${group.name == page.group}">
+                    <summary th:text="${group.label}">Group</summary>
+                    <ul>
+                        <li th:each="p : ${group.pages}">
+                            <a th:href="'/docs/' + ${p.slug}"
+                               th:text="${p.title}"
+                               th:classappend="${p.slug == activeSlug} ? 'docs-nav-link--active' : ''"
+                               class="docs-nav-link">Page</a>
+                        </li>
+                    </ul>
+                </details>
+            </div>
+        </nav>
+    </aside>
+
+    <main class="docs-main">
+        <div class="docs-toolbar">
+            <button id="themeBtn" class="docs-btn docs-btn--icon" onclick="toggleTheme()" aria-label="Toggle theme">&#9789;</button>
+            <button id="docsViewToggle" class="docs-btn" type="button">View as Markdown</button>
+            <button id="docsCopyBtn" class="docs-btn" type="button">Copy for AI</button>
+        </div>
+
+        <div id="docsRendered" class="docs-content" th:utext="${page.renderedHtml}">Content</div>
+        <pre id="docsRaw" class="docs-raw" hidden><code th:text="${page.rawMarkdown}">raw</code></pre>
+    </main>
+</div>
+
+<script>
+    const toggleBtn = document.getElementById('docsViewToggle');
+    const copyBtn = document.getElementById('docsCopyBtn');
+    const rendered = document.getElementById('docsRendered');
+    const raw = document.getElementById('docsRaw');
+
+    toggleBtn.addEventListener('click', () => {
+        const showingRaw = !raw.hidden;
+        raw.hidden = showingRaw;
+        rendered.hidden = !showingRaw;
+        toggleBtn.textContent = showingRaw ? 'View as Markdown' : 'View Rendered';
+    });
+
+    copyBtn.addEventListener('click', () => {
+        const text = raw.querySelector('code').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            const original = copyBtn.textContent;
+            copyBtn.textContent = 'Copied!';
+            copyBtn.classList.add('docs-btn--copied');
+            setTimeout(() => {
+                copyBtn.textContent = original;
+                copyBtn.classList.remove('docs-btn--copied');
+            }, 2000);
+        });
+    });
+</script>
+</body>
+</html>

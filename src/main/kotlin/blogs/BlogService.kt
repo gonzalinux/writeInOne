@@ -9,7 +9,6 @@ import com.gonzalinux.domain.site.SiteRepository
 import com.gonzalinux.domain.tag.TagRepository
 import com.vladsch.flexmark.html.HtmlRenderer
 import com.vladsch.flexmark.parser.Parser
-import com.vladsch.flexmark.util.data.MutableDataSet
 import io.micrometer.core.instrument.MeterRegistry
 import org.jsoup.Jsoup
 import org.jsoup.safety.Safelist
@@ -26,20 +25,13 @@ class BlogService(
     private val tagRepo: TagRepository,
     private val siteRepo: SiteRepository,
     private val postEventService: PostEventService,
-    private val registry: MeterRegistry
-) {
-    private val mdParser: Parser
+    private val registry: MeterRegistry,
+    private val mdParser: Parser,
     private val mdRenderer: HtmlRenderer
-
+) {
     private val safelist = Safelist.relaxed()
         .addAttributes("code", "class")
         .addAttributes("pre", "class")
-
-    init {
-        val options = MutableDataSet()
-        mdParser = Parser.builder(options).build()
-        mdRenderer = HtmlRenderer.builder(options).build()
-    }
 
     fun listPublished(
         siteId: Long,

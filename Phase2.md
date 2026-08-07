@@ -15,34 +15,28 @@ Pricing is subscription-based with a free tier.
 
 ---
 
-## Domain modes
+## Domain modes ✓
 
-Three ways a user can expose their blog, with different tiers:
+Two ways a user can expose their blog, both Free — the earlier CNAME + dynamic-ACME plan (Mode 2 below, historical) was dropped in favor of the reverse-proxy mode, so there's no longer a domain-based Pro differentiator.
 
-### Mode 1 — Free subdomain (`slug.writeinone.com`) — Free
+### Mode 1 — Managed subdomain (`label.writeinone.com`) — Free ✓
 
-Every user gets a subdomain under `writeinone.com` on signup (e.g. `gonblog.writeinone.com`).
+User picks a label in the site form; `SubdomainService` validates it (length, charset, reserved-word list) and checks live availability against `sites` and `subdomain_reservations` before it's claimed. Created `VERIFIED` immediately — no ownership proof needed since we control the DNS and the wildcard cert.
 
-- DNS: `*.writeinone.com CNAME writeinone.com` — one-time setup, covers all users forever
-- SSL: existing wildcard cert for `*.writeinone.com` covers all subdomains automatically
-- Platform work per user: generate a unique slug, store it as `site.domain`, HostFilter routes by Host header — nothing else
+- Released labels are held in `subdomain_reservations` for a grace window so the previous owner can reclaim them; nobody else can take it during that window
+- HostFilter routes by Host header — nothing further needed
 
-### Mode 2 — Custom domain (`blog.mysite.com`) — Pro
+### Mode 2 — User's own domain behind their reverse proxy — Free ✓
 
-User points their own domain to the platform via CNAME (`blog.mysite.com CNAME writeinone.com`).
+Covers both a full domain and a path-mounted blog (`mysite.com` or `mysite.com/blog`) — the user's proxy sends `X-Site-Host` (which domain to resolve) and `X-Forwarded-Prefix` (the mount path), and `HostFilter` reads both.
 
-- DNS: user's responsibility — they add the CNAME record on their DNS provider
-- SSL: API gateway detects the new hostname on first request and provisions a Let's Encrypt cert automatically (dynamic ACME)
-- Platform work per user: store `custom_domain` in DB, gate behind `plan = pro` check
-- HostFilter already routes by Host header — no code change needed
+- DNS/SSL: entirely the user's responsibility — their proxy holds the cert, the platform provisions nothing
+- Ownership proof: `VerifyClientImpl` hits `GET {prefix}/_verify` on the user's domain with a token and checks it round-trips before the site goes `VERIFIED`; `sites.status`/`verify_date` (V7) track this
+- No support for subdomains of a *user's* domain — would need per-site cert provisioning at the gateway, which is exactly the cost this mode was chosen to avoid
 
-### Mode 3 — Path proxy (`mysite.com/blog`) — Free
+~~### Mode 2 (historical) — Custom domain via CNAME — Pro~~
 
-User runs their own reverse proxy and forwards a path prefix to WriteInOne. SSL and routing are entirely the user's responsibility.
-
-- DNS/SSL: handled by the user's own server — platform does nothing
-- Platform work: `prefix` is already stored per site and threaded through all templates and links — this works today
-- Free because the platform provides zero additional infrastructure; the user brings their own server
+Dropped. Would have required the platform to provision Let's Encrypt certs per user domain (dynamic ACME) — real cost and operational surface for a feature the reverse-proxy mode achieves for free.
 
 ---
 
@@ -104,39 +98,33 @@ Emails needed:
 - On successful payment: set `plan = pro`, set `plan_expires_at`
 - On cancellation: revert to `free` at period end
 
-### 5. Collaboration (editor invites)
+### 5. Collaboration & roles
 
-- Site owner can invite a user by email to a site with role `editor`
-- Invitation token (UUID, 48h expiry) stored in `site_invitations` table
+Sites move from single-owner to multi-member. `site_members (site_id, user_id, role, created_at)` replaces the implicit owner — the creating user becomes the first `admin`.
+
+Roles:
+- `admin` — manage site settings, invite/remove members, plus everything `editor` can do
+- `editor` — create, edit, and publish any post; cannot manage members or site settings
+- `writer` — create and edit post drafts (see #17); cannot publish
+
+- Invite a human by email to a site with a role; invitation token (UUID, 48h expiry) stored in `site_invitations`
 - Email sent with accept link: `GET /invitations/accept?token=xxx`
-- If invitee has no account, they are taken to register first, then invitation is applied
-- Editors can create, edit, and publish posts but cannot change site settings or delete the site
-- Owner can revoke access at any time
+- If invitee has no account, they are taken to register first, then the invitation is applied
+- An AI agent is invited the same way, except it's backed by a **service account** (#15) instead of an email — a login-less user authenticated only via API key, added directly to `site_members` with role `writer`
+- Any admin can revoke a member's access at any time
 
 ### 6. Public registration
 
 - Registration page already exists — just needs to be open to everyone
 - After register → prompt to verify email before creating a site
 
-### 7. Free subdomain assignment
+### 7. Free subdomain assignment ✓
 
-On site creation, auto-generate a unique `slug.writeinone.com` subdomain and store it as `site.domain`.
+Done, see Domain modes → Mode 1. Built as user-chosen + validated + reserved (`SubdomainService`), not silent auto-generation from the site name as originally sketched here — same outcome (unique subdomain per site), better UX (user can see and correct their own label).
 
-- Slug derived from site name, lowercased, non-alphanumeric replaced with `-`, uniqueness checked against DB
-- Append a short random suffix on collision (e.g. `myblog-a3f`)
-- HostFilter already routes by Host header — no routing change needed
-- DNS: `*.writeinone.com CNAME writeinone.com` — one-time infrastructure setup, not per user
+### 8. User's own domain (reverse proxy) ✓
 
-### 8. Custom domain (Pro)
-
-Allow pro users to attach their own domain to a site.
-
-- Store `custom_domain` on the `sites` table (nullable, unique)
-- Admin UI: input field in site settings, only shown/enabled for pro users
-- On save: validate format, check uniqueness, store
-- HostFilter matches `custom_domain` as a secondary lookup after the primary `domain`
-- SSL: handled by the API gateway (dynamic ACME) — no platform code needed
-- Gate behind `plan = pro`; return clear error if free user tries to set one
+Done, see Domain modes → Mode 2. Superseded the CNAME/dynamic-ACME plan entirely — no `custom_domain` column, no per-site cert provisioning on our end. Free for everyone, not Pro-gated, since it costs the platform nothing.
 
 ### 9. Image uploads
 
@@ -184,32 +172,49 @@ Public documentation for writeinone.com, needed before opening registration.
 
 ### 15. API keys
 
-Allows programmatic access to the REST API without browser-based JWT cookies. Target users: developers, automation pipelines, and the MCP server.
+Allows programmatic access to the REST API without browser-based JWT cookies. Target users: developers, automation pipelines, the MCP server, and AI agent accounts (#5).
 
-- User generates named key+secret pairs in the admin UI; secret shown once, stored hashed (SHA-256) in DB
+- A key belongs to a user — either a normal human user (personal automation) or a **service account** (`users.is_service_account`), a login-less user created specifically to be invited as a site member
+- User/service account generates named key+secret pairs in the admin UI; secret shown once, stored hashed (SHA-256) in DB
 - Passed as `Authorization: Bearer <secret>` on every request
 - New auth filter alongside `JwtAuthFilter` — checks bearer token, loads user, writes `RequestContext` same as JWT filter
+- Permissions are exactly whatever the underlying user/service account has via `site_members` — no separate scope system to maintain
 - Keys can be revoked at any time from the admin UI
 - `api_keys (id, user_id, name, key_hash, created_at, last_used_at, revoked_at)`
 
 ### 16. MCP server
 
-A standalone TypeScript package (distributed, not hosted) that wraps the REST API and exposes it as MCP tools for AI agents. Target users: SEO agencies automating content creation across sites and languages.
+A standalone TypeScript package (distributed, not hosted) that wraps the REST API and exposes it as MCP tools for AI agents. Target users: SEO agencies automating content creation across sites and languages, and individual users writing posts via Claude/Cursor/etc.
 
-**Auth:** the MCP server authenticates to WriteInOne using a regular API key (feature 7) — no special protocol. Users paste their API key into the MCP server config.
+**Auth:** the MCP server authenticates to WriteInOne using a regular API key (#15), typically one belonging to a service account with `writer` role on the target site(s) — no special protocol. Users paste the API key into the MCP server config.
 
 **Distribution:** users run the MCP server locally or in their own infra. Zero hosting cost on our end.
 
 **Tools exposed:**
-- `list_sites` — list all sites for the authenticated user
-- `create_post` — create a post with title, body (Markdown), excerpt, tags, cover URL, language
-- `update_post` — update any field of a post by slug
-- `publish_post` — publish a draft post (optionally at a scheduled date)
+- `list_sites` — list all sites the authenticated account can access
+- `create_draft` — create a new draft version of a post (new post or new translation)
+- `propose_edit` — create a new draft version on top of an already-published translation
+- `list_versions` — list version history for a post translation (status, `published_at`, `updated_at`)
 - `list_posts` — list posts for a site, filterable by status, tag, language
-- `get_post` — fetch a single post by slug
+- `get_post` — fetch a single post's live content by slug
 - `list_tags` — list tags for a site
 
+Publishing and rollback are deliberately **not** exposed as MCP tools — only `editor`/`admin` roles can publish (#17), and that stays a human action in the admin UI. This is the approval step the whole feature is built around.
+
 **Also expose the OpenAPI spec** (already generated by springdoc-openapi) as a fallback for agencies using non-MCP AI frameworks — they can load it directly as tools without any extra service.
+
+### 17. Post versioning & review workflow
+
+Every post translation keeps a full history of versions, enabling multiple concurrent drafts, editor-driven publishing, and rollback. This is what makes it safe to mix AI-authored drafts (#16) and human-authored drafts on the same post.
+
+- `post_translation_versions` — one full content snapshot per row (title, slug, body, excerpt), scoped to a `post_translation_id`, with a strictly incrementing `version_number`. No diffs/patches, always whole snapshots.
+- Status is just `draft` or `published` — there's no separate "pending review" gate; any draft can be published by an editor/admin at any time
+- Multiple drafts can coexist on the same translation (e.g. two writers, or a writer plus an AI agent) — no locking, `version_number` just keeps incrementing
+- Editor/admin sees every version for a translation in a picker and publishes whichever one they choose
+- Publishing copies the chosen version's content into the live `post_translations` row and sets `post_translations.current_version_id` — the public blog read path is untouched, it still reads `post_translations` directly
+- Rollback is not a special operation — it's publishing an older version again
+- `published_at` on a version is set once, the first time it ever goes live; `updated_at` is bumped every subsequent time it's (re)published — both shown next to each version in the admin UI's picker
+- Only `editor`/`admin` roles can publish; `writer` (human or AI, #5) can only create/edit drafts
 
 ---
 
@@ -217,12 +222,18 @@ A standalone TypeScript package (distributed, not hosted) that wraps the REST AP
 
 - `V7` — add `prefix`, `verify_date`, `status` to `sites` ✓
 - `V8` — add `email_verified` to `users`; create `email_verification_tokens (token_hash, user_id, expires_at)` and `password_reset_tokens (token_hash, user_id, expires_at)` ✓
-- `V9` — add `plan`, `plan_expires_at`, `stripe_customer_id` to `users`
-- `V10` — `site_invitations (id, site_id, email, role, token_hash, expires_at, accepted_at, created_at)`
-- `V11` — `site_members (site_id, user_id, role, created_at)` — accepted invitations land here
-- `V12` — add `custom_domain` (nullable, unique) to `sites`
-- `V13` — add `search_vector tsvector` to `post_translations`; GIN index; backfill
-- `V14` — `api_keys (id, user_id, name, key_hash, created_at, last_used_at, revoked_at)`
+- `V9` — add `styles_url` to `sites` (custom CSS) ✓
+- `V10` — `post_events (post_id, event_type, value, fingerprint_hash, created_at)` (view tracking) ✓
+- `V11` — `subdomain_reservations` ✓
+- `V12` — add `plan`, `plan_expires_at`, `stripe_customer_id` to `users`
+- `V13` — `site_invitations (id, site_id, email, role, token_hash, expires_at, accepted_at, created_at)`
+- `V14` — `site_members (site_id, user_id, role, created_at)` — `role` is `admin` | `editor` | `writer`; accepted invitations land here
+- `V15` — add `search_vector tsvector` to `post_translations`; GIN index; backfill
+- `V16` — `api_keys (id, user_id, name, key_hash, created_at, last_used_at, revoked_at)`
+- `V17` — add `is_service_account` boolean to `users` (login-less accounts for AI agents, #5/#15)
+- `V18` — `post_translation_versions (id, post_translation_id, version_number, status, title, slug, body, excerpt, author_id, created_at, published_at, updated_at)` + `current_version_id` on `post_translations`; backfill a `published`/`draft` version 1 for every existing translation (#17)
+
+Note: `V9`–`V11` above are already taken by shipped work (custom CSS, post view events, subdomain reservations) unrelated to this doc's original plan for those numbers — renumbered starting at `V12` to avoid collisions with the real migration folder.
 
 ---
 
@@ -231,23 +242,24 @@ A standalone TypeScript package (distributed, not hosted) that wraps the REST AP
 1. ~~Email service~~ ✓
 2. ~~Email verification + password reset~~ ✓
 3. ~~Custom 404 page~~ ✓
-4. Free subdomain assignment
-5. Plan enforcement (free tier limits)
-6. Usage dashboard
-7. Full-text search
-8. Image uploads (local disk)
-9. Stripe integration
-10. Custom domain (Pro)
-11. Collaboration / invites
-12. API keys
-13. MCP server (TypeScript, separate repo)
-14. Docs site
+4. ~~Free subdomain assignment + own-domain reverse proxy~~ ✓
+5. Full-text search
+6. Image uploads (local disk)
+7. Collaboration / invites (roles: admin / editor / writer)
+8. Post versioning & review workflow
+9. API keys
+10. MCP server (TypeScript, separate repo)
+11. Docs site
+12. Plan enforcement (free tier limits)
+13. Usage dashboard
+14. Stripe integration
 
 ---
 
 ## Open questions
 
 - Grace period when pro subscription lapses (e.g. 7 days before enforcing free limits)?
-- Should editors be able to invite other editors, or only the owner?
 - Should API key access be a paid feature, or available on the free tier?
 - Should the MCP server be open source?
+- Should there be a cap on how many concurrent drafts can pile up on one translation, or is unlimited fine?
+- Can one service account (AI agent) be invited to multiple sites, or is it one agent per site?
