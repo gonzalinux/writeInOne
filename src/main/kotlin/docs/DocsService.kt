@@ -9,12 +9,13 @@ data class DocPage(
     val slug: String,
     val group: String,
     val groupLabel: String,
+    val order: Int,
     val title: String,
     val renderedHtml: String,
     val rawMarkdown: String
 )
 
-data class DocGroup(val name: String, val label: String, val pages: List<DocPage>)
+data class DocGroup(val name: String, val label: String, val order: Int, val pages: List<DocPage>)
 
 @Service
 class DocsService(
@@ -35,32 +36,44 @@ class DocsService(
                     .substringAfterLast("/docs/")
                     .removeSuffix(".md")
                 val raw = resource.inputStream.bufferedReader().use { it.readText() }
-                val group = relativePath.substringBefore('/')
-                val fileName = relativePath.substringAfterLast('/')
+                val (groupOrder, group) = splitOrderPrefix(relativePath.substringBefore('/'))
+                val (order, fileName) = splitOrderPrefix(relativePath.substringAfterLast('/'))
                 val title = raw.lineSequence().firstOrNull { it.startsWith("# ") }
                     ?.removePrefix("# ")?.trim()
                     ?: humanize(fileName)
 
                 DocPage(
-                    slug = relativePath,
+                    slug = "$group/$fileName",
                     group = group,
                     groupLabel = humanize(group),
+                    order = order,
                     title = title,
                     renderedHtml = mdRenderer.render(mdParser.parse(raw)),
                     rawMarkdown = raw
-                )
+                ) to groupOrder
             }
-            .sortedBy { it.title }
+            .sortedWith(compareBy({ it.first.order }, { it.first.title }))
 
-        pagesBySlug = pages.associateBy { it.slug }
-        groups = pages.groupBy { it.group }
-            .toSortedMap()
-            .map { (name, groupPages) -> DocGroup(name, humanize(name), groupPages) }
+        pagesBySlug = pages.associate { (page, _) -> page.slug to page }
+        groups = pages
+            .groupBy { (page, groupOrder) -> Triple(page.group, page.groupLabel, groupOrder) }
+            .map { (key, groupPages) -> DocGroup(key.first, key.second, key.third, groupPages.map { it.first }) }
+            .sortedWith(compareBy({ it.order }, { it.label }))
     }
 
     fun find(slug: String): DocPage? = pagesBySlug[slug.trim('/')]
 
     fun firstSlug(): String? = groups.firstOrNull()?.pages?.firstOrNull()?.slug
+
+    /**
+     * Strips an optional leading "N-" ordering prefix (e.g. "1-quickstart" -> 1 to "quickstart").
+     * Segments without a numeric prefix sort after ordered ones, alphabetically.
+     */
+    private fun splitOrderPrefix(segment: String): Pair<Int, String> {
+        val match = Regex("^(\\d+)-(.+)$").find(segment)
+        return if (match != null) match.groupValues[1].toInt() to match.groupValues[2]
+        else Int.MAX_VALUE to segment
+    }
 
     private fun humanize(name: String): String =
         if (name.equals("api", ignoreCase = true)) "API"

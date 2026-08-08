@@ -1,0 +1,23 @@
+# Authentication
+
+This section documents the **external API** — the same one the WriteInOne MCP server
+uses. It's separate from the admin UI you'd use by hand (see the
+[Guides](/docs/guides/quickstart) section for that).
+
+Every request is authenticated with an API key, sent as a bearer token:
+
+```
+Authorization: Bearer wio_live_51H8x...
+```
+
+Generate a key from **Account Settings → API Keys** in the admin UI. A key inherits
+whatever access its owner has on a site — there's no separate scope system to
+configure. Keys can be revoked at any time; revoking one takes effect immediately.
+
+## Base URL
+
+```
+https://writeinone.com
+```
+
+All endpoints in this section are relative to this.

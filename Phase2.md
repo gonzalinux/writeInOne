@@ -107,11 +107,13 @@ Roles:
 - `editor` — create, edit, and publish any post; cannot manage members or site settings
 - `writer` — create and edit post drafts (see #17); cannot publish
 
-- Invite a human by email to a site with a role; invitation token (UUID, 48h expiry) stored in `site_invitations`
-- Email sent with accept link: `GET /invitations/accept?token=xxx`
+- Invite by generating a token (UUID, 48h expiry) + role in `site_invitations`; email is never stored, only optionally passed in at creation to send with Gonemail
+- If email is given, Gonemail sends the accept link synchronously as part of that call: `GET /invitations/accept?token=xxx`; otherwise the admin copies that same link from the UI and shares it manually
 - If invitee has no account, they are taken to register first, then the invitation is applied
-- An AI agent is invited the same way, except it's backed by a **service account** (#15) instead of an email — a login-less user authenticated only via API key, added directly to `site_members` with role `writer`
+- An AI agent is invited the same way, except it's backed by a **service account** (#15) instead of an email — added directly to `site_members`, and only under sites its owner administers
 - Any admin can revoke a member's access at any time
+
+Full design (including the service-account invite constraint) in **[Collaboration.md](Collaboration.md)**.
 
 ### 6. Public registration
 
@@ -172,21 +174,22 @@ Public documentation for writeinone.com, needed before opening registration.
 
 ### 15. API keys
 
-Allows programmatic access to the REST API without browser-based JWT cookies. Target users: developers, automation pipelines, the MCP server, and AI agent accounts (#5).
+Allows programmatic access to the REST API without browser-based JWT cookies. Target users: the MCP server and AI agent accounts (#5) — **human users never get a key**, only service accounts do.
 
-- A key belongs to a user — either a normal human user (personal automation) or a **service account** (`users.is_service_account`), a login-less user created specifically to be invited as a site member
-- User/service account generates named key+secret pairs in the admin UI; secret shown once, stored hashed (SHA-256) in DB
+- A service account is a login-less `users` row with `service_account_token_hash` populated (its presence *is* the identity marker, no separate flag), created for exactly one integration (one MCP connection = one service account = one token) — not a separate table
+- Token is generated server-side, shown once in the admin UI, stored as a SHA-256 hash on the `users` row itself
 - Passed as `Authorization: Bearer <secret>` on every request
-- New auth filter alongside `JwtAuthFilter` — checks bearer token, loads user, writes `RequestContext` same as JWT filter
-- Permissions are exactly whatever the underlying user/service account has via `site_members` — no separate scope system to maintain
-- Keys can be revoked at any time from the admin UI
-- `api_keys (id, user_id, name, key_hash, created_at, last_used_at, revoked_at)`
+- New auth filter alongside `JwtAuthFilter` — checks bearer token, loads the service-account user, writes `RequestContext` same as JWT filter
+- Permissions are exactly whatever the service account has via `site_members` — no separate scope system to maintain
+- Revoking = deleting the `users` row (cascades to `site_members`)
+
+Full design in **[Collaboration.md](Collaboration.md)** — why this reuses `users` instead of a new table, why the token isn't stored in the `password` column, and the invite-time ownership constraint.
 
 ### 16. MCP server
 
 A standalone TypeScript package (distributed, not hosted) that wraps the REST API and exposes it as MCP tools for AI agents. Target users: SEO agencies automating content creation across sites and languages, and individual users writing posts via Claude/Cursor/etc.
 
-**Auth:** the MCP server authenticates to WriteInOne using a regular API key (#15), typically one belonging to a service account with `writer` role on the target site(s) — no special protocol. Users paste the API key into the MCP server config.
+**Auth:** the MCP server authenticates to WriteInOne using a service account token (#15), typically with `writer` role on the target site(s) — no special protocol. Users paste the token into the MCP server config.
 
 **Distribution:** users run the MCP server locally or in their own infra. Zero hosting cost on our end.
 
@@ -225,13 +228,12 @@ Every post translation keeps a full history of versions, enabling multiple concu
 - `V9` — add `styles_url` to `sites` (custom CSS) ✓
 - `V10` — `post_events (post_id, event_type, value, fingerprint_hash, created_at)` (view tracking) ✓
 - `V11` — `subdomain_reservations` ✓
-- `V12` — add `plan`, `plan_expires_at`, `stripe_customer_id` to `users`
-- `V13` — `site_invitations (id, site_id, email, role, token_hash, expires_at, accepted_at, created_at)`
-- `V14` — `site_members (site_id, user_id, role, created_at)` — `role` is `admin` | `editor` | `writer`; accepted invitations land here
-- `V15` — add `search_vector tsvector` to `post_translations`; GIN index; backfill
-- `V16` — `api_keys (id, user_id, name, key_hash, created_at, last_used_at, revoked_at)`
-- `V17` — add `is_service_account` boolean to `users` (login-less accounts for AI agents, #5/#15)
-- `V18` — `post_translation_versions (id, post_translation_id, version_number, status, title, slug, body, excerpt, author_id, created_at, published_at, updated_at)` + `current_version_id` on `post_translations`; backfill a `published`/`draft` version 1 for every existing translation (#17)
+- `V12` — add `owner_id`, `service_account_token_hash` to `users`; make `password` nullable; index on `owner_id` (login-less service accounts for AI agents, #5/#15)
+- `V13` — `site_invitations (id, site_id, role, token_hash, expires_at, accepted_at, created_at)`; index on `site_id`
+- `V14` — `site_members (site_id, user_id, role, created_at)` — `role` is `admin` | `editor` | `writer`; accepted invitations land here; index on `site_id`; backfills existing site owners (`sites.user_id`) as `admin`
+- `V15` — add `plan`, `plan_expires_at`, `stripe_customer_id` to `users`
+- `V16` — add `search_vector tsvector` to `post_translations`; GIN index; backfill
+- `V17` — `post_translation_versions (id, post_translation_id, version_number, status, title, slug, body, excerpt, author_id, created_at, published_at, updated_at)` + `current_version_id` on `post_translations`; backfill a `published`/`draft` version 1 for every existing translation (#17)
 
 Note: `V9`–`V11` above are already taken by shipped work (custom CSS, post view events, subdomain reservations) unrelated to this doc's original plan for those numbers — renumbered starting at `V12` to avoid collisions with the real migration folder.
 
@@ -258,8 +260,8 @@ Note: `V9`–`V11` above are already taken by shipped work (custom CSS, post vie
 
 ## Open questions
 
-- Grace period when pro subscription lapses (e.g. 7 days before enforcing free limits)?
-- Should API key access be a paid feature, or available on the free tier?
-- Should the MCP server be open source?
-- Should there be a cap on how many concurrent drafts can pile up on one translation, or is unlimited fine?
-- Can one service account (AI agent) be invited to multiple sites, or is it one agent per site?
+- Grace period when pro subscription lapses (e.g. 7 days before enforcing free limits)? -> yes
+- Should API key access be a paid feature, or available on the free tier -> PAID  
+- Should the MCP server be open source? -> Yes same as the rest
+- Should there be a cap on how many concurrent drafts can pile up on one translation, or is unlimited fine? -> each blog can only have 30 versions available, if more are added the oldest not published ones are removed
+- Can one service account (AI agent) be invited to multiple sites, or is it one agent per site? -> Yes, but only under the owner sites.
