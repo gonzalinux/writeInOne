@@ -14,14 +14,24 @@ import java.time.OffsetDateTime
 class SiteRepository(private val client: DatabaseClient, private val objectMapper: ObjectMapper) {
 
     fun findById(id: Long, userId: Long): Mono<Site> =
-        client.sql("SELECT * FROM sites WHERE id = :id AND user_id = :userId")
+        client.sql(
+            """SELECT sites.*, site_members.role FROM sites 
+            INNER JOIN site_members ON sites.id = site_members.site_id
+             WHERE sites.id = :id AND site_members.user_id = :userId
+        """
+        )
             .bind("id", id)
             .bind("userId", userId)
             .fetch().first()
             .map { mapToSite(it) }
 
     fun findAllByUserId(userId: Long): Flux<Site> =
-        client.sql("SELECT * FROM sites WHERE user_id = :userId ORDER BY created_at DESC")
+        client.sql(
+            """SELECT sites.*, site_members.role FROM sites 
+             INNER JOIN site_members ON sites.id = site_members.site_id 
+             WHERE site_members.user_id = :userId 
+             ORDER BY created_at DESC"""
+        )
             .bind("userId", userId)
             .fetch().all()
             .map { mapToSite(it) }
@@ -31,11 +41,13 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
         description: String?, stylesUrl: String?, customCss: String?, availableThemes: List<Theme>,
         languages: List<Languages>, config: SiteConfig, status: SiteStatus = SiteStatus.NOT_VERIFIED
     ): Mono<Site> =
-        client.sql("""
+        client.sql(
+            """
             INSERT INTO sites (user_id, name, domain, description, styles_url, custom_css, available_themes, languages, config, status)
             VALUES (:userId, :name, :domain, :description, :stylesUrl, :customCss, :availableThemes, :languages, :config::jsonb, :status)
             RETURNING *
-        """)
+        """
+        )
             .bind("userId", userId)
             .bind("name", name)
             .bind("domain", domain)
@@ -64,7 +76,8 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
         prefix: String? = null,
         verifyDate: OffsetDateTime? = null
     ): Mono<Site> =
-        client.sql("""
+        client.sql(
+            """
             UPDATE sites SET
                 name             = COALESCE(:name, name),
                 domain           = COALESCE(:domain, domain),
@@ -80,7 +93,8 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
                 updated_at       = now()
             WHERE id = :id AND user_id = :userId
             RETURNING *
-        """)
+        """
+        )
             .bind("id", id)
             .bind("userId", userId)
             .bindNullable<String>("name", name)
@@ -141,11 +155,13 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             .map { mapToSite(it) }
 
     fun updateStatus(siteId: Long, status: SiteStatus): Mono<Site> =
-        client.sql("""
+        client.sql(
+            """
             UPDATE sites SET status = :status, updated_at = now()
             WHERE id = :id
             RETURNING *
-        """)
+        """
+        )
             .bind("id", siteId)
             .bind("status", status.toString())
             .fetch().first()
@@ -159,7 +175,7 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             is String -> objectMapper.readValue(raw, SiteConfig::class.java)
             is ByteArray -> objectMapper.readValue(raw, SiteConfig::class.java)
             is Json -> objectMapper.readValue(raw.asArray(), SiteConfig::class.java)
-            else ->  error("Unexpected config type: ${raw?.javaClass}")
+            else -> error("Unexpected config type: ${raw?.javaClass}")
         }
 
         return Site(
@@ -178,6 +194,7 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             createdAt = row["created_at"] as OffsetDateTime,
             updatedAt = row["updated_at"] as OffsetDateTime,
             verifyDate = row["verify_date"] as OffsetDateTime,
+            role = Roles.from(row["role"] as String?)
         )
     }
 }

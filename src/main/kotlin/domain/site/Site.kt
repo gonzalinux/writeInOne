@@ -18,7 +18,9 @@ data class Site(
     val status: SiteStatus,
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime,
-    val verifyDate: OffsetDateTime
+    val verifyDate: OffsetDateTime,
+    val role: Roles? = null,
+
 )
 
 enum class SiteStatus {
