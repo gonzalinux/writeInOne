@@ -149,13 +149,13 @@ belongs in `customCss` (max 25,000 characters) or `stylesUrl`.
 
 ## Errors
 
-| Status | Code | When |
-|---|---|---|
-| 400 | `VALIDATION_ERROR` | `POST /sites` body fails field validation (e.g. blank `name`) |
-| 400 | `BAD_REQUEST` | invalid nav link URL, `customCss` too long, domain is a reserved/home domain |
-| 404 | `SITE_NOT_FOUND` | site doesn't exist or you don't have access to it |
-| 409 | `SITE_DOMAIN_TAKEN` | custom domain already claimed by another site |
-| 409 | `SUBDOMAIN_NOT_ALLOWED` | label fails length/charset rules or is reserved |
-| 409 | `SUBDOMAIN_HELD` | label is inside another user's reservation window |
+| Status | Code                    | When                                                                         |
+|--------|-------------------------|------------------------------------------------------------------------------|
+| 400    | `VALIDATION_ERROR`      | `POST /sites` body fails field validation (e.g. blank `name`)                |
+| 400    | `BAD_REQUEST`           | invalid nav link URL, `customCss` too long, domain is a reserved/home domain |
+| 404    | `SITE_NOT_FOUND`        | site doesn't exist or you don't have access to it                            |
+| 409    | `SITE_DOMAIN_TAKEN`     | custom domain already claimed by another site                                |
+| 409    | `SUBDOMAIN_NOT_ALLOWED` | label fails length/charset rules or is reserved                              |
+| 409    | `SUBDOMAIN_HELD`        | label is inside another user's reservation window                            |
 
 See [Errors](/docs/api/errors) for the response envelope and the full list of codes.

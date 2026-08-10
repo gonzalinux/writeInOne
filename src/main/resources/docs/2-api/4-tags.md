@@ -31,8 +31,8 @@ even if `tagId` doesn't exist — it's a no-op in that case, not a `404`.
 
 ## Errors
 
-| Status | Code | When |
-|---|---|---|
-| 404 | `SITE_NOT_FOUND` | site doesn't exist or you don't have access to it |
+| Status | Code             | When                                              |
+|--------|------------------|---------------------------------------------------|
+| 404    | `SITE_NOT_FOUND` | site doesn't exist or you don't have access to it |
 
 See [Errors](/docs/api/errors) for the response envelope and the full list of codes.

@@ -224,10 +224,12 @@ class BlogPostListJsonIntegrationTest {
         val response = webTestClient.post().uri("/sites/$siteId/posts/")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(mapOf(
-                "translations" to mapOf("en" to mapOf("title" to title, "body" to body)),
-                "tags" to tags
-            ))
+            .bodyValue(
+                mapOf(
+                    "translations" to mapOf("en" to mapOf("title" to title, "body" to body)),
+                    "tags" to tags
+                )
+            )
             .exchange()
             .expectStatus().isOk
             .expectBody(Map::class.java)

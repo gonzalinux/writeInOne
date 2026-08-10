@@ -7,6 +7,7 @@ import com.gonzalinux.common.PostNotFoundException
 import com.gonzalinux.common.SiteNotFoundException
 import com.gonzalinux.common.SlugAlreadyExistsException
 import com.gonzalinux.domain.Languages
+import com.gonzalinux.domain.site.Roles
 import com.gonzalinux.domain.site.Site
 import com.gonzalinux.domain.site.SiteConfig
 import com.gonzalinux.domain.site.SiteRepository
@@ -40,7 +41,7 @@ class PostServiceTest {
         id = 1L, userId = 1L, name = "My Blog", domain = "blog.example.com",
         prefix = "", description = null, stylesUrl = null, availableThemes = listOf(Theme.LIGHT),
         languages = listOf(Languages.ENGLISH), config = SiteConfig(), status = SiteStatus.NOT_VERIFIED,
-        createdAt = now, updatedAt = now, verifyDate = now
+        createdAt = now, updatedAt = now, verifyDate = now, role = Roles.ADMIN
     )
 
     private val post = Post(
@@ -64,7 +65,9 @@ class PostServiceTest {
 
         every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
         every { postRepo.create(1L, null) } returns Mono.just(post)
-        every { postRepo.createTranslation(1L, 1L, "en", "Test Post", "test-post", "Body", null) } returns Mono.just(translation)
+        every { postRepo.createTranslation(1L, 1L, "en", "Test Post", "test-post", "Body", null) } returns Mono.just(
+            translation
+        )
 
         StepVerifier.create(service.create(1L, 1L, request))
             .expectNext(PostWithTranslations(post, listOf(translation), emptyList()))
@@ -79,7 +82,17 @@ class PostServiceTest {
 
         every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
         every { postRepo.create(1L, null) } returns Mono.just(post)
-        every { postRepo.createTranslation(1L, 1L, "en", "Hello World!", "hello-world", "Body", null) } returns Mono.just(translation)
+        every {
+            postRepo.createTranslation(
+                1L,
+                1L,
+                "en",
+                "Hello World!",
+                "hello-world",
+                "Body",
+                null
+            )
+        } returns Mono.just(translation)
 
         StepVerifier.create(service.create(1L, 1L, request))
             .expectNextCount(1)
@@ -97,7 +110,9 @@ class PostServiceTest {
 
         every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
         every { postRepo.create(1L, null) } returns Mono.just(post)
-        every { postRepo.createTranslation(1L, 1L, "en", "Test Post", "test-post", "Body", null) } returns Mono.just(translation)
+        every { postRepo.createTranslation(1L, 1L, "en", "Test Post", "test-post", "Body", null) } returns Mono.just(
+            translation
+        )
         every { tagRepo.findOrCreate(1L, "kotlin") } returns Mono.just(tag)
         every { tagRepo.assignToPost(1L, 1L) } returns Mono.empty()
 
@@ -253,7 +268,8 @@ class PostServiceTest {
 
     @Test
     fun `list returns page of summaries with translations and tags`() {
-        val translationSummary = PostTranslationSummary(postId = 1L, lang = "en", slug = "test-post", title = "Test Post")
+        val translationSummary =
+            PostTranslationSummary(postId = 1L, lang = "en", slug = "test-post", title = "Test Post")
 
         every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
         every { postRepo.countBySiteId(1L, null, null, null) } returns Mono.just(1L)
@@ -264,10 +280,10 @@ class PostServiceTest {
         StepVerifier.create(service.list(1L, 1L, 0, 20))
             .expectNextMatches { page ->
                 page.totalElements == 1L &&
-                page.content.size == 1 &&
-                page.content[0].post == post &&
-                page.content[0].translations == listOf(translationSummary) &&
-                page.content[0].tags == listOf(tag)
+                        page.content.size == 1 &&
+                        page.content[0].post == post &&
+                        page.content[0].translations == listOf(translationSummary) &&
+                        page.content[0].tags == listOf(tag)
             }
             .verifyComplete()
     }
@@ -298,10 +314,10 @@ class PostServiceTest {
 
         StepVerifier.create(service.list(1L, 1L, 0, 20))
             .expectNextMatches { page ->
-                val first  = page.content[0]
+                val first = page.content[0]
                 val second = page.content[1]
                 first.translations == listOf(t1) && first.tags == listOf(tag) &&
-                second.translations == listOf(t2) && second.tags == listOf(tag2)
+                        second.translations == listOf(t2) && second.tags == listOf(tag2)
             }
             .verifyComplete()
     }
@@ -324,7 +340,7 @@ class PostServiceTest {
         every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
         every { postRepo.create(1L, null) } returns Mono.just(post)
         every { postRepo.createTranslation(1L, 1L, "en", "Test Post", "test-post", "Body", null) } returns
-            Mono.error(DataIntegrityViolationException("duplicate key value violates unique constraint"))
+                Mono.error(DataIntegrityViolationException("duplicate key value violates unique constraint"))
 
         StepVerifier.create(service.create(1L, 1L, request))
             .expectError(SlugAlreadyExistsException::class.java)
@@ -334,7 +350,13 @@ class PostServiceTest {
     @Test
     fun `update throws SlugAlreadyExistsException when slug conflicts`() {
         val request = UpdatePostRequest(
-            translations = mapOf("en" to TranslationInput(title = "Updated Title", body = "Body", slug = "existing-slug"))
+            translations = mapOf(
+                "en" to TranslationInput(
+                    title = "Updated Title",
+                    body = "Body",
+                    slug = "existing-slug"
+                )
+            )
         )
         val updatedPost = post.copy(updatedAt = now)
 
@@ -343,7 +365,7 @@ class PostServiceTest {
         every { postRepo.update(1L, 1L, null, null, null, null) } returns Mono.just(updatedPost)
         every { tagRepo.findByPostId(1L) } returns Flux.empty()
         every { postRepo.upsertTranslation(1L, 1L, "en", "Updated Title", "existing-slug", "Body", null) } returns
-            Mono.error(DataIntegrityViolationException("duplicate key value violates unique constraint"))
+                Mono.error(DataIntegrityViolationException("duplicate key value violates unique constraint"))
 
         StepVerifier.create(service.update(1L, 1L, 1L, request))
             .expectError(SlugAlreadyExistsException::class.java)

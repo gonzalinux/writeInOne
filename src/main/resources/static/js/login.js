@@ -32,7 +32,9 @@ loginForm.addEventListener('submit', async e => {
   });
 
   if (res.ok) {
-    setTimeout(() => { location.href = '/admin'; }, 0);
+    setTimeout(() => {
+      location.href = '/admin';
+    }, 0);
   } else {
     const data = await res.json().catch(() => ({}));
     err.textContent = data.message || 'Invalid credentials';
@@ -55,7 +57,7 @@ forgotForm.addEventListener('submit', async e => {
   const res = await fetch('/auth/forgot-password', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ email: resetEmail }),
+    body: JSON.stringify({email: resetEmail}),
   });
 
   if (res.ok) {
@@ -87,7 +89,9 @@ resetForm.addEventListener('submit', async e => {
     resetErr.textContent = 'Password reset. Redirecting to log in…';
     resetErr.style.color = '#2a7d2a';
     resetErr.style.display = 'block';
-    setTimeout(() => { location.href = '/admin/login'; }, 1500);
+    setTimeout(() => {
+      location.href = '/admin/login';
+    }, 1500);
   } else {
     const data = await res.json().catch(() => ({}));
     resetErr.textContent = data.message || 'Invalid or expired code.';
@@ -102,7 +106,7 @@ document.getElementById('resendResetBtn').addEventListener('click', async () => 
   const res = await fetch('/auth/forgot-password', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ email: resetEmail }),
+    body: JSON.stringify({email: resetEmail}),
   });
 
   if (res.ok) {

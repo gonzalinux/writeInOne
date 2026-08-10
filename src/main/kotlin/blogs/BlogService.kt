@@ -64,7 +64,14 @@ class BlogService(
                     .zipWith(postRepo.findTranslationsByPostId(post.id).collectList())
                     .map { (tags, allTranslations) ->
                         val rendered = renderMarkdown(translation.body)
-                        BlogPostDetail(post, translation, tags, rendered, extractCodeLanguages(rendered), allTranslations)
+                        BlogPostDetail(
+                            post,
+                            translation,
+                            tags,
+                            rendered,
+                            extractCodeLanguages(rendered),
+                            allTranslations
+                        )
                     }
             }
             .flatMap { detail -> Mono.just(detail) }

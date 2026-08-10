@@ -10,6 +10,10 @@ import com.gonzalinux.domain.site.SiteConfig
 import com.gonzalinux.domain.site.SiteRepository
 import com.gonzalinux.domain.site.SiteStatus
 import com.gonzalinux.domain.tag.TagRepository
+import com.vladsch.flexmark.ext.tables.TablesExtension
+import com.vladsch.flexmark.html.HtmlRenderer
+import com.vladsch.flexmark.parser.Parser
+import com.vladsch.flexmark.util.data.MutableDataSet
 import io.micrometer.core.instrument.MeterRegistry
 import io.mockk.every
 import io.mockk.mockk
@@ -27,7 +31,13 @@ class BlogServiceTest {
     private val siteRepo = mockk<SiteRepository>()
     private val registry = mockk<MeterRegistry>(relaxed = true)
     private val postEventService = mockk<PostEventService>()
-    private val service = BlogService(postRepo, tagRepo, siteRepo, postEventService, registry)
+
+    private val mdOptions = MutableDataSet().set(Parser.EXTENSIONS, listOf(TablesExtension.create()))
+    private val mdParser: Parser = Parser.builder(mdOptions).build()
+    private val mdRenderer: HtmlRenderer = HtmlRenderer.builder(mdOptions).build()
+
+    private val service =
+        BlogService(postRepo, tagRepo, siteRepo, postEventService, registry, mdParser, mdRenderer)
 
     private val now = OffsetDateTime.now(ZoneOffset.UTC)
 
@@ -98,7 +108,12 @@ class BlogServiceTest {
     @Test
     fun `getPreviewPost returns site and post detail for the site owner`() {
         every { siteRepo.findById(1L, 42L) } returns Mono.just(site)
-        every { postRepo.findPublishedBySlug(1L, "en", "test", 42L) } returns Mono.just(Pair(post, translation("Hello")))
+        every { postRepo.findPublishedBySlug(1L, "en", "test", 42L) } returns Mono.just(
+            Pair(
+                post,
+                translation("Hello")
+            )
+        )
         every { tagRepo.findByPostId(1L) } returns Flux.empty()
         every { postRepo.findTranslationsByPostId(1L) } returns Flux.just(translation("Hello"))
         every { postRepo.incrementViewCount(1L) } returns Mono.empty()

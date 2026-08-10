@@ -19,7 +19,7 @@ class PublishPostsScheduler(
 ) : SchedulerBase(postSchedulerProperties.intervalMs, schedulersProperties.enabled) {
 
     override fun execute(): Mono<*> =
-           postRepository.publishScheduled()
+        postRepository.publishScheduled()
             .doOnNext { count ->
                 if (count > 0) {
                     logger.info { "Published $count scheduled post(s)" }

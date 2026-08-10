@@ -8,7 +8,8 @@ But as I started wiring things up, something felt a bit off.
 
 Spring Security was designed for the classic MVC model — `@RestController`, `@RequestMapping`, annotations everywhere.
 
-In that model, routes are scattered across dozens of controller classes, so centralizing security rules in one place makes
+In that model, routes are scattered across dozens of controller classes, so centralizing security rules in one place
+makes
 sense. You just declare your rules in a `SecurityWebFilterChain` bean:
 
 ```kotlin
@@ -75,7 +76,8 @@ class JwtAuthFilter(private val tokenService: TokenService) : HandlerFilterFunct
 }
 ```
 
-Here we can see what I mentioned earlier: the `userId` extracted from the token gets written into Reactor's `ContextView`
+Here we can see what I mentioned earlier: the `userId` extracted from the token gets written into Reactor's
+`ContextView`
 via a Kotlin extension function (in Java you would just create a function that takes the context and modifies it).
 Any handler downstream can then pull it out with `Mono.deferContextual { ctx -> ctx.getRequestContext() }`. No thread
 locals, no static holders, just the reactive context flowing through the pipeline.

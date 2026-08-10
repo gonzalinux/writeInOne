@@ -11,7 +11,7 @@ data class Site(
     val prefix: String,
     val description: String?,
     val stylesUrl: String?,
-    val customCss: String? =null,
+    val customCss: String? = null,
     val availableThemes: List<Theme>,
     val languages: List<Languages>,
     val config: SiteConfig,
@@ -21,7 +21,7 @@ data class Site(
     val verifyDate: OffsetDateTime,
     val role: Roles? = null,
 
-)
+    )
 
 enum class SiteStatus {
     NOT_VERIFIED,

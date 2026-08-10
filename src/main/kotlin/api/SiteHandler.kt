@@ -38,8 +38,7 @@ class SiteHandler(private val service: SiteService, private val validator: Reque
 
     fun list(request: ServerRequest): Mono<ServerResponse> =
         Mono.deferContextual { ctx ->
-            ServerResponse.ok().
-            body<Site>(service.list(ctx.getUserId()!!))
+            ServerResponse.ok().body<Site>(service.list(ctx.getUserId()!!))
         }
 
     fun update(request: ServerRequest): Mono<ServerResponse> {

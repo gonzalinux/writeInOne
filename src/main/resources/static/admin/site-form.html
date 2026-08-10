@@ -1,210 +1,217 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <link rel="icon" type="image/x-icon" href="/img/favicon.ico"/>
-    <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png"/>
-    <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png"/>
-    <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png"/>
-    <link rel="manifest" href="/manifest.json"/>
-    <title>Site — WriteInOne</title>
-    <link rel="stylesheet" href="/css/admin.css"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/xml/xml.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/javascript/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/css/css.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/htmlmixed/htmlmixed.min.js"></script>
-    <script src="/js/api.js" defer></script>
-    <script src="/js/admin.js" defer></script>
-    <script src="/js/site-form.js" defer></script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png"/>
+  <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png"/>
+  <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png"/>
+  <link rel="manifest" href="/manifest.json"/>
+  <title>Site — WriteInOne</title>
+  <link rel="stylesheet" href="/css/admin.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="/js/api.js" defer></script>
+  <script src="/js/admin.js" defer></script>
+  <script src="/js/site-form.js" defer></script>
 </head>
 <body>
-    <header>
-        <a class="brand" href="https://WriteInOne.com"><img src="/img/logoWriteInOneGrey.png" alt="" class="brand__img"/>WriteInOne</a>
-        <a href="/admin">← Dashboard</a>
-    </header>
+<header>
+  <a class="brand" href="https://WriteInOne.com"><img src="/img/logoWriteInOneGrey.png" alt="" class="brand__img"/>WriteInOne</a>
+  <a href="/admin">← Dashboard</a>
+</header>
 
-    <main class="main--form">
-        <div class="page-header">
-            <h1 id="pageTitle">Site</h1>
+<main class="main--form">
+  <div class="page-header">
+    <h1 id="pageTitle">Site</h1>
+  </div>
+
+  <nav class="form-tabs" role="tablist">
+    <button class="form-tab form-tab--active" data-tab="general" role="tab">General</button>
+    <button class="form-tab" data-tab="appearance" role="tab">Appearance</button>
+    <button class="form-tab" data-tab="languages" role="tab">Languages</button>
+    <button class="form-tab" data-tab="code" role="tab">Code</button>
+  </nav>
+
+  <form id="siteForm" onsubmit="return false">
+
+    <!-- General -->
+    <div class="tab-panel" id="tab-general">
+      <div class="field">
+        <label for="name">Site name</label>
+        <input id="name" type="text" required placeholder="My Blog"/>
+      </div>
+      <div class="field">
+        <label>Where will your blog live?</label>
+        <div class="radio-row">
+          <label class="checkbox-label">
+            <input type="radio" name="hosting" value="subdomain" id="hostingSubdomain" checked/>
+            <span>Free subdomain</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="radio" name="hosting" value="custom" id="hostingCustom"/>
+            <span>My own domain</span>
+          </label>
         </div>
-
-        <nav class="form-tabs" role="tablist">
-            <button class="form-tab form-tab--active" data-tab="general"    role="tab">General</button>
-            <button class="form-tab"                  data-tab="appearance" role="tab">Appearance</button>
-            <button class="form-tab"                  data-tab="languages"  role="tab">Languages</button>
-            <button class="form-tab"                  data-tab="code"       role="tab">Code</button>
-        </nav>
-
-        <form id="siteForm" onsubmit="return false">
-
-            <!-- General -->
-            <div class="tab-panel" id="tab-general">
-                <div class="field">
-                    <label for="name">Site name</label>
-                    <input id="name" type="text" required placeholder="My Blog"/>
-                </div>
-                <div class="field">
-                    <label>Where will your blog live?</label>
-                    <div class="radio-row">
-                        <label class="checkbox-label">
-                            <input type="radio" name="hosting" value="subdomain" id="hostingSubdomain" checked/>
-                            <span>Free subdomain</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="radio" name="hosting" value="custom" id="hostingCustom"/>
-                            <span>My own domain</span>
-                        </label>
-                    </div>
-                </div>
-                <div class="field" id="subdomainField">
-                    <label for="subdomain">Subdomain</label>
-                    <div class="domain-row">
-                        <input id="subdomain" type="text" placeholder="myblog" autocomplete="off" spellcheck="false"/>
-                        <span class="domain-suffix" id="baseDomainLabel"></span>
-                    </div>
-                    <p class="hint" id="subdomainStatus">Served over HTTPS right away — no DNS setup, no verification.</p>
-                </div>
-                <div class="field" id="customDomainField" hidden>
-                    <label for="domain">Domain</label>
-                    <div class="domain-row">
-                        <input id="domain" type="text" placeholder="blog.example.com"/>
-                        <span id="verificationBadge" hidden></span>
-                    </div>
-                    <p class="hint">The domain where your blog will be served (e.g. blog.example.com)</p>
-                </div>
-                <div class="field" id="prefixField" hidden>
-                    <label for="prefix">Path prefix <span style="color:#aaa">(optional)</span></label>
-                    <input id="prefix" type="text" placeholder="E.g: blog"/>
-                    <p class="hint">If your blog lives at example.com/blog, enter <code>blog</code>. Leave empty if served at the root.</p>
-                </div>
-                <div class="field" id="requestVerificationField" hidden>
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="requestVerification"/>
-                        <span>Request domain re-verification</span>
-                    </label>
-                </div>
-                <div class="field">
-                    <label for="description">Description <span style="color:#aaa">(optional)</span></label>
-                    <textarea id="description" placeholder="A short description of your blog"></textarea>
-                </div>
-            </div>
-
-            <!-- Appearance -->
-            <div class="tab-panel" id="tab-appearance" hidden>
-                <div class="field">
-                    <label for="faviconUrl">Favicon URL <span style="color:#aaa">(optional)</span></label>
-                    <input id="faviconUrl" type="url" placeholder="https://example.com/favicon.ico"/>
-                </div>
-                <div class="field">
-                    <label for="stylesUrl">Styles URL <span style="color:#aaa">(optional)</span></label>
-                    <input id="stylesUrl" type="url" placeholder="https://example.com/styles.css"/>
-                    <p class="hint">You can also write custom CSS directly in the <span id="styleEditorLink">Style Editor</span> after saving the site.</p>
-                </div>
-                <div class="field">
-                    <label for="defaultTheme">Default theme</label>
-                    <select id="defaultTheme">
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                    </select>
-                </div>
-                <div class="field">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="enableSwitcher"/>
-                        <span>Enable theme switcher (support both light and dark)</span>
-                    </label>
-                </div>
-            </div>
-
-            <!-- Languages -->
-            <div class="tab-panel" id="tab-languages" hidden>
-                <div class="lang-block">
-                    <label class="lang-toggle">
-                        <input type="checkbox" id="lang-ENGLISH" value="ENGLISH" checked/>
-                        <span>English</span>
-                    </label>
-                    <div class="lang-config" id="config-ENGLISH">
-                        <div class="field">
-                            <label for="en-title">Title override <span style="color:#aaa">(optional)</span></label>
-                            <input id="en-title" type="text" placeholder="Overrides site name for English pages"/>
-                        </div>
-                        <div class="field">
-                            <label for="en-description">Description override <span style="color:#aaa">(optional)</span></label>
-                            <textarea id="en-description" rows="2" placeholder="Overrides site description for English pages"></textarea>
-                        </div>
-                        <div class="field">
-                            <label for="en-footer">Footer text <span style="color:#aaa">(optional)</span></label>
-                            <textarea id="en-footer" rows="2" placeholder="Footer content for the English version"></textarea>
-                        </div>
-                        <div class="field">
-                            <label>Navigation links</label>
-                            <div id="en-nav"></div>
-                            <button type="button" class="btn btn-ghost btn--small" data-add-nav="en-nav">+ Add link</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="lang-block">
-                    <label class="lang-toggle">
-                        <input type="checkbox" id="lang-SPANISH" value="SPANISH"/>
-                        <span>Spanish</span>
-                    </label>
-                    <div class="lang-config" id="config-SPANISH">
-                        <div class="field">
-                            <label for="es-title">Title override <span style="color:#aaa">(optional)</span></label>
-                            <input id="es-title" type="text" placeholder="Overrides site name for Spanish pages"/>
-                        </div>
-                        <div class="field">
-                            <label for="es-description">Description override <span style="color:#aaa">(optional)</span></label>
-                            <textarea id="es-description" rows="2" placeholder="Overrides site description for Spanish pages"></textarea>
-                        </div>
-                        <div class="field">
-                            <label for="es-footer">Footer text <span style="color:#aaa">(optional)</span></label>
-                            <textarea id="es-footer" rows="2" placeholder="Footer content for the Spanish version"></textarea>
-                        </div>
-                        <div class="field">
-                            <label>Navigation links</label>
-                            <div id="es-nav"></div>
-                            <button type="button" class="btn btn-ghost btn--small" data-add-nav="es-nav">+ Add link</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Code -->
-            <div class="tab-panel" id="tab-code" hidden>
-                <div class="field">
-                    <label for="headHtml">Head HTML <span style="color:#aaa">(optional)</span></label>
-                    <textarea id="headHtml" rows="6" placeholder="<!-- Scripts or tags injected before </head> on every page -->"></textarea>
-                    <p class="hint">Injected at the end of <code>&lt;head&gt;</code> on every page. Use for analytics, meta tags, custom fonts, etc.</p>
-                </div>
-                <div class="field">
-                    <label for="bodyHtml">Body HTML <span style="color:#aaa">(optional)</span></label>
-                    <textarea id="bodyHtml" rows="6" placeholder="<!-- Scripts or tags injected before </body> on every page -->"></textarea>
-                    <p class="hint">Injected at the start of <code>&lt;body&gt;</code> on every page.</p>
-                </div>
-            </div>
-
-            <p id="error" style="display:none;color:#c00;font-size:0.875rem;margin-top:0.75rem;"></p>
-
-            <div class="actions">
-                <button class="btn" type="submit" id="submitBtn">Submit</button>
-                <a class="btn btn-ghost" href="/admin">Cancel</a>
-            </div>
-        </form>
-    </main>
-
-    <div id="verificationModal" class="modal" style="display:none">
-        <div class="modal__box">
-            <button class="modal__close" aria-label="Close">×</button>
-            <h2 class="modal__title"></h2>
-            <p class="modal__body"></p>
-            <div class="modal__footer">
-                <button class="btn modal__action"></button>
-                <button class="btn btn-ghost modal__close">Close</button>
-            </div>
+      </div>
+      <div class="field" id="subdomainField">
+        <label for="subdomain">Subdomain</label>
+        <div class="domain-row">
+          <input id="subdomain" type="text" placeholder="myblog" autocomplete="off" spellcheck="false"/>
+          <span class="domain-suffix" id="baseDomainLabel"></span>
         </div>
+        <p class="hint" id="subdomainStatus">Served over HTTPS right away — no DNS setup, no verification.</p>
+      </div>
+      <div class="field" id="customDomainField" hidden>
+        <label for="domain">Domain</label>
+        <div class="domain-row">
+          <input id="domain" type="text" placeholder="blog.example.com"/>
+          <span id="verificationBadge" hidden></span>
+        </div>
+        <p class="hint">The domain where your blog will be served (e.g. blog.example.com)</p>
+      </div>
+      <div class="field" id="prefixField" hidden>
+        <label for="prefix">Path prefix <span style="color:#aaa">(optional)</span></label>
+        <input id="prefix" type="text" placeholder="E.g: blog"/>
+        <p class="hint">If your blog lives at example.com/blog, enter <code>blog</code>. Leave empty if served at the
+          root.</p>
+      </div>
+      <div class="field" id="requestVerificationField" hidden>
+        <label class="checkbox-label">
+          <input type="checkbox" id="requestVerification"/>
+          <span>Request domain re-verification</span>
+        </label>
+      </div>
+      <div class="field">
+        <label for="description">Description <span style="color:#aaa">(optional)</span></label>
+        <textarea id="description" placeholder="A short description of your blog"></textarea>
+      </div>
     </div>
+
+    <!-- Appearance -->
+    <div class="tab-panel" id="tab-appearance" hidden>
+      <div class="field">
+        <label for="faviconUrl">Favicon URL <span style="color:#aaa">(optional)</span></label>
+        <input id="faviconUrl" type="url" placeholder="https://example.com/favicon.ico"/>
+      </div>
+      <div class="field">
+        <label for="stylesUrl">Styles URL <span style="color:#aaa">(optional)</span></label>
+        <input id="stylesUrl" type="url" placeholder="https://example.com/styles.css"/>
+        <p class="hint">You can also write custom CSS directly in the <span id="styleEditorLink">Style Editor</span>
+          after saving the site.</p>
+      </div>
+      <div class="field">
+        <label for="defaultTheme">Default theme</label>
+        <select id="defaultTheme">
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="checkbox-label">
+          <input type="checkbox" id="enableSwitcher"/>
+          <span>Enable theme switcher (support both light and dark)</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Languages -->
+    <div class="tab-panel" id="tab-languages" hidden>
+      <div class="lang-block">
+        <label class="lang-toggle">
+          <input type="checkbox" id="lang-ENGLISH" value="ENGLISH" checked/>
+          <span>English</span>
+        </label>
+        <div class="lang-config" id="config-ENGLISH">
+          <div class="field">
+            <label for="en-title">Title override <span style="color:#aaa">(optional)</span></label>
+            <input id="en-title" type="text" placeholder="Overrides site name for English pages"/>
+          </div>
+          <div class="field">
+            <label for="en-description">Description override <span style="color:#aaa">(optional)</span></label>
+            <textarea id="en-description" rows="2"
+                      placeholder="Overrides site description for English pages"></textarea>
+          </div>
+          <div class="field">
+            <label for="en-footer">Footer text <span style="color:#aaa">(optional)</span></label>
+            <textarea id="en-footer" rows="2" placeholder="Footer content for the English version"></textarea>
+          </div>
+          <div class="field">
+            <label>Navigation links</label>
+            <div id="en-nav"></div>
+            <button type="button" class="btn btn-ghost btn--small" data-add-nav="en-nav">+ Add link</button>
+          </div>
+        </div>
+      </div>
+      <div class="lang-block">
+        <label class="lang-toggle">
+          <input type="checkbox" id="lang-SPANISH" value="SPANISH"/>
+          <span>Spanish</span>
+        </label>
+        <div class="lang-config" id="config-SPANISH">
+          <div class="field">
+            <label for="es-title">Title override <span style="color:#aaa">(optional)</span></label>
+            <input id="es-title" type="text" placeholder="Overrides site name for Spanish pages"/>
+          </div>
+          <div class="field">
+            <label for="es-description">Description override <span style="color:#aaa">(optional)</span></label>
+            <textarea id="es-description" rows="2"
+                      placeholder="Overrides site description for Spanish pages"></textarea>
+          </div>
+          <div class="field">
+            <label for="es-footer">Footer text <span style="color:#aaa">(optional)</span></label>
+            <textarea id="es-footer" rows="2" placeholder="Footer content for the Spanish version"></textarea>
+          </div>
+          <div class="field">
+            <label>Navigation links</label>
+            <div id="es-nav"></div>
+            <button type="button" class="btn btn-ghost btn--small" data-add-nav="es-nav">+ Add link</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Code -->
+    <div class="tab-panel" id="tab-code" hidden>
+      <div class="field">
+        <label for="headHtml">Head HTML <span style="color:#aaa">(optional)</span></label>
+        <textarea id="headHtml" rows="6"
+                  placeholder="<!-- Scripts or tags injected before </head> on every page -->"></textarea>
+        <p class="hint">Injected at the end of <code>&lt;head&gt;</code> on every page. Use for analytics, meta tags,
+          custom fonts, etc.</p>
+      </div>
+      <div class="field">
+        <label for="bodyHtml">Body HTML <span style="color:#aaa">(optional)</span></label>
+        <textarea id="bodyHtml" rows="6"
+                  placeholder="<!-- Scripts or tags injected before </body> on every page -->"></textarea>
+        <p class="hint">Injected at the start of <code>&lt;body&gt;</code> on every page.</p>
+      </div>
+    </div>
+
+    <p id="error" style="display:none;color:#c00;font-size:0.875rem;margin-top:0.75rem;"></p>
+
+    <div class="actions">
+      <button class="btn" type="submit" id="submitBtn">Submit</button>
+      <a class="btn btn-ghost" href="/admin">Cancel</a>
+    </div>
+  </form>
+</main>
+
+<div id="verificationModal" class="modal" style="display:none">
+  <div class="modal__box">
+    <button class="modal__close" aria-label="Close">×</button>
+    <h2 class="modal__title"></h2>
+    <p class="modal__body"></p>
+    <div class="modal__footer">
+      <button class="btn modal__action"></button>
+      <button class="btn btn-ghost modal__close">Close</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

@@ -1,6 +1,5 @@
 package com.gonzalinux.blogs
 
-import com.gonzalinux.domain.Languages
 import com.gonzalinux.domain.post.Post
 import com.gonzalinux.domain.post.PostTranslation
 import com.gonzalinux.domain.site.Site

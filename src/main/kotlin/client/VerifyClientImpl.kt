@@ -24,7 +24,7 @@ class VerifyClientImpl(private val webClient: WebClient) : VerifyClient {
             .bodyToMono<String>()
             .map { it == verifications[domain] }
             .defaultIfEmpty(false)
-            .doOnSuccess { verified -> if (verified==true) verifications.remove(domain) }
+            .doOnSuccess { verified -> if (verified == true) verifications.remove(domain) }
     }
 
     override fun getToken(domain: String): String? = verifications[domain]

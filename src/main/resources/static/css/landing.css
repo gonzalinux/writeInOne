@@ -78,14 +78,19 @@ p {
     color: #fff;
 }
 
-.btn-primary:hover { background: #333; }
+.btn-primary:hover {
+    background: #333;
+}
 
 .btn-secondary {
     border: 1px solid #ddd;
     color: #555;
 }
 
-.btn-secondary:hover { border-color: #aaa; color: #1a1a1a; }
+.btn-secondary:hover {
+    border-color: #aaa;
+    color: #1a1a1a;
+}
 
 .docs-link {
     position: fixed;
@@ -99,7 +104,10 @@ p {
     padding: 0.4rem 0.9rem;
 }
 
-.docs-link:hover { border-color: #aaa; color: #1a1a1a; }
+.docs-link:hover {
+    border-color: #aaa;
+    color: #1a1a1a;
+}
 
 footer {
     position: fixed;

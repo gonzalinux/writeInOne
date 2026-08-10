@@ -164,6 +164,7 @@ class BlogsHandler(private val blogService: BlogService, private val verifyClien
                         blogService.recordView(site.id, lang, slug, ip, ua)
                             .then(ServerResponse.noContent().build())
                     }
+
                     else -> ServerResponse.badRequest().build()
                 }
             }

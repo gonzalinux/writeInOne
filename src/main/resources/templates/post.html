@@ -1,115 +1,121 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en" th:lang="${lang}">
 <head>
-    <th:block th:replace="~{fragments/layout :: head(${translation.title + ' — ' + (langConfig?.title ?: site.name)})}"/>
+  <th:block th:replace="~{fragments/layout :: head(${translation.title + ' — ' + (langConfig?.title ?: site.name)})}"/>
 
-    <!-- Canonical -->
-    <link rel="canonical" th:href="'https://' + ${site.domain} + ${prefix} + '/' + ${lang} + '/articles/' + ${translation.slug}"/>
+  <!-- Canonical -->
+  <link rel="canonical"
+        th:href="'https://' + ${site.domain} + ${prefix} + '/' + ${lang} + '/articles/' + ${translation.slug}"/>
 
-    <!-- Primary meta -->
-    <meta th:if="${translation.excerpt != null}" name="description" th:content="${translation.excerpt}"/>
+  <!-- Primary meta -->
+  <meta th:if="${translation.excerpt != null}" name="description" th:content="${translation.excerpt}"/>
 
-    <!-- Open Graph -->
-    <meta property="og:type"                content="article"/>
-    <meta property="og:site_name"           th:content="${site.name}"/>
-    <meta property="og:title"               th:content="${translation.title}"/>
-    <meta property="og:description"         th:if="${translation.excerpt != null}" th:content="${translation.excerpt}"/>
-    <meta property="og:image"               th:if="${post.coverUrl != null}" th:content="${post.coverUrl}"/>
-    <meta property="og:url"                 th:content="'https://' + ${site.domain} + ${prefix} + '/' + ${lang} + '/articles/' + ${translation.slug}"/>
-    <meta property="article:published_time" th:if="${post.publishedAt != null}" th:content="${post.publishedAt}"/>
+  <!-- Open Graph -->
+  <meta property="og:type" content="article"/>
+  <meta property="og:site_name" th:content="${site.name}"/>
+  <meta property="og:title" th:content="${translation.title}"/>
+  <meta property="og:description" th:if="${translation.excerpt != null}" th:content="${translation.excerpt}"/>
+  <meta property="og:image" th:if="${post.coverUrl != null}" th:content="${post.coverUrl}"/>
+  <meta property="og:url"
+        th:content="'https://' + ${site.domain} + ${prefix} + '/' + ${lang} + '/articles/' + ${translation.slug}"/>
+  <meta property="article:published_time" th:if="${post.publishedAt != null}" th:content="${post.publishedAt}"/>
 
-    <!-- Twitter / X -->
-    <meta name="twitter:card"        th:content="${post.coverUrl != null ? 'summary_large_image' : 'summary'}"/>
-    <meta name="twitter:title"       th:content="${translation.title}"/>
-    <meta name="twitter:description" th:if="${translation.excerpt != null}" th:content="${translation.excerpt}"/>
-    <meta name="twitter:image"       th:if="${post.coverUrl != null}" th:content="${post.coverUrl}"/>
+  <!-- Twitter / X -->
+  <meta name="twitter:card" th:content="${post.coverUrl != null ? 'summary_large_image' : 'summary'}"/>
+  <meta name="twitter:title" th:content="${translation.title}"/>
+  <meta name="twitter:description" th:if="${translation.excerpt != null}" th:content="${translation.excerpt}"/>
+  <meta name="twitter:image" th:if="${post.coverUrl != null}" th:content="${post.coverUrl}"/>
 
-    <!-- href is updated by theme.js on DOMContentLoaded to match the active theme -->
-    <link id="hljs-theme" rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github.min.css"/>
+  <!-- href is updated by theme.js on DOMContentLoaded to match the active theme -->
+  <link id="hljs-theme" rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github.min.css"/>
 </head>
 <body>
-    <th:block th:replace="~{fragments/layout :: bodyStart}"/>
-    <th:block th:replace="~{fragments/layout :: nav}"/>
+<th:block th:replace="~{fragments/layout :: bodyStart}"/>
+<th:block th:replace="~{fragments/layout :: nav}"/>
 
-    <main class="container">
-        <article>
-            <header class="post-header">
-                <a class="post-header__back" th:href="${prefix} + '/' + ${lang}">← All posts</a>
+<main class="container">
+  <article>
+    <header class="post-header">
+      <a class="post-header__back" th:href="${prefix} + '/' + ${lang}">← All posts</a>
 
-                <div class="post-header__meta">
-                    <time th:datetime="${post.publishedAt}"
-                          th:text="${#temporals.format(post.publishedAt, 'MMM d, yyyy')}">Jan 1, 2025</time>
-                </div>
+      <div class="post-header__meta">
+        <time th:datetime="${post.publishedAt}"
+              th:text="${#temporals.format(post.publishedAt, 'MMM d, yyyy')}">Jan 1, 2025
+        </time>
+      </div>
 
-                <h1 class="post-header__title" th:text="${translation.title}">Post Title</h1>
+      <h1 class="post-header__title" th:text="${translation.title}">Post Title</h1>
 
-                <p class="post-header__excerpt"
-                   th:if="${translation.excerpt != null}"
-                   th:text="${translation.excerpt}">Excerpt</p>
+      <p class="post-header__excerpt"
+         th:if="${translation.excerpt != null}"
+         th:text="${translation.excerpt}">Excerpt</p>
 
-                <div class="post-header__tags" th:if="${!tags.isEmpty()}">
-                    <a class="tag"
-                       th:each="tag : ${tags}"
-                       th:text="${tag.name}"
-                       th:href="${prefix} + '/' + ${lang} + '?tag=' + ${tag.name}">tag</a>
-                </div>
+      <div class="post-header__tags" th:if="${!tags.isEmpty()}">
+        <a class="tag"
+           th:each="tag : ${tags}"
+           th:text="${tag.name}"
+           th:href="${prefix} + '/' + ${lang} + '?tag=' + ${tag.name}">tag</a>
+      </div>
 
-                <img class="post-header__cover"
-                     th:if="${not #strings.isEmpty(post.coverUrl)}"
-                     th:src="${post.coverUrl}"
-                     th:alt="${translation.title}"/>
-            </header>
+      <img class="post-header__cover"
+           th:if="${not #strings.isEmpty(post.coverUrl)}"
+           th:src="${post.coverUrl}"
+           th:alt="${translation.title}"/>
+    </header>
 
-            <!-- th:utext renders the pre-rendered HTML from flexmark -->
-            <div class="post-body" th:utext="${renderedBody}">Post content</div>
-        </article>
-    </main>
+    <!-- th:utext renders the pre-rendered HTML from flexmark -->
+    <div class="post-body" th:utext="${renderedBody}">Post content</div>
+  </article>
+</main>
 
-    <th:block th:replace="~{fragments/layout :: footer}"/>
-    <script th:inline="javascript">
-        const _hljsLangs = /*[[${codeLanguages}]]*/ [];
-        const _postLang  = /*[[${lang}]]*/ 'en';
-        const _postSlug  = /*[[${translation.slug}]]*/ '';
-        const _prefix    = /*[[${prefix}]]*/ '';
-    </script>
-    <script>
-        fetch(`${_prefix}/${_postLang}/posts/${_postSlug}/event`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'view' }),
-            keepalive: true
-        }).catch(() => {});
-    </script>
-    <script type="module">
-        import hljs from 'https://esm.sh/highlight.js@11.11.1/lib/core';
-        await Promise.all(_hljsLangs.map(l =>
-            import(`https://esm.sh/highlight.js@11.11.1/lib/languages/${l}`)
-                .then(m => hljs.registerLanguage(l, m.default))
-                .catch(() => {})
-        ));
-        hljs.highlightAll();
-        document.querySelectorAll('.post-body pre').forEach(pre => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'code-block';
-            pre.parentNode.insertBefore(wrapper, pre);
-            wrapper.appendChild(pre);
+<th:block th:replace="~{fragments/layout :: footer}"/>
+<script th:inline="javascript">
+  const _hljsLangs = /*[[${codeLanguages}]]*/ [];
+  const _postLang = /*[[${lang}]]*/ 'en';
+  const _postSlug = /*[[${translation.slug}]]*/ '';
+  const _prefix = /*[[${prefix}]]*/ '';
+</script>
+<script>
+  fetch(`${_prefix}/${_postLang}/posts/${_postSlug}/event`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({type: 'view'}),
+    keepalive: true
+  }).catch(() => {
+  });
+</script>
+<script type="module">
+  import hljs from 'https://esm.sh/highlight.js@11.11.1/lib/core';
 
-            const btn = document.createElement('button');
-            btn.className = 'copy-btn';
-            btn.textContent = 'Copy';
-            btn.addEventListener('click', () => {
-                navigator.clipboard.writeText(pre.querySelector('code').innerText).then(() => {
-                    btn.textContent = 'Copied!';
-                    btn.classList.add('copied');
-                    setTimeout(() => {
-                        btn.textContent = 'Copy';
-                        btn.classList.remove('copied');
-                    }, 2000);
-                });
-            });
-            wrapper.appendChild(btn);
-        });
-    </script>
+  await Promise.all(_hljsLangs.map(l =>
+    import(`https://esm.sh/highlight.js@11.11.1/lib/languages/${l}`)
+      .then(m => hljs.registerLanguage(l, m.default))
+      .catch(() => {
+      })
+  ));
+  hljs.highlightAll();
+  document.querySelectorAll('.post-body pre').forEach(pre => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'code-block';
+    pre.parentNode.insertBefore(wrapper, pre);
+    wrapper.appendChild(pre);
+
+    const btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.textContent = 'Copy';
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(pre.querySelector('code').innerText).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    });
+    wrapper.appendChild(btn);
+  });
+</script>
 </body>
 </html>

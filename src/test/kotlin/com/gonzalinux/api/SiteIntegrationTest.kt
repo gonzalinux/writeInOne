@@ -219,11 +219,22 @@ class SiteIntegrationTest {
         webTestClient.post().uri("/sites/")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(mapOf(
-                "name" to "Blog",
-                "domain" to "navtest-$ts.example.com",
-                "config" to mapOf("en" to mapOf("nav" to listOf(mapOf("label" to "Evil", "url" to "javascript:alert(1)"))))
-            ))
+            .bodyValue(
+                mapOf(
+                    "name" to "Blog",
+                    "domain" to "navtest-$ts.example.com",
+                    "config" to mapOf(
+                        "en" to mapOf(
+                            "nav" to listOf(
+                                mapOf(
+                                    "label" to "Evil",
+                                    "url" to "javascript:alert(1)"
+                                )
+                            )
+                        )
+                    )
+                )
+            )
             .exchange()
             .expectStatus().isBadRequest
             .expectBody()
@@ -237,9 +248,20 @@ class SiteIntegrationTest {
         webTestClient.patch().uri("/sites/$siteId")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(mapOf(
-                "config" to mapOf("en" to mapOf("nav" to listOf(mapOf("label" to "Bad", "url" to "data:text/html,evil"))))
-            ))
+            .bodyValue(
+                mapOf(
+                    "config" to mapOf(
+                        "en" to mapOf(
+                            "nav" to listOf(
+                                mapOf(
+                                    "label" to "Bad",
+                                    "url" to "data:text/html,evil"
+                                )
+                            )
+                        )
+                    )
+                )
+            )
             .exchange()
             .expectStatus().isBadRequest
     }
@@ -249,14 +271,20 @@ class SiteIntegrationTest {
         webTestClient.post().uri("/sites/")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(mapOf(
-                "name" to "Blog",
-                "domain" to "navvalid-$ts.example.com",
-                "config" to mapOf("en" to mapOf("nav" to listOf(
-                    mapOf("label" to "Home", "url" to "/"),
-                    mapOf("label" to "External", "url" to "https://example.com")
-                )))
-            ))
+            .bodyValue(
+                mapOf(
+                    "name" to "Blog",
+                    "domain" to "navvalid-$ts.example.com",
+                    "config" to mapOf(
+                        "en" to mapOf(
+                            "nav" to listOf(
+                                mapOf("label" to "Home", "url" to "/"),
+                                mapOf("label" to "External", "url" to "https://example.com")
+                            )
+                        )
+                    )
+                )
+            )
             .exchange()
             .expectStatus().isOk
     }

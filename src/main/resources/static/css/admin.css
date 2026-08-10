@@ -10,7 +10,10 @@
     align-items: center;
     gap: 0.75rem;
 }
-.domain-row input { flex: 1; }
+
+.domain-row input {
+    flex: 1;
+}
 
 .domain-suffix {
     font-size: 0.9rem;
@@ -29,8 +32,13 @@
     margin: 0;
 }
 
-.hint--ok    { color: #155724; }
-.hint--error { color: #721c24; }
+.hint--ok {
+    color: #155724;
+}
+
+.hint--error {
+    color: #721c24;
+}
 
 .badge {
     display: inline-block;
@@ -40,22 +48,41 @@
     border-radius: 999px;
     white-space: nowrap;
 }
-.badge--verified { background: #d4edda; color: #155724; }
-.badge--pending  { background: #fff3cd; color: #856404; }
-.badge--expired  { background: #f8d7da; color: #721c24; }
-.badge--clickable { cursor: pointer; }
-.badge--clickable:hover { filter: brightness(0.92); }
+
+.badge--verified {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge--pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge--expired {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.badge--clickable {
+    cursor: pointer;
+}
+
+.badge--clickable:hover {
+    filter: brightness(0.92);
+}
 
 /* ── Modal ── */
 .modal {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.45);
+    background: rgba(0, 0, 0, 0.45);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 100;
 }
+
 .modal__box {
     background: #fff;
     border-radius: 8px;
@@ -64,6 +91,7 @@
     width: 90%;
     position: relative;
 }
+
 .modal__close {
     position: absolute;
     top: 1rem;
@@ -75,10 +103,27 @@
     color: #888;
     line-height: 1;
 }
-.modal__title { margin: 0 0 1rem; font-size: 1.1rem; }
-.modal__body  { margin: 0 0 1.5rem; font-size: 0.9rem; line-height: 1.6; color: #444; }
-.modal__body a { color: inherit; }
-.modal__footer { display: flex; gap: 0.75rem; }
+
+.modal__title {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+}
+
+.modal__body {
+    margin: 0 0 1.5rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #444;
+}
+
+.modal__body a {
+    color: inherit;
+}
+
+.modal__footer {
+    display: flex;
+    gap: 0.75rem;
+}
 
 /* ── Base ── */
 body {
@@ -252,7 +297,7 @@ h1 {
 
 /* ── Forms ── */
 .field {
-    margin-top:1.25rem;
+    margin-top: 1.25rem;
     margin-bottom: 0.7rem;
 }
 
@@ -392,6 +437,7 @@ textarea {
     color: #888;
     text-decoration: none;
 }
+
 .site-card__domain:hover {
     text-decoration: underline;
     color: #555;
@@ -518,16 +564,40 @@ tr:last-child td {
     display: inline-block;
 }
 
-.action-btn:hover { border-color: #1a1a1a; color: #1a1a1a; }
+.action-btn:hover {
+    border-color: #1a1a1a;
+    color: #1a1a1a;
+}
 
-.action-btn--edit  { color: #1a6fc4; border-color: #aac8e8; }
-.action-btn--edit:hover  { color: #0f4a8a; border-color: #1a6fc4; }
+.action-btn--edit {
+    color: #1a6fc4;
+    border-color: #aac8e8;
+}
 
-.action-btn--view  { color: #1a8a6c; border-color: #a0d4c4; }
-.action-btn--view:hover  { color: #0f5c48; border-color: #1a8a6c; }
+.action-btn--edit:hover {
+    color: #0f4a8a;
+    border-color: #1a6fc4;
+}
 
-.action-btn--danger { color: #c00; border-color: #e0b0b0; }
-.action-btn--danger:hover { color: #900; border-color: #c00; }
+.action-btn--view {
+    color: #1a8a6c;
+    border-color: #a0d4c4;
+}
+
+.action-btn--view:hover {
+    color: #0f5c48;
+    border-color: #1a8a6c;
+}
+
+.action-btn--danger {
+    color: #c00;
+    border-color: #e0b0b0;
+}
+
+.action-btn--danger:hover {
+    color: #900;
+    border-color: #c00;
+}
 
 /* ── Filter bar (post list) ── */
 .filter-bar {
@@ -550,7 +620,9 @@ tr:last-child td {
     min-width: 140px;
 }
 
-.filter-bar__input--narrow { flex: 0 0 120px; }
+.filter-bar__input--narrow {
+    flex: 0 0 120px;
+}
 
 .filter-bar__select {
     padding: 0.35rem 0.5rem;
@@ -661,7 +733,9 @@ tr:last-child td {
     font-family: inherit;
 }
 
-.form-tab:hover { color: #1a1a1a; }
+.form-tab:hover {
+    color: #1a1a1a;
+}
 
 .form-tab--active {
     color: #1a1a1a;
@@ -692,7 +766,9 @@ tr:last-child td {
     gap: 0.4rem;
 }
 
-.lang-tab:hover { color: #1a1a1a; }
+.lang-tab:hover {
+    color: #1a1a1a;
+}
 
 .lang-tab--active {
     color: #1a1a1a;
@@ -707,7 +783,9 @@ tr:last-child td {
     display: none;
 }
 
-.lang-tab__dot--filled { display: inline-block; }
+.lang-tab__dot--filled {
+    display: inline-block;
+}
 
 /* ── Nav link rows ── */
 .nav-link-row {

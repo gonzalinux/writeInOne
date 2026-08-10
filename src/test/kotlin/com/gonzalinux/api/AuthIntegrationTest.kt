@@ -221,7 +221,13 @@ class AuthIntegrationTest {
             .exchange()
 
         webTestClient.post().uri("/auth/reset-password")
-            .bodyValue(mapOf("email" to "resetbad@integrationtest.com", "code" to "000000", "password" to "newpassword123"))
+            .bodyValue(
+                mapOf(
+                    "email" to "resetbad@integrationtest.com",
+                    "code" to "000000",
+                    "password" to "newpassword123"
+                )
+            )
             .exchange()
             .expectStatus().isBadRequest
     }

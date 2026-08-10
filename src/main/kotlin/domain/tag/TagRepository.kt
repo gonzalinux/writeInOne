@@ -10,11 +10,13 @@ import java.time.OffsetDateTime
 class TagRepository(private val client: DatabaseClient) {
 
     fun findOrCreate(siteId: Long, name: String): Mono<Tag> =
-        client.sql("""
+        client.sql(
+            """
             INSERT INTO tags (site_id, name) VALUES (:siteId, :name)
             ON CONFLICT (site_id, name) DO UPDATE SET name = EXCLUDED.name
             RETURNING *
-        """)
+        """
+        )
             .bind("siteId", siteId)
             .bind("name", name)
             .fetch().first()
@@ -27,12 +29,14 @@ class TagRepository(private val client: DatabaseClient) {
             .map { mapToTag(it) }
 
     fun findByPostId(postId: Long): Flux<Tag> =
-        client.sql("""
+        client.sql(
+            """
             SELECT t.* FROM tags t
             JOIN post_tags pt ON t.id = pt.tag_id
             WHERE pt.post_id = :postId
             ORDER BY t.name
-        """)
+        """
+        )
             .bind("postId", postId)
             .fetch().all()
             .map { mapToTag(it) }
@@ -67,12 +71,14 @@ class TagRepository(private val client: DatabaseClient) {
     fun findByPostIds(postIds: List<Long>): Flux<Pair<Long, Tag>> {
         if (postIds.isEmpty()) return Flux.empty()
         val placeholders = postIds.indices.joinToString(",") { ":id$it" }
-        var spec = client.sql("""
+        var spec = client.sql(
+            """
             SELECT pt.post_id, t.* FROM tags t
             JOIN post_tags pt ON t.id = pt.tag_id
             WHERE pt.post_id IN ($placeholders)
             ORDER BY t.name
-        """)
+        """
+        )
         postIds.forEachIndexed { i, id -> spec = spec.bind("id$i", id) }
         return spec.fetch().all().map { row -> (row["post_id"] as Long) to mapToTag(row) }
     }

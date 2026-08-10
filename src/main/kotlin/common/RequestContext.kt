@@ -20,7 +20,7 @@ object RequestContextHolder {
     }
 
     fun generateRequestId(): String {
-        val randomPart = UUID.randomUUID().toString().replace("-", "").substring(0,18)
+        val randomPart = UUID.randomUUID().toString().replace("-", "").substring(0, 18)
         return "GK$randomPart"
     }
 

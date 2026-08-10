@@ -41,21 +41,25 @@ class BlogExceptionFilter : HandlerFilterFunction<ServerResponse, ServerResponse
                 val lang = request.pathVariables()["lang"] ?: site.languages.firstOrNull()?.value ?: "en"
                 ServerResponse.status(HttpStatus.NOT_FOUND)
                     .contentType(MediaType.TEXT_HTML)
-                    .render("blog-not-found", mapOf(
-                        "site" to site,
-                        "lang" to lang,
-                        "prefix" to prefix,
-                        "langConfig" to site.config.forLang(lang),
-                    ))
+                    .render(
+                        "blog-not-found", mapOf(
+                            "site" to site,
+                            "lang" to lang,
+                            "prefix" to prefix,
+                            "langConfig" to site.config.forLang(lang),
+                        )
+                    )
             }
         }
 
     private fun renderErrorPage(status: HttpStatus, message: String?): Mono<ServerResponse> =
         ServerResponse.status(status)
             .contentType(MediaType.TEXT_HTML)
-            .render("error", mapOf(
-                "status" to status.value(),
-                "reason" to status.reasonPhrase,
-                "message" to message
-            ))
+            .render(
+                "error", mapOf(
+                    "status" to status.value(),
+                    "reason" to status.reasonPhrase,
+                    "message" to message
+                )
+            )
 }

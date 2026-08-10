@@ -14,9 +14,9 @@ per-site certificate provisioning at the gateway, which isn't available.
 Your proxy needs to forward requests for the blog's path to WriteInOne, adding two
 headers on every forwarded request:
 
-| Header | Value |
-|---|---|
-| `X-Site-Host` | the domain to resolve, e.g. `example.com` |
+| Header               | Value                                                                        |
+|----------------------|------------------------------------------------------------------------------|
+| `X-Site-Host`        | the domain to resolve, e.g. `example.com`                                    |
 | `X-Forwarded-Prefix` | the path the blog is mounted at, e.g. `/blog` (empty if mounted at the root) |
 
 Get the prefix wrong and internal links on the blog will 404, since every page builds

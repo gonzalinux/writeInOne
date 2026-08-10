@@ -39,13 +39,13 @@ GET /sites/{siteId}/posts?page=0&size=10&status=published&tag=intro&search=hello
 
 All query params are optional:
 
-| Param | Default | Notes |
-|---|---|---|
-| `page` | `0` | zero-indexed |
-| `size` | `10` | no upper bound enforced |
-| `status` | — | one of `draft`, `scheduled`, `published`, `archived` (lowercase) |
-| `tag` | — | exact tag name |
-| `search` | — | case-insensitive match against translation titles, any language |
+| Param    | Default | Notes                                                            |
+|----------|---------|------------------------------------------------------------------|
+| `page`   | `0`     | zero-indexed                                                     |
+| `size`   | `10`    | no upper bound enforced                                          |
+| `status` | —       | one of `draft`, `scheduled`, `published`, `archived` (lowercase) |
+| `tag`    | —       | exact tag name                                                   |
+| `search` | —       | case-insensitive match against translation titles, any language  |
 
 Multiple filters combine with AND. Results are ordered newest-first by creation date.
 
@@ -151,10 +151,10 @@ that sets it.
 
 ## Errors
 
-| Status | Code | When |
-|---|---|---|
-| 404 | `SITE_NOT_FOUND` | site doesn't exist or you don't have access to it |
-| 404 | `POST_NOT_FOUND` | post doesn't exist under that site |
-| 409 | `SLUG_ALREADY_EXISTS` | a translation's slug collides with an existing one in the same site+language |
+| Status | Code                  | When                                                                         |
+|--------|-----------------------|------------------------------------------------------------------------------|
+| 404    | `SITE_NOT_FOUND`      | site doesn't exist or you don't have access to it                            |
+| 404    | `POST_NOT_FOUND`      | post doesn't exist under that site                                           |
+| 409    | `SLUG_ALREADY_EXISTS` | a translation's slug collides with an existing one in the same site+language |
 
 See [Errors](/docs/api/errors) for the response envelope and the full list of codes.

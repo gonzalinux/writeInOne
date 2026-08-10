@@ -2,8 +2,10 @@ let _refreshPromise = null;
 
 function doRefresh() {
   if (_refreshPromise) return _refreshPromise;
-  _refreshPromise = fetch('/auth/refresh', { method: 'POST', credentials: 'include' })
-    .finally(() => { _refreshPromise = null; });
+  _refreshPromise = fetch('/auth/refresh', {method: 'POST', credentials: 'include'})
+    .finally(() => {
+      _refreshPromise = null;
+    });
   return _refreshPromise;
 }
 
@@ -26,7 +28,7 @@ async function api(url, options = {}) {
 }
 
 async function logout() {
-  await api("/auth/logout", { method: 'POST' })
+  await api("/auth/logout", {method: 'POST'})
   location.href = '/admin/login';
 }
 

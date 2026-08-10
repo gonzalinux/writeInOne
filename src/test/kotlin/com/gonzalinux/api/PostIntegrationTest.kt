@@ -55,11 +55,13 @@ class PostIntegrationTest {
         webTestClient.post().uri("/sites/$siteId/posts/")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(mapOf(
-                "translations" to mapOf(
-                    "en" to mapOf("title" to "Hello World", "body" to "First post body")
+            .bodyValue(
+                mapOf(
+                    "translations" to mapOf(
+                        "en" to mapOf("title" to "Hello World", "body" to "First post body")
+                    )
                 )
-            ))
+            )
             .exchange()
             .expectStatus().isOk
             .expectBody()
@@ -74,11 +76,13 @@ class PostIntegrationTest {
         webTestClient.post().uri("/sites/$siteId/posts/")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(mapOf(
-                "translations" to mapOf(
-                    "en" to mapOf("title" to "My Awesome Post!", "body" to "Content")
+            .bodyValue(
+                mapOf(
+                    "translations" to mapOf(
+                        "en" to mapOf("title" to "My Awesome Post!", "body" to "Content")
+                    )
                 )
-            ))
+            )
             .exchange()
             .expectStatus().isOk
             .expectBody()
@@ -90,10 +94,12 @@ class PostIntegrationTest {
         webTestClient.post().uri("/sites/$siteId/posts/")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(mapOf(
-                "translations" to mapOf("en" to mapOf("title" to "Tagged Post", "body" to "Content")),
-                "tags" to listOf("kotlin", "spring")
-            ))
+            .bodyValue(
+                mapOf(
+                    "translations" to mapOf("en" to mapOf("title" to "Tagged Post", "body" to "Content")),
+                    "tags" to listOf("kotlin", "spring")
+                )
+            )
             .exchange()
             .expectStatus().isOk
             .expectBody()
@@ -105,9 +111,11 @@ class PostIntegrationTest {
         webTestClient.post().uri("/sites/999999/posts/")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(mapOf(
-                "translations" to mapOf("en" to mapOf("title" to "Post", "body" to "Content"))
-            ))
+            .bodyValue(
+                mapOf(
+                    "translations" to mapOf("en" to mapOf("title" to "Post", "body" to "Content"))
+                )
+            )
             .exchange()
             .expectStatus().isNotFound
     }
@@ -166,11 +174,13 @@ class PostIntegrationTest {
         webTestClient.put().uri("/sites/$siteId/posts/$postId")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(mapOf(
-                "translations" to mapOf(
-                    "en" to mapOf("title" to "Updated Title", "body" to "Updated body")
+            .bodyValue(
+                mapOf(
+                    "translations" to mapOf(
+                        "en" to mapOf("title" to "Updated Title", "body" to "Updated body")
+                    )
                 )
-            ))
+            )
             .exchange()
             .expectStatus().isOk
             .expectBody()
@@ -311,9 +321,11 @@ class PostIntegrationTest {
         val response = webTestClient.post().uri("/sites/$siteId/posts/")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(mapOf(
-                "translations" to mapOf("en" to mapOf("title" to title, "body" to body))
-            ))
+            .bodyValue(
+                mapOf(
+                    "translations" to mapOf("en" to mapOf("title" to title, "body" to body))
+                )
+            )
             .exchange()
             .expectStatus().isOk
             .expectBody(Map::class.java)

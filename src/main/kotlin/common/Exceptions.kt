@@ -63,3 +63,9 @@ class NotFoundException : ApiException(
     error = "NOT_FOUND"
 )
 
+class ForbiddenException(details: String) : ApiException(
+    status = HttpStatus.FORBIDDEN,
+    error = "FORBIDDEN",
+    details = details
+)
+

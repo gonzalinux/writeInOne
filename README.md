@@ -1,6 +1,7 @@
 # WriteInOne
 
-A multi-tenant blogging platform. Each site runs on its own domain, has its own posts, and renders a public blog with server-side Thymeleaf templates. Manage everything through a built-in admin UI or the REST API.
+A multi-tenant blogging platform. Each site runs on its own domain, has its own posts, and renders a public blog with
+server-side Thymeleaf templates. Manage everything through a built-in admin UI or the REST API.
 
 ## Stack
 
@@ -13,6 +14,7 @@ A multi-tenant blogging platform. Each site runs on its own domain, has its own 
 ## Features
 
 ### Sites
+
 - Each site has a unique domain, resolved from the `Host` header on every request
 - Per-language config (nav links, footer text) stored as JSONB
 - Custom CSS loaded from a user-provided URL
@@ -20,6 +22,7 @@ A multi-tenant blogging platform. Each site runs on its own domain, has its own 
 - Light/dark theme toggle, configurable per site
 
 ### Posts
+
 - Written in Markdown, rendered on request via flexmark
 - Translations per language — all defined languages must be translated before publishing
 - Statuses: `draft`, `published`, `scheduled`
@@ -29,6 +32,7 @@ A multi-tenant blogging platform. Each site runs on its own domain, has its own 
 - Tags — created implicitly, scoped per site
 
 ### Public Blog
+
 - `GET /` — redirects to default language
 - `GET /{lang}` — paginated post list with search and tag filtering
 - `GET /{lang}/articles/{slug}` — single post (rendered Markdown)
@@ -38,9 +42,13 @@ A multi-tenant blogging platform. Each site runs on its own domain, has its own 
 - Live search via JS (debounced, no page reload)
 
 ### Reverse Proxy Prefix
-Send `X-Forwarded-Prefix: blog` from your proxy to serve the blog under a subpath of your main domain (e.g. `yourdomain.com/blog/`). All internal links, OG tags, RSS autodiscovery, and JS fetch URLs are adjusted automatically. Prefix must be alphanumeric with hyphens, max 20 characters.
+
+Send `X-Forwarded-Prefix: blog` from your proxy to serve the blog under a subpath of your main domain (e.g.
+`yourdomain.com/blog/`). All internal links, OG tags, RSS autodiscovery, and JS fetch URLs are adjusted automatically.
+Prefix must be alphanumeric with hyphens, max 20 characters.
 
 Example Express config:
+
 ```javascript
 app.use('/blog', createProxyMiddleware({
     target: 'http://blog.yourdomain.com',
@@ -51,6 +59,7 @@ app.use('/blog', createProxyMiddleware({
 ```
 
 ### Admin UI
+
 - Login, register, dashboard
 - Create and manage sites (domain, description, styles, themes, languages, nav/footer config)
 - Post editor with Markdown live preview and split view
@@ -59,6 +68,7 @@ app.use('/blog', createProxyMiddleware({
 - Tag management
 
 ### Auth
+
 - Register / login / logout / refresh
 - JWT delivered via HttpOnly cookies
 - Refresh tokens stored hashed in DB, rotated on use

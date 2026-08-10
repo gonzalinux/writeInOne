@@ -8,6 +8,7 @@ import reactor.core.publisher.Hooks
 @SpringBootApplication
 @ConfigurationPropertiesScan
 class Application
+
 fun main(args: Array<String>) {
     Hooks.enableAutomaticContextPropagation()
     runApplication<Application>(*args)

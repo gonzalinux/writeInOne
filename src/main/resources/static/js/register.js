@@ -63,7 +63,7 @@ document.getElementById('resendBtn').addEventListener('click', async () => {
   const res = await fetch('/auth/resend-verification', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ email: submittedEmail }),
+    body: JSON.stringify({email: submittedEmail}),
   });
 
   if (res.ok) {

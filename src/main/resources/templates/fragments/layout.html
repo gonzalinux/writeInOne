@@ -3,85 +3,89 @@
 
 <!-- HEAD fragment -->
 <th:block th:fragment="head(title)">
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title th:text="${title}">Blog</title>
-    <link rel="icon" th:if="${site.config.faviconUrl != null}" th:href="${site.config.faviconUrl}"/>
-    <!-- RSS auto-discovery — one per language, readers will find these automatically -->
-    <th:block th:each="l : ${site.languages}">
-        <link rel="alternate" type="application/rss+xml"
-              th:title="${site.name + ' (' + l.value + ')'}"
-              th:href="${prefix} + '/' + ${l.value} + '/rss.xml'"/>
-    </th:block>
-    <!-- Expose available themes and prefix to JS before it runs -->
-    <script th:inline="javascript">
-        window.SITE_THEMES = /*[[${site.availableThemes}]]*/['LIGHT'];
-        window.SITE_PREFIX = /*[[${prefix}]]*/ '';
-    </script>
-    <!-- Theme script — sync (no defer) so html.dark class is set before first paint -->
-    <script th:src="${prefix} + '/js/theme.js'"></script>
-    <!-- Default blog stylesheet — all classes are overridable by the site's custom stylesheet -->
-    <link rel="stylesheet" th:href="${prefix} + '/css/blog.css'"/>
-    <!-- Inline custom CSS stored in DB (edited in admin) -->
-    <link th:if="${not #strings.isEmpty(site.customCss)}" rel="stylesheet" th:href="${prefix} + '/css/custom.css'"/>
-    <!-- External stylesheet URL — loaded last so it can override everything -->
-    <link th:if="${site.stylesUrl != null}" rel="stylesheet" th:href="${site.stylesUrl}"/>
-    <!-- Site custom head HTML (analytics, meta tags, etc.) -->
-    <th:block th:if="${site.config.headHtml != null}" th:utext="${site.config.headHtml}"></th:block>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title th:text="${title}">Blog</title>
+  <link rel="icon" th:if="${site.config.faviconUrl != null}" th:href="${site.config.faviconUrl}"/>
+  <!-- RSS auto-discovery — one per language, readers will find these automatically -->
+  <th:block th:each="l : ${site.languages}">
+    <link rel="alternate" type="application/rss+xml"
+          th:title="${site.name + ' (' + l.value + ')'}"
+          th:href="${prefix} + '/' + ${l.value} + '/rss.xml'"/>
+  </th:block>
+  <!-- Expose available themes and prefix to JS before it runs -->
+  <script th:inline="javascript">
+    window.SITE_THEMES = /*[[${site.availableThemes}]]*/['LIGHT'];
+    window.SITE_PREFIX = /*[[${prefix}]]*/ '';
+  </script>
+  <!-- Theme script — sync (no defer) so html.dark class is set before first paint -->
+  <script th:src="${prefix} + '/js/theme.js'"></script>
+  <!-- Default blog stylesheet — all classes are overridable by the site's custom stylesheet -->
+  <link rel="stylesheet" th:href="${prefix} + '/css/blog.css'"/>
+  <!-- Inline custom CSS stored in DB (edited in admin) -->
+  <link th:if="${not #strings.isEmpty(site.customCss)}" rel="stylesheet" th:href="${prefix} + '/css/custom.css'"/>
+  <!-- External stylesheet URL — loaded last so it can override everything -->
+  <link th:if="${site.stylesUrl != null}" rel="stylesheet" th:href="${site.stylesUrl}"/>
+  <!-- Site custom head HTML (analytics, meta tags, etc.) -->
+  <th:block th:if="${site.config.headHtml != null}" th:utext="${site.config.headHtml}"></th:block>
 </th:block>
 
 <!-- HEADER/NAV fragment -->
 <th:block th:fragment="nav">
-    <header>
-        <div class="container">
-            <nav>
-                <a class="site-name" th:href="${prefix} + '/' + ${lang}" th:text="${site.name}">Site Name</a>
-                <div class="nav-right">
-                    <ul class="nav-links" th:if="${langConfig != null and !langConfig.nav.isEmpty()}">
-                        <li th:each="link : ${langConfig.nav}">
-                            <a th:href="${link.url}" th:text="${link.label}">Link</a>
-                        </li>
-                    </ul>
-                    <div th:if="${site.languages != null and #lists.size(site.languages) > 1
+  <header>
+    <div class="container">
+      <nav>
+        <a class="site-name" th:href="${prefix} + '/' + ${lang}" th:text="${site.name}">Site Name</a>
+        <div class="nav-right">
+          <ul class="nav-links" th:if="${langConfig != null and !langConfig.nav.isEmpty()}">
+            <li th:each="link : ${langConfig.nav}">
+              <a th:href="${link.url}" th:text="${link.label}">Link</a>
+            </li>
+          </ul>
+          <div th:if="${site.languages != null and #lists.size(site.languages) > 1
                                  and (langSlugs == null or langSlugs.size() > 1)}" class="lang-switcher">
-                        <th:block th:each="l : ${site.languages}">
-                            <span th:if="${l.value == lang}" class="lang-btn lang-btn--active" th:text="${#strings.toUpperCase(l.value)}">EN</span>
-                            <a th:if="${l.value != lang and (langSlugs == null or langSlugs[l.value] != null)}"
-                               th:href="${langSlugs != null ? prefix + '/' + l.value + '/articles/' + langSlugs[l.value] : prefix + '/' + l.value}"
-                               class="lang-btn" th:text="${#strings.toUpperCase(l.value)}">ES</a>
-                        </th:block>
-                    </div>
-                    <a th:href="${prefix} + '/' + ${lang} + '/rss.xml'"
-                       class="rss-btn" aria-label="RSS feed" title="RSS feed">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <circle cx="6.18" cy="17.82" r="2.18"/>
-                            <path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"/>
-                        </svg>
-                    </a>
-                    <button th:if="${#lists.contains(site.availableThemes, T(com.gonzalinux.domain.site.Theme).LIGHT)
+            <th:block th:each="l : ${site.languages}">
+              <span th:if="${l.value == lang}" class="lang-btn lang-btn--active"
+                    th:text="${#strings.toUpperCase(l.value)}">EN</span>
+              <a th:if="${l.value != lang and (langSlugs == null or langSlugs[l.value] != null)}"
+                 th:href="${langSlugs != null ? prefix + '/' + l.value + '/articles/' + langSlugs[l.value] : prefix + '/' + l.value}"
+                 class="lang-btn" th:text="${#strings.toUpperCase(l.value)}">ES</a>
+            </th:block>
+          </div>
+          <a th:href="${prefix} + '/' + ${lang} + '/rss.xml'"
+             class="rss-btn" aria-label="RSS feed" title="RSS feed">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"
+                 aria-hidden="true">
+              <circle cx="6.18" cy="17.82" r="2.18"/>
+              <path
+                d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"/>
+            </svg>
+          </a>
+          <button th:if="${#lists.contains(site.availableThemes, T(com.gonzalinux.domain.site.Theme).LIGHT)
                                  and #lists.contains(site.availableThemes, T(com.gonzalinux.domain.site.Theme).DARK)}"
-                            id="themeBtn" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme">&#9789;</button>
-                </div>
-            </nav>
+                  id="themeBtn" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme">&#9789;
+          </button>
         </div>
-    </header>
+      </nav>
+    </div>
+  </header>
 </th:block>
 
 <!-- BODY START fragment — site custom body HTML (analytics, etc.) -->
 <th:block th:fragment="bodyStart">
-    <th:block th:if="${site.config.bodyHtml != null}" th:utext="${site.config.bodyHtml}"></th:block>
+  <th:block th:if="${site.config.bodyHtml != null}" th:utext="${site.config.bodyHtml}"></th:block>
 </th:block>
 
 <!-- FOOTER fragment -->
 <th:block th:fragment="footer">
-    <footer>
-        <div class="container">
-            <p th:if="${langConfig != null and !langConfig.footer.isEmpty()}"
-               th:text="${langConfig.footer}">Footer text</p>
-            <p th:if="${langConfig == null or langConfig.footer.isEmpty()}"
-               th:text="'© ' + ${site.name}">© Site</p>
-        </div>
-    </footer>
+  <footer>
+    <div class="container">
+      <p th:if="${langConfig != null and !langConfig.footer.isEmpty()}"
+         th:text="${langConfig.footer}">Footer text</p>
+      <p th:if="${langConfig == null or langConfig.footer.isEmpty()}"
+         th:text="'© ' + ${site.name}">© Site</p>
+    </div>
+  </footer>
 </th:block>
 
 </html>

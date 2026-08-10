@@ -116,14 +116,16 @@ class UserRepository(private val client: DatabaseClient) {
             .then()
 
     fun deleteUnverifiedExpiredUsers(): Mono<Void> =
-        client.sql("""
+        client.sql(
+            """
             DELETE FROM users
             WHERE email_verified = false
             AND NOT EXISTS (
                 SELECT 1 FROM email_verification_tokens
                 WHERE user_id = users.id AND expires_at > now()
             )
-        """.trimIndent())
+        """.trimIndent()
+        )
             .then()
 
     fun savePasswordResetToken(userId: Long, tokenHash: String, expiresAt: OffsetDateTime): Mono<Void> =

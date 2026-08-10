@@ -156,13 +156,13 @@ affect the rest of the page.
 
 ## 404 page
 
-| Selector              | What it styles                                      |
-|-----------------------|-----------------------------------------------------|
-| `.not-found`          | Wrapper for the 404 block — controls top padding    |
-| `.not-found__code`    | The large "404" number                              |
-| `.not-found__title`   | The "Page not found" heading                        |
-| `.not-found__message` | The explanatory text below the heading              |
-| `.not-found__back`    | The back link (also carries `.post-header__back`)   |
+| Selector              | What it styles                                    |
+|-----------------------|---------------------------------------------------|
+| `.not-found`          | Wrapper for the 404 block — controls top padding  |
+| `.not-found__code`    | The large "404" number                            |
+| `.not-found__title`   | The "Page not found" heading                      |
+| `.not-found__message` | The explanatory text below the heading            |
+| `.not-found__back`    | The back link (also carries `.post-header__back`) |
 
 ---
 

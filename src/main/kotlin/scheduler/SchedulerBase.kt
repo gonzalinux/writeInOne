@@ -10,7 +10,8 @@ import java.time.Duration
 
 private val logger = KotlinLogging.logger {}
 
-abstract class SchedulerBase(private val intervalMs: Long, private val enabled: Boolean = true) : ApplicationRunner, AutoCloseable {
+abstract class SchedulerBase(private val intervalMs: Long, private val enabled: Boolean = true) : ApplicationRunner,
+    AutoCloseable {
     private var subscription: Disposable? = null
 
     abstract fun execute(): Mono<*>

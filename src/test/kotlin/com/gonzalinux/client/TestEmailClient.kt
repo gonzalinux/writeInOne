@@ -27,5 +27,7 @@ class TestEmailClient : EmailClient {
 
     fun getVerificationCode(email: String): String? = verificationCodes[email]
     fun getResetCode(email: String): String? = resetCodes[email]
-    fun clear() { verificationCodes.clear(); resetCodes.clear() }
+    fun clear() {
+        verificationCodes.clear(); resetCodes.clear()
+    }
 }

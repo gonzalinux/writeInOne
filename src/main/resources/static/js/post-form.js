@@ -1,23 +1,23 @@
-const parts  = location.pathname.split('/');
+const parts = location.pathname.split('/');
 const siteId = parts[3];
 const postId = (parts[5] && parts[5] !== 'new') ? parts[5] : null;
 
-const form             = document.getElementById('postForm');
-const err              = document.getElementById('error');
-const publishBtn       = document.getElementById('publishBtn');
-const scheduleToggle   = document.getElementById('scheduleToggle');
-const scheduleSection  = document.getElementById('scheduleSection');
-const scheduleBtn      = document.getElementById('scheduleBtn');
+const form = document.getElementById('postForm');
+const err = document.getElementById('error');
+const publishBtn = document.getElementById('publishBtn');
+const scheduleToggle = document.getElementById('scheduleToggle');
+const scheduleSection = document.getElementById('scheduleSection');
+const scheduleBtn = document.getElementById('scheduleBtn');
 const clearScheduleBtn = document.getElementById('clearScheduleBtn');
 const scheduledAtInput = document.getElementById('scheduledAt');
-const pageTitle        = document.getElementById('pageTitle');
-const backLink         = document.getElementById('backLink');
-const cancelLink       = document.getElementById('cancelLink');
-const slugInput        = document.getElementById('slug');
-const coverInput       = document.getElementById('coverUrl');
-const tagsInput        = document.getElementById('tags');
+const pageTitle = document.getElementById('pageTitle');
+const backLink = document.getElementById('backLink');
+const cancelLink = document.getElementById('cancelLink');
+const slugInput = document.getElementById('slug');
+const coverInput = document.getElementById('coverUrl');
+const tagsInput = document.getElementById('tags');
 
-if (backLink)   backLink.href   = `/admin/sites/${siteId}/posts`;
+if (backLink) backLink.href = `/admin/sites/${siteId}/posts`;
 if (cancelLink) cancelLink.href = `/admin/sites/${siteId}/posts`;
 
 let siteLanguages = [];
@@ -71,7 +71,7 @@ function updateDot(lang) {
 }
 
 function buildUI(languages) {
-  const tabsContainer   = document.getElementById('langTabsContainer');
+  const tabsContainer = document.getElementById('langTabsContainer');
   const panelsContainer = document.getElementById('langPanels');
 
   languages.forEach((lang, i) => {
@@ -121,7 +121,7 @@ function buildUI(languages) {
 // ── Data ──────────────────────────────────────────────────────────────────
 
 function buildBody() {
-  const slug         = slugInput.value.trim() || null;
+  const slug = slugInput.value.trim() || null;
   const translations = {};
 
   siteLanguages.forEach(lang => {
@@ -131,22 +131,22 @@ function buildBody() {
       translations[lang] = {
         title,
         slug,
-        body:    editors[lang]?.getValue() ?? document.getElementById(`body-${lang}`).value,
+        body: editors[lang]?.getValue() ?? document.getElementById(`body-${lang}`).value,
         excerpt: document.getElementById(`excerpt-${lang}`).value.trim() || null,
       };
     } else {
-      translations[lang] = { title, slug, body: '' };
+      translations[lang] = {title, slug, body: ''};
     }
   });
 
-  const tags     = postId ? tagsInput.value.split(',').map(t => t.trim()).filter(Boolean) : [];
+  const tags = postId ? tagsInput.value.split(',').map(t => t.trim()).filter(Boolean) : [];
   const coverUrl = postId ? (coverInput.value.trim() || null) : null;
-  return { coverUrl, translations, tags };
+  return {coverUrl, translations, tags};
 }
 
 async function handleError(res) {
   const data = await res.json().catch(() => ({}));
-  err.textContent   = data.details || data.error || 'Something went wrong';
+  err.textContent = data.details || data.error || 'Something went wrong';
   err.style.display = 'block';
 }
 
@@ -158,7 +158,7 @@ async function loadPost() {
   const post = data.post;
 
   pageTitle.textContent = 'Edit post';
-  document.title        = 'Edit post — WriteInOne';
+  document.title = 'Edit post — WriteInOne';
 
   data.translations?.forEach(t => {
     const titleEl = document.getElementById(`title-${t.lang}`);
@@ -173,12 +173,12 @@ async function loadPost() {
 
   if (post) {
     coverInput.value = post.coverUrl || '';
-    tagsInput.value  = (data.tags || []).map(t => t.name).join(', ');
+    tagsInput.value = (data.tags || []).map(t => t.name).join(', ');
 
-    const isPublished  = post.status === 'PUBLISHED';
-    const isScheduled  = post.status === 'SCHEDULED';
+    const isPublished = post.status === 'PUBLISHED';
+    const isScheduled = post.status === 'SCHEDULED';
 
-    if (!isPublished) publishBtn.style.display   = '';
+    if (!isPublished) publishBtn.style.display = '';
     if (!isPublished) scheduleToggle.style.display = '';
 
     if (isScheduled && post.scheduledAt) {
@@ -206,7 +206,7 @@ async function init() {
     await loadPost();
   } else {
     pageTitle.textContent = 'New post';
-    document.title        = 'New post — WriteInOne';
+    document.title = 'New post — WriteInOne';
   }
 }
 
@@ -227,14 +227,14 @@ scheduleBtn.addEventListener('click', async () => {
   err.style.display = 'none';
   const value = scheduledAtInput.value;
   if (!value) {
-    err.textContent   = 'Please pick a date and time.';
+    err.textContent = 'Please pick a date and time.';
     err.style.display = 'block';
     return;
   }
 
   const res = await api(`/sites/${siteId}/posts/${postId}/schedule`, {
     method: 'POST',
-    body: JSON.stringify({ scheduledAt: new Date(value).toISOString() }),
+    body: JSON.stringify({scheduledAt: new Date(value).toISOString()}),
   });
   if (!res) return;
 
@@ -247,7 +247,7 @@ scheduleBtn.addEventListener('click', async () => {
 
 clearScheduleBtn.addEventListener('click', async () => {
   err.style.display = 'none';
-  const res = await api(`/sites/${siteId}/posts/${postId}/unpublish`, { method: 'POST' });
+  const res = await api(`/sites/${siteId}/posts/${postId}/unpublish`, {method: 'POST'});
   if (!res) return;
 
   if (res.ok) {
@@ -265,15 +265,15 @@ form.addEventListener('submit', async e => {
 
   const body = buildBody();
   if (Object.keys(body.translations).length === 0) {
-    err.textContent   = 'At least one translation must have a title.';
+    err.textContent = 'At least one translation must have a title.';
     err.style.display = 'block';
     return;
   }
 
-  const url    = postId ? `/sites/${siteId}/posts/${postId}` : `/sites/${siteId}/posts/`;
+  const url = postId ? `/sites/${siteId}/posts/${postId}` : `/sites/${siteId}/posts/`;
   const method = postId ? 'PUT' : 'POST';
 
-  const res = await api(url, { method, body: JSON.stringify(body) });
+  const res = await api(url, {method, body: JSON.stringify(body)});
   if (!res) return;
 
   if (res.ok) {
@@ -293,7 +293,7 @@ form.addEventListener('submit', async e => {
 
 publishBtn.addEventListener('click', async () => {
   err.style.display = 'none';
-  const res = await api(`/sites/${siteId}/posts/${postId}/publish`, { method: 'POST' });
+  const res = await api(`/sites/${siteId}/posts/${postId}/publish`, {method: 'POST'});
   if (!res) return;
 
   if (res.ok) {

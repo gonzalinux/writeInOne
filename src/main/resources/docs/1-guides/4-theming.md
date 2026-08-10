@@ -121,7 +121,7 @@ The index page that shows all published posts.
 The full post view.
 
 | Selector                   | What it styles                                                      |
-|----------------------------|-----------------------------------------------------------------------|
+|----------------------------|---------------------------------------------------------------------|
 | `.post-header`             | Wrapper for all post header content (back link, meta, title, cover) |
 | `.post-header__back`       | The "← All posts" back link                                         |
 | `.post-header__back:hover` | Back link hover state                                               |
@@ -138,7 +138,7 @@ These selectors style the rendered content of a post's `body`. All are scoped in
 `.post-body` so they don't affect the rest of the page.
 
 | Selector                                                        | What it styles                                                 |
-|-------------------------------------------------------------------|----------------------------------------------------------------|
+|-----------------------------------------------------------------|----------------------------------------------------------------|
 | `.post-body h1` `.post-body h2` `.post-body h3` `.post-body h4` | Headings inside the post                                       |
 | `.post-body p`                                                  | Paragraphs                                                     |
 | `.post-body ul` `.post-body ol`                                 | Bulleted and numbered lists                                    |
@@ -150,23 +150,23 @@ These selectors style the rendered content of a post's `body`. All are scoped in
 | `.post-body img`                                                | Images embedded in the post                                    |
 | `.post-body a`                                                  | Links inside the post body                                     |
 | `.post-body hr`                                                 | Horizontal rules (`---`)                                       |
-| `.post-body table`                                              | Tables                                                          |
+| `.post-body table`                                              | Tables                                                         |
 | `.post-body th` `.post-body td`                                 | Table header and data cells                                    |
 
 ## 404 page
 
-| Selector              | What it styles                                      |
-|-----------------------|-----------------------------------------------------|
-| `.not-found`          | Wrapper for the 404 block — controls top padding    |
-| `.not-found__code`    | The large "404" number                              |
-| `.not-found__title`   | The "Page not found" heading                        |
-| `.not-found__message` | The explanatory text below the heading              |
-| `.not-found__back`    | The back link (also carries `.post-header__back`)   |
+| Selector              | What it styles                                    |
+|-----------------------|---------------------------------------------------|
+| `.not-found`          | Wrapper for the 404 block — controls top padding  |
+| `.not-found__code`    | The large "404" number                            |
+| `.not-found__title`   | The "Page not found" heading                      |
+| `.not-found__message` | The explanatory text below the heading            |
+| `.not-found__back`    | The back link (also carries `.post-header__back`) |
 
 ## Shared components
 
 | Selector | What it styles                                                           |
-|----------|---------------------------------------------------------------------------|
+|----------|--------------------------------------------------------------------------|
 | `.tag`   | A tag pill — used on both the post list cards and the post detail header |
 
 ## Dark mode

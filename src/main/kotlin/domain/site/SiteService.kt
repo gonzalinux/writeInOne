@@ -13,6 +13,7 @@ import reactor.kotlin.core.publisher.toMono
 import java.time.OffsetDateTime
 
 private val logger = KotlinLogging.logger {}
+
 @Service
 class SiteService(
     private val repo: SiteRepository,
@@ -76,6 +77,7 @@ class SiteService(
         return request.toMono()
             .map { validateNavLinks(it.config); validateCustomCss(it.customCss); it }
             .flatMap { repo.findById(id, userId) }
+            .requireAdmin()
             .switchIfEmpty(Mono.error(SiteNotFoundException(id)))
             .flatMap { existing ->
                 val newDomain = request.domain?.let { subdomainService.normalizeDomain(it) }
@@ -114,7 +116,6 @@ class SiteService(
     ): Mono<Site> =
         repo.update(
             id,
-            userId,
             request.name,
             domain,
             request.description,
@@ -154,7 +155,7 @@ class SiteService(
                 logger.info { "Attempting verification  ${site.domain}" }
                 verifyClient.verify(site.domain, site.prefix)
                     .flatMap { verified ->
-                        if (verified) repo.update(site.id, site.userId, status = SiteStatus.VERIFIED)
+                        if (verified) repo.update(site.id, status = SiteStatus.VERIFIED)
                         else Mono.empty()
                     }
                     .onErrorResume { e ->
@@ -167,9 +168,13 @@ class SiteService(
             }
             .then()
 
-    fun delete(id: Long, userId: Long): Mono<Void> =
+    fun delete(id: Long, userId: Long): Mono<Unit> =
         repo.findById(id, userId)
+            .requireAdmin()
             .switchIfEmpty(Mono.error(SiteNotFoundException(id)))
             // Park the label too, otherwise deleting a site frees the handle instantly.
-            .flatMap { site -> repo.delete(id, userId).then(subdomainService.park(site.domain, userId)) }
+            .flatMap { site ->
+                // Parked for the site's owner, not whichever admin pressed delete.
+                repo.delete(id).then(subdomainService.park(site.domain, site.userId)).thenReturn(Unit)
+            }
 }

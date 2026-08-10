@@ -53,7 +53,7 @@ const esNav = document.getElementById('es-nav');
 
 const DEFAULT_SUBDOMAIN_HINT = subdomainStatus.textContent;
 
-let subdomainConfig = { baseDomain: '', minLength: 3, maxLength: 30 };
+let subdomainConfig = {baseDomain: '', minLength: 3, maxLength: 30};
 let currentSubdomain = null;   // the label this site already owns, in edit mode
 let checkTimer = null;
 

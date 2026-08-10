@@ -2,7 +2,9 @@ package com.gonzalinux.common
 
 import com.gonzalinux.common.RequestContextHolder.extractRequestId
 import com.gonzalinux.common.RequestContextHolder.generateRequestId
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest
 

@@ -37,10 +37,10 @@ class PostHandler(private val service: PostService) {
 
     fun list(request: ServerRequest): Mono<ServerResponse> {
         val siteId = request.pathVariableLong("siteId")
-        val page = Utils.queryToInt(request.queryParam("page").getOrNull(), default = 0, min= 0)
-        val size   = Utils.queryToInt(request.queryParam("size").getOrNull(), default = 10, min= 1)
+        val page = Utils.queryToInt(request.queryParam("page").getOrNull(), default = 0, min = 0)
+        val size = Utils.queryToInt(request.queryParam("size").getOrNull(), default = 10, min = 1)
         val status = request.queryParam("status").orElse(null)?.takeIf { it.isNotBlank() }
-        val tag    = request.queryParam("tag").orElse(null)?.takeIf { it.isNotBlank() }
+        val tag = request.queryParam("tag").orElse(null)?.takeIf { it.isNotBlank() }
         val search = request.queryParam("search").orElse(null)?.takeIf { it.isNotBlank() }
         return Mono.deferContextual { ctx ->
             service.list(siteId, ctx.getUserId()!!, page, size, status, tag, search)

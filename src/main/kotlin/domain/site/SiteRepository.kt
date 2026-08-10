@@ -30,7 +30,7 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             """SELECT sites.*, site_members.role FROM sites 
              INNER JOIN site_members ON sites.id = site_members.site_id 
              WHERE site_members.user_id = :userId 
-             ORDER BY created_at DESC"""
+             ORDER BY sites.created_at DESC"""
         )
             .bind("userId", userId)
             .fetch().all()
@@ -43,9 +43,17 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
     ): Mono<Site> =
         client.sql(
             """
-            INSERT INTO sites (user_id, name, domain, description, styles_url, custom_css, available_themes, languages, config, status)
-            VALUES (:userId, :name, :domain, :description, :stylesUrl, :customCss, :availableThemes, :languages, :config::jsonb, :status)
-            RETURNING *
+            WITH new_site AS (
+                INSERT INTO sites (user_id, name, domain, description, styles_url, custom_css, available_themes, languages, config, status)
+                VALUES (:userId, :name, :domain, :description, :stylesUrl, :customCss, :availableThemes, :languages, :config::jsonb, :status)
+                RETURNING *
+            ), creator AS (
+                -- The creator is the site's first admin; one statement so a site can never
+                -- exist without a member row, which findById's join would make unreachable.
+                INSERT INTO site_members (site_id, user_id, role)
+                SELECT id, user_id, 'ADMIN' FROM new_site
+            )
+            SELECT new_site.*, 'ADMIN' AS role FROM new_site
         """
         )
             .bind("userId", userId)
@@ -63,7 +71,6 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
 
     fun update(
         id: Long,
-        userId: Long,
         name: String? = null,
         domain: String? = null,
         description: String? = null,
@@ -91,12 +98,11 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
                 config           = COALESCE(:config::jsonb, config),
                 verify_date      = COALESCE(:verify_date, verify_date),
                 updated_at       = now()
-            WHERE id = :id AND user_id = :userId
+            WHERE id = :id
             RETURNING *
         """
         )
             .bind("id", id)
-            .bind("userId", userId)
             .bindNullable<String>("name", name)
             .bindNullable<String>("domain", domain)
             .bindNullable<String>("description", description)
@@ -111,11 +117,10 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             .fetch().first()
             .map { mapToSite(it) }
 
-    fun delete(id: Long, userId: Long): Mono<Void> =
-        client.sql("DELETE FROM sites WHERE id = :id AND user_id = :userId")
+    fun delete(id: Long): Mono<Unit> =
+        client.sql("DELETE FROM sites WHERE id = :id")
             .bind("id", id)
-            .bind("userId", userId)
-            .then()
+            .then().thenReturn(Unit)
 
     fun findByDomain(domain: String): Mono<Site> =
         client.sql("SELECT * FROM sites WHERE domain = :domain")

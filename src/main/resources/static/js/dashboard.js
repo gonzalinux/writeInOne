@@ -28,16 +28,16 @@ async function loadDashboard() {
   }
 
   sites.forEach(site => {
-    const prefix     = site.prefix ? `/${escHtml(site.prefix)}` : '';
-    const siteUrl    = `https://${escHtml(site.domain)}${prefix}`;
-    const verified   = site.status === 'VERIFIED';
-    const expired    = !verified && site.verifyDate && (Date.now() - new Date(site.verifyDate).getTime() > 2 * 24 * 60 * 60 * 1000);
+    const prefix = site.prefix ? `/${escHtml(site.prefix)}` : '';
+    const siteUrl = `https://${escHtml(site.domain)}${prefix}`;
+    const verified = site.status === 'VERIFIED';
+    const expired = !verified && site.verifyDate && (Date.now() - new Date(site.verifyDate).getTime() > 2 * 24 * 60 * 60 * 1000);
     const badgeClass = verified ? 'badge--verified' : expired ? 'badge--expired' : 'badge--pending';
-    const badgeText  = verified ? '✓ Verified' : expired ? 'Verification expired' : 'Pending verification';
+    const badgeText = verified ? '✓ Verified' : expired ? 'Verification expired' : 'Pending verification';
 
     // Subdomains of our own base domain never go through DNS verification.
     const managed = Boolean(baseDomain) && site.domain.endsWith('.' + baseDomain);
-    const badge   = managed ? '' : `<span class="badge ${badgeClass} badge--clickable"
+    const badge = managed ? '' : `<span class="badge ${badgeClass} badge--clickable"
                      data-verify-domain="${escHtml(site.domain)}"
                      data-verify-prefix="${escHtml(site.prefix || '')}"
                      data-verify-status="${escHtml(site.status)}"
@@ -63,11 +63,11 @@ async function loadDashboard() {
   siteList.querySelectorAll('[data-verify-domain]').forEach(badge => {
     badge.addEventListener('click', () => {
       showVerificationModal({
-        domain:     badge.dataset.verifyDomain,
-        prefix:     badge.dataset.verifyPrefix,
-        status:     badge.dataset.verifyStatus,
+        domain: badge.dataset.verifyDomain,
+        prefix: badge.dataset.verifyPrefix,
+        status: badge.dataset.verifyStatus,
         verifyDate: badge.dataset.verifyDate || null,
-        siteId:     badge.dataset.verifySiteId,
+        siteId: badge.dataset.verifySiteId,
       });
     });
   });
@@ -76,7 +76,7 @@ async function loadDashboard() {
     btn.addEventListener('click', async () => {
       const name = btn.dataset.siteName;
       if (!confirm(`Delete "${name}" and all its posts? This cannot be undone.`)) return;
-      const res = await api(`/sites/${btn.dataset.deleteSite}`, { method: 'DELETE' });
+      const res = await api(`/sites/${btn.dataset.deleteSite}`, {method: 'DELETE'});
       if (!res) return;
       if (res.ok) loadDashboard();
       else alert('Failed to delete site');

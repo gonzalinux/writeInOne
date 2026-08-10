@@ -1,6 +1,12 @@
 package com.gonzalinux.api
 
-import com.gonzalinux.config.*
+import com.gonzalinux.config.AdminExceptionFilter
+import com.gonzalinux.config.AdminHostFilter
+import com.gonzalinux.config.BlogExceptionFilter
+import com.gonzalinux.config.HostFilter
+import com.gonzalinux.config.JwtAuthFilter
+import com.gonzalinux.config.JwtNotEnforcedFilter
+import com.gonzalinux.config.SubdomainProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.reactive.function.server.RequestPredicates

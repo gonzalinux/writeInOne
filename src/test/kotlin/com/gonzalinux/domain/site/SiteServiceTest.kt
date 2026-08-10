@@ -38,7 +38,8 @@ class SiteServiceTest {
         status = SiteStatus.NOT_VERIFIED,
         createdAt = OffsetDateTime.now(ZoneOffset.UTC),
         updatedAt = OffsetDateTime.now(ZoneOffset.UTC),
-        verifyDate = OffsetDateTime.now(ZoneOffset.UTC)
+        verifyDate = OffsetDateTime.now(ZoneOffset.UTC),
+        role = Roles.ADMIN
     )
 
     private val createRequest = CreateSiteRequest(name = "My Blog", domain = "blog.example.com")
@@ -133,7 +134,7 @@ class SiteServiceTest {
     fun `update returns updated site when found`() {
         val request = UpdateSiteRequest(name = "Updated Blog")
         every { repo.findById(1L, 1L) } returns Mono.just(site)
-        every { repo.update(1L, 1L, name = "Updated Blog") } returns Mono.just(site)
+        every { repo.update(1L, name = "Updated Blog") } returns Mono.just(site)
 
         StepVerifier.create(service.update(1L, 1L, request))
             .expectNext(site)
@@ -157,8 +158,7 @@ class SiteServiceTest {
         every { repo.existsByDomain("new.example.com") } returns Mono.just(false)
         every {
             repo.update(
-                1L, 1L,
-                domain = "new.example.com",
+                1L, domain = "new.example.com",
                 status = SiteStatus.NOT_VERIFIED,
                 verifyDate = any()
             )
@@ -170,8 +170,7 @@ class SiteServiceTest {
 
         verify {
             repo.update(
-                1L, 1L,
-                domain = "new.example.com",
+                1L, domain = "new.example.com",
                 status = SiteStatus.NOT_VERIFIED,
                 verifyDate = any()
             )
@@ -184,13 +183,13 @@ class SiteServiceTest {
     fun `update does not reset verification when domain is unchanged`() {
         val request = UpdateSiteRequest(domain = "blog.example.com", name = "New Name")
         every { repo.findById(1L, 1L) } returns Mono.just(site)
-        every { repo.update(1L, 1L, name = "New Name") } returns Mono.just(site)
+        every { repo.update(1L, name = "New Name") } returns Mono.just(site)
 
         StepVerifier.create(service.update(1L, 1L, request))
             .expectNext(site)
             .verifyComplete()
 
-        verify { repo.update(1L, 1L, name = "New Name", status = null, verifyDate = null) }
+        verify { repo.update(1L, name = "New Name") }
     }
 
     @Test
@@ -198,14 +197,14 @@ class SiteServiceTest {
         val request = UpdateSiteRequest(name = "Same Name", requestVerification = true)
         every { repo.findById(1L, 1L) } returns Mono.just(site)
         every {
-            repo.update(1L, 1L, name = "Same Name", status = SiteStatus.NOT_VERIFIED, verifyDate = any())
+            repo.update(1L, name = "Same Name", status = SiteStatus.NOT_VERIFIED, verifyDate = any())
         } returns Mono.just(site)
 
         StepVerifier.create(service.update(1L, 1L, request))
             .expectNext(site)
             .verifyComplete()
 
-        verify { repo.update(1L, 1L, name = "Same Name", status = SiteStatus.NOT_VERIFIED, verifyDate = any()) }
+        verify { repo.update(1L, name = "Same Name", status = SiteStatus.NOT_VERIFIED, verifyDate = any()) }
     }
 
     @Test
@@ -213,26 +212,26 @@ class SiteServiceTest {
         val request = UpdateSiteRequest(name = "Same Name", requestVerification = true)
         every { subdomainService.isManaged("blog.example.com") } returns true
         every { repo.findById(1L, 1L) } returns Mono.just(site)
-        every { repo.update(1L, 1L, name = "Same Name", prefix = "") } returns Mono.just(site)
+        every { repo.update(1L, name = "Same Name", prefix = "") } returns Mono.just(site)
 
         StepVerifier.create(service.update(1L, 1L, request))
             .expectNext(site)
             .verifyComplete()
 
-        verify { repo.update(1L, 1L, name = "Same Name", prefix = "", status = null, verifyDate = null) }
+        verify { repo.update(1L, name = "Same Name", prefix = "") }
     }
 
     @Test
     fun `update does not reset verification when requestVerification is false`() {
         val request = UpdateSiteRequest(name = "Same Name", requestVerification = false)
         every { repo.findById(1L, 1L) } returns Mono.just(site)
-        every { repo.update(1L, 1L, name = "Same Name") } returns Mono.just(site)
+        every { repo.update(1L, name = "Same Name") } returns Mono.just(site)
 
         StepVerifier.create(service.update(1L, 1L, request))
             .expectNext(site)
             .verifyComplete()
 
-        verify { repo.update(1L, 1L, name = "Same Name", status = null, verifyDate = null) }
+        verify { repo.update(1L, name = "Same Name") }
     }
 
     @Test
@@ -252,12 +251,12 @@ class SiteServiceTest {
     fun `verifyPendingSites marks site as verified when token matches`() {
         every { repo.notVerified() } returns Flux.just(site)
         every { verifyClient.verify(site.domain, site.prefix) } returns Mono.just(true)
-        every { repo.update(site.id, site.userId, status = SiteStatus.VERIFIED) } returns Mono.just(site)
+        every { repo.update(site.id, status = SiteStatus.VERIFIED) } returns Mono.just(site)
 
         StepVerifier.create(service.verifyPendingSites())
             .verifyComplete()
 
-        verify { repo.update(site.id, site.userId, status = SiteStatus.VERIFIED) }
+        verify { repo.update(site.id, status = SiteStatus.VERIFIED) }
     }
 
     @Test
@@ -268,7 +267,7 @@ class SiteServiceTest {
         StepVerifier.create(service.verifyPendingSites())
             .verifyComplete()
 
-        verify(exactly = 0) { repo.update(any(), any(), status = SiteStatus.VERIFIED) }
+        verify(exactly = 0) { repo.update(any(), status = SiteStatus.VERIFIED) }
     }
 
     @Test
@@ -282,13 +281,13 @@ class SiteServiceTest {
             )
         } returns Mono.error(RuntimeException("Connection refused"))
         every { verifyClient.verify(site2.domain, site2.prefix) } returns Mono.just(true)
-        every { repo.update(site2.id, site2.userId, status = SiteStatus.VERIFIED) } returns Mono.just(site2)
+        every { repo.update(site2.id, status = SiteStatus.VERIFIED) } returns Mono.just(site2)
 
         StepVerifier.create(service.verifyPendingSites())
             .verifyComplete()
 
-        verify(exactly = 0) { repo.update(site.id, any(), status = SiteStatus.VERIFIED) }
-        verify { repo.update(site2.id, site2.userId, status = SiteStatus.VERIFIED) }
+        verify(exactly = 0) { repo.update(site.id, status = SiteStatus.VERIFIED) }
+        verify { repo.update(site2.id, status = SiteStatus.VERIFIED) }
     }
 
     @Test
@@ -306,12 +305,13 @@ class SiteServiceTest {
     @Test
     fun `delete removes site when found`() {
         every { repo.findById(1L, 1L) } returns Mono.just(site)
-        every { repo.delete(1L, 1L) } returns Mono.empty()
+        every { repo.delete(1L) } returns Mono.empty()
 
         StepVerifier.create(service.delete(1L, 1L))
+            .expectNext(Unit)
             .verifyComplete()
 
-        verify { repo.delete(1L, 1L) }
+        verify { repo.delete(1L) }
     }
 
     @Test

@@ -3,26 +3,26 @@
   const siteId = location.pathname.match(/\/sites\/([^/]+)\/style-editor/)?.[1];
 
   // ── DOM refs ──────────────────────────────────────────────────────────
-  const frame          = document.getElementById('previewFrame');
-  const cssTextarea    = document.getElementById('cssEditor');
-  const defaultsArea   = document.getElementById('defaultsEditor');
-  const copyBtn        = document.getElementById('copyBtn');
-  const loadBtn        = document.getElementById('loadBtn');
-  const saveBtn        = document.getElementById('saveBtn');
-  const charCount      = document.getElementById('charCount');
-  const editorStatus   = document.getElementById('editorStatus');
-  const tooltip        = document.getElementById('selectorTooltip');
-  const siteName       = document.getElementById('siteName');
-  const editorTitle    = document.getElementById('editorSiteName');
-  const tabCustom      = document.getElementById('tabCustom');
-  const tabDefaults    = document.getElementById('tabDefaults');
-  const tabs           = document.querySelectorAll('.preview-tab[data-view]');
+  const frame = document.getElementById('previewFrame');
+  const cssTextarea = document.getElementById('cssEditor');
+  const defaultsArea = document.getElementById('defaultsEditor');
+  const copyBtn = document.getElementById('copyBtn');
+  const loadBtn = document.getElementById('loadBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const charCount = document.getElementById('charCount');
+  const editorStatus = document.getElementById('editorStatus');
+  const tooltip = document.getElementById('selectorTooltip');
+  const siteName = document.getElementById('siteName');
+  const editorTitle = document.getElementById('editorSiteName');
+  const tabCustom = document.getElementById('tabCustom');
+  const tabDefaults = document.getElementById('tabDefaults');
+  const tabs = document.querySelectorAll('.preview-tab[data-view]');
 
   // ── CodeMirror editor ─────────────────────────────────────────────────
   const SITE_VARS = [
-    '--bg','--fg','--border','--muted','--muted-2','--muted-3','--surface',
-    '--tag-bg','--tag-fg','--blockquote-border','--blockquote-fg',
-    '--code-bg','--inline-code-bg','--copy-btn-bg','--copy-btn-border','--copy-btn-fg',
+    '--bg', '--fg', '--border', '--muted', '--muted-2', '--muted-3', '--surface',
+    '--tag-bg', '--tag-fg', '--blockquote-border', '--blockquote-fg',
+    '--code-bg', '--inline-code-bg', '--copy-btn-bg', '--copy-btn-border', '--copy-btn-fg',
   ];
 
   const editor = CodeMirror.fromTextArea(cssTextarea, {
@@ -33,7 +33,7 @@
     tabSize: 2,
     lineWrapping: false,
     autofocus: false,
-    extraKeys: { 'Ctrl-Space': cm => cm.showHint({ completeSingle: false }) },
+    extraKeys: {'Ctrl-Space': cm => cm.showHint({completeSingle: false})},
   });
 
   const defaultsViewer = CodeMirror.fromTextArea(defaultsArea, {
@@ -79,20 +79,20 @@
             hint: () => ({
               list,
               from: CodeMirror.Pos(cursor.line, token.start),
-              to:   CodeMirror.Pos(cursor.line, token.end),
+              to: CodeMirror.Pos(cursor.line, token.end),
             }),
           });
         }
         return;
       }
-      cm.showHint({ completeSingle: false });
+      cm.showHint({completeSingle: false});
     }
   });
 
   // ── State ─────────────────────────────────────────────────────────────
-  let blogCssText  = '';
-  let currentView  = 'index';
-  let site         = null;
+  let blogCssText = '';
+  let currentView = 'index';
+  let site = null;
 
   // ── Placeholder image SVG ─────────────────────────────────────────────
   const PLACEHOLDER = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='720' height='315'><rect fill='%23e5e5e5' width='100%25' height='100%25'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23888' font-size='16'>Cover Image</text></svg>";
@@ -396,7 +396,7 @@
           const block = `\n\n${sel} {\n  \n}`;
           editor.setValue(current + block);
           const line = editor.lineCount() - 2;
-          editor.setCursor({ line, ch: 2 });
+          editor.setCursor({line, ch: 2});
           editor.focus();
         });
 
@@ -413,15 +413,16 @@
           editorStatus.textContent = 'Hover an element in the preview to see its selector';
         });
       });
-    } catch (_) {}
+    } catch (_) {
+    }
   }
 
   function positionTooltip(e) {
     const rect = frame.getBoundingClientRect();
     const x = rect.left + e.clientX;
-    const y = rect.top  + e.clientY;
+    const y = rect.top + e.clientY;
     tooltip.style.left = (x + 12) + 'px';
-    tooltip.style.top  = (y - 28) + 'px';
+    tooltip.style.top = (y - 28) + 'px';
   }
 
   // ── Debounce ──────────────────────────────────────────────────────────
@@ -469,7 +470,9 @@
     }
     const orig = copyBtn.textContent;
     copyBtn.textContent = 'Copied!';
-    setTimeout(() => { copyBtn.textContent = orig; }, 2000);
+    setTimeout(() => {
+      copyBtn.textContent = orig;
+    }, 2000);
   }
 
   copyBtn.onclick = () => copyText(editor.getValue());
@@ -522,10 +525,12 @@
     saveBtn.textContent = 'Saving…';
     saveBtn.disabled = true;
     try {
-      const res = await api(`/sites/${siteId}`, { method: 'PATCH', body: JSON.stringify({ customCss: css }) });
+      const res = await api(`/sites/${siteId}`, {method: 'PATCH', body: JSON.stringify({customCss: css})});
       if (!res || !res.ok) throw new Error();
       saveBtn.textContent = 'Saved!';
-      setTimeout(() => { saveBtn.textContent = 'Save'; }, 2000);
+      setTimeout(() => {
+        saveBtn.textContent = 'Save';
+      }, 2000);
     } catch (_) {
       alert('Failed to save CSS. Please try again.');
       saveBtn.textContent = 'Save';
@@ -558,7 +563,7 @@
       site = await fetchSite();
       if (site) {
         const name = site.name || 'Untitled';
-        siteName.textContent    = `Style Editor — ${name}`;
+        siteName.textContent = `Style Editor — ${name}`;
         editorTitle.textContent = name;
         if (site.customCss) {
           editor.setValue(site.customCss);

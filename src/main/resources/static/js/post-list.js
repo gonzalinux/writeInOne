@@ -1,11 +1,11 @@
-const siteId        = location.pathname.split('/')[3];
+const siteId = location.pathname.split('/')[3];
 const postTableBody = document.getElementById('postTableBody');
-const postTable     = document.getElementById('postTable');
-const empty         = document.getElementById('empty');
-const newPostLink   = document.getElementById('newPostLink');
-const emptyNewLink  = document.getElementById('emptyNewPostLink');
+const postTable = document.getElementById('postTable');
+const empty = document.getElementById('empty');
+const newPostLink = document.getElementById('newPostLink');
+const emptyNewLink = document.getElementById('emptyNewPostLink');
 
-if (newPostLink)  newPostLink.href  = `/admin/sites/${siteId}/posts/new`;
+if (newPostLink) newPostLink.href = `/admin/sites/${siteId}/posts/new`;
 if (emptyNewLink) emptyNewLink.href = `/admin/sites/${siteId}/posts/new`;
 
 let currentPage = 0;
@@ -13,13 +13,17 @@ const PAGE_SIZE = 20;
 
 const filterSearch = document.getElementById('filterSearch');
 const filterStatus = document.getElementById('filterStatus');
-const filterTag    = document.getElementById('filterTag');
+const filterTag = document.getElementById('filterTag');
 
-function applyFilters() { currentPage = 0; loadPosts(); }
+function applyFilters() {
+  currentPage = 0;
+  loadPosts();
+}
+
 function clearFilters() {
   filterSearch.value = '';
   filterStatus.value = '';
-  filterTag.value    = '';
+  filterTag.value = '';
   currentPage = 0;
   loadPosts();
 }
@@ -29,12 +33,14 @@ filterSearch?.addEventListener('input', () => {
   clearTimeout(searchDebounce);
   searchDebounce = setTimeout(applyFilters, 300);
 });
-filterTag?.addEventListener('keydown', e => { if (e.key === 'Enter') applyFilters(); });
+filterTag?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') applyFilters();
+});
 filterStatus?.addEventListener('change', applyFilters);
 
 function formatDate(iso) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
 }
 
 function escHtml(str) {
@@ -49,7 +55,7 @@ function attachActionListeners() {
   postTableBody.querySelectorAll('[data-publish-post]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const postId = btn.dataset.publishPost;
-      const res = await api(`/sites/${siteId}/posts/${postId}/publish`, { method: 'POST' });
+      const res = await api(`/sites/${siteId}/posts/${postId}/publish`, {method: 'POST'});
       if (!res) return;
       if (res.ok) loadPosts();
       else alert('Failed to publish post');
@@ -59,7 +65,7 @@ function attachActionListeners() {
   postTableBody.querySelectorAll('[data-unpublish-post]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const postId = btn.dataset.unpublishPost;
-      const res = await api(`/sites/${siteId}/posts/${postId}/unpublish`, { method: 'POST' });
+      const res = await api(`/sites/${siteId}/posts/${postId}/unpublish`, {method: 'POST'});
       if (!res) return;
       if (res.ok) loadPosts();
       else alert('Failed to unpublish post');
@@ -69,7 +75,7 @@ function attachActionListeners() {
   postTableBody.querySelectorAll('[data-unschedule-post]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const postId = btn.dataset.unschedulePost;
-      const res = await api(`/sites/${siteId}/posts/${postId}/unpublish`, { method: 'POST' });
+      const res = await api(`/sites/${siteId}/posts/${postId}/unpublish`, {method: 'POST'});
       if (!res) return;
       if (res.ok) loadPosts();
       else alert('Failed to unschedule post');
@@ -80,7 +86,7 @@ function attachActionListeners() {
     btn.addEventListener('click', async () => {
       if (!confirm('Delete this post? This cannot be undone.')) return;
       const postId = btn.dataset.deletePost;
-      const res = await api(`/sites/${siteId}/posts/${postId}`, { method: 'DELETE' });
+      const res = await api(`/sites/${siteId}/posts/${postId}`, {method: 'DELETE'});
       if (!res) return;
       if (res.ok) loadPosts();
       else alert('Failed to delete post');
@@ -96,23 +102,32 @@ function renderPagination(page, totalPages) {
     nav.className = 'table-pagination';
     postTable.insertAdjacentElement('afterend', nav);
   }
-  if (totalPages <= 1) { nav.innerHTML = ''; return; }
+  if (totalPages <= 1) {
+    nav.innerHTML = '';
+    return;
+  }
   nav.innerHTML = `
     <button class="btn btn-ghost btn--small" id="pgPrev" ${page === 0 ? 'disabled' : ''}>← Prev</button>
     <span>${page + 1} / ${totalPages}</span>
     <button class="btn btn-ghost btn--small" id="pgNext" ${page + 1 >= totalPages ? 'disabled' : ''}>Next →</button>`;
-  nav.querySelector('#pgPrev')?.addEventListener('click', () => { currentPage--; loadPosts(); });
-  nav.querySelector('#pgNext')?.addEventListener('click', () => { currentPage++; loadPosts(); });
+  nav.querySelector('#pgPrev')?.addEventListener('click', () => {
+    currentPage--;
+    loadPosts();
+  });
+  nav.querySelector('#pgNext')?.addEventListener('click', () => {
+    currentPage++;
+    loadPosts();
+  });
 }
 
 async function loadPosts() {
-  const params = new URLSearchParams({ page: currentPage, size: PAGE_SIZE });
+  const params = new URLSearchParams({page: currentPage, size: PAGE_SIZE});
   const search = filterSearch?.value.trim();
   const status = filterStatus?.value;
-  const tag    = filterTag?.value.trim();
+  const tag = filterTag?.value.trim();
   if (search) params.set('search', search);
   if (status) params.set('status', status);
-  if (tag)    params.set('tag', tag);
+  if (tag) params.set('tag', tag);
 
   const res = await api(`/sites/${siteId}/posts/?${params}`);
   if (!res) return;
@@ -132,10 +147,10 @@ async function loadPosts() {
   renderPagination(data.page, data.totalPages);
 
   posts.forEach(item => {
-    const langs  = item.translations.map(t => t.lang).join(' ');
+    const langs = item.translations.map(t => t.lang).join(' ');
     const status = item.post.status.toLowerCase();
-    const t      = item.translations[0];
-    const tags   = (item.tags || []).map(tag => `<span class="tag-badge">${escHtml(tag.name)}</span>`).join(' ');
+    const t = item.translations[0];
+    const tags = (item.tags || []).map(tag => `<span class="tag-badge">${escHtml(tag.name)}</span>`).join(' ');
 
     const dateDisplay = status === 'scheduled'
       ? formatDate(item.post.scheduledAt)

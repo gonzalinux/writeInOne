@@ -1,123 +1,123 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Owner Dashboard - WriteInOne</title>
-    <link rel="stylesheet" href="/css/admin.css"/>
-    <link rel="stylesheet" href="/css/owner.css"/>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Owner Dashboard - WriteInOne</title>
+  <link rel="stylesheet" href="/css/admin.css"/>
+  <link rel="stylesheet" href="/css/owner.css"/>
 </head>
 <body>
 <header>
-    <div class="brand">
-        <span>Owner Dashboard</span>
-    </div>
+  <div class="brand">
+    <span>Owner Dashboard</span>
+  </div>
 </header>
 
 <main>
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-value" th:text="${userCount}">0</div>
-            <div class="stat-label">Total Users</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value" th:text="${siteCount}">0</div>
-            <div class="stat-label">Total Sites</div>
-        </div>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value" th:text="${userCount}">0</div>
+      <div class="stat-label">Total Users</div>
     </div>
+    <div class="stat-card">
+      <div class="stat-value" th:text="${siteCount}">0</div>
+      <div class="stat-label">Total Sites</div>
+    </div>
+  </div>
 
-    <section class="dashboard-section">
-        <h2>All Users</h2>
-        <table>
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Email</th>
-                <th>Display Name</th>
-                <th>Verified</th>
-                <th>Created</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="user : ${users}">
-                <td th:text="${user.id}">1</td>
-                <td th:text="${user.email}">user@example.com</td>
-                <td th:text="${user.displayName}">John Doe</td>
-                <td>
+  <section class="dashboard-section">
+    <h2>All Users</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Email</th>
+        <th>Display Name</th>
+        <th>Verified</th>
+        <th>Created</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="user : ${users}">
+        <td th:text="${user.id}">1</td>
+        <td th:text="${user.email}">user@example.com</td>
+        <td th:text="${user.displayName}">John Doe</td>
+        <td>
                     <span class="status"
                           th:classappend="${user.emailVerified ? 'status--published' : 'status--draft'}"
                           th:text="${user.emailVerified ? 'Yes' : 'No'}">Yes</span>
-                </td>
-                <td th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</td>
-            </tr>
-            </tbody>
-        </table>
-    </section>
+        </td>
+        <td th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
 
-    <section class="dashboard-section">
-        <h2>Top Posts by Views</h2>
-        <table>
-            <thead>
-            <tr>
-                <th>Title</th>
-                <th>Site</th>
-                <th>Domain</th>
-                <th>Views</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="p : ${topPosts}">
-                <td>
-                    <a th:href="'https://' + ${p.domain} + '/' + ${p.lang} + '/articles/' + ${p.slug}"
-                       target="_blank" rel="noopener" th:text="${p.title}">Post title</a>
-                </td>
-                <td th:text="${p.siteName}">Site</td>
-                <td th:text="${p.domain}">example.com</td>
-                <td th:text="${p.viewCount}">0</td>
-            </tr>
-            </tbody>
-        </table>
-    </section>
+  <section class="dashboard-section">
+    <h2>Top Posts by Views</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>Title</th>
+        <th>Site</th>
+        <th>Domain</th>
+        <th>Views</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="p : ${topPosts}">
+        <td>
+          <a th:href="'https://' + ${p.domain} + '/' + ${p.lang} + '/articles/' + ${p.slug}"
+             target="_blank" rel="noopener" th:text="${p.title}">Post title</a>
+        </td>
+        <td th:text="${p.siteName}">Site</td>
+        <td th:text="${p.domain}">example.com</td>
+        <td th:text="${p.viewCount}">0</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
 
-    <section class="dashboard-section">
-        <h2>Recent Sites</h2>
-        <table>
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Domain</th>
-                <th>User ID</th>
-                <th>Status</th>
-                <th>Created</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="site : ${sites}">
-                <td th:text="${site.id}">1</td>
-                <td th:text="${site.name}">Site Name</td>
-                <td th:text="${site.domain}">example.com</td>
-                <td th:text="${site.userId}">1</td>
-                <td>
+  <section class="dashboard-section">
+    <h2>Recent Sites</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Domain</th>
+        <th>User ID</th>
+        <th>Status</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="site : ${sites}">
+        <td th:text="${site.id}">1</td>
+        <td th:text="${site.name}">Site Name</td>
+        <td th:text="${site.domain}">example.com</td>
+        <td th:text="${site.userId}">1</td>
+        <td>
                     <span class="status"
                           th:classappend="${site.status.name() == 'VERIFIED' ? 'status--published' : 'status--draft'}"
                           th:text="${site.status}">VERIFIED</span>
-                </td>
-                <td th:text="${#temporals.format(site.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</td>
-                <td>
-                    <form th:if="${site.status.name() != 'VERIFIED'}"
-                          th:action="@{/owner/sites/{id}/verify(id=${site.id})}"
-                          method="post"
-                          class="form-inline">
-                        <button type="submit" class="action-btn action-btn--edit">Verify</button>
-                    </form>
-                    <span th:if="${site.status.name() == 'VERIFIED'}" class="text-muted">Verified</span>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </section>
+        </td>
+        <td th:text="${#temporals.format(site.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</td>
+        <td>
+          <form th:if="${site.status.name() != 'VERIFIED'}"
+                th:action="@{/owner/sites/{id}/verify(id=${site.id})}"
+                method="post"
+                class="form-inline">
+            <button type="submit" class="action-btn action-btn--edit">Verify</button>
+          </form>
+          <span th:if="${site.status.name() == 'VERIFIED'}" class="text-muted">Verified</span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
 </main>
 </body>
 </html>

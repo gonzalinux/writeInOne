@@ -2,7 +2,6 @@ package com.gonzalinux.config
 
 import com.gonzalinux.common.SiteContextHolder.withPrefix
 import com.gonzalinux.common.SiteContextHolder.withSite
-import com.gonzalinux.config.SubdomainProperties
 import com.gonzalinux.domain.site.SiteRepository
 import com.gonzalinux.domain.site.SiteStatus
 import mu.KotlinLogging

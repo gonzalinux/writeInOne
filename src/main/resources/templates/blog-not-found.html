@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en" th:lang="${lang}">
 <head>
-    <th:block th:replace="~{fragments/layout :: head('404 — ' + ${site.name})}"/>
+  <th:block th:replace="~{fragments/layout :: head('404 — ' + ${site.name})}"/>
 </head>
 <body>
-    <th:block th:replace="~{fragments/layout :: bodyStart}"/>
-    <th:block th:replace="~{fragments/layout :: nav}"/>
+<th:block th:replace="~{fragments/layout :: bodyStart}"/>
+<th:block th:replace="~{fragments/layout :: nav}"/>
 
-    <main class="container">
-        <div class="not-found">
-            <p class="not-found__code">404</p>
-            <h1 class="not-found__title">Page not found</h1>
-            <p class="not-found__message">The page you're looking for doesn't exist or has been moved.</p>
-            <a class="not-found__back post-header__back" th:href="${prefix} + '/' + ${lang}">← All posts</a>
-        </div>
-    </main>
+<main class="container">
+  <div class="not-found">
+    <p class="not-found__code">404</p>
+    <h1 class="not-found__title">Page not found</h1>
+    <p class="not-found__message">The page you're looking for doesn't exist or has been moved.</p>
+    <a class="not-found__back post-header__back" th:href="${prefix} + '/' + ${lang}">← All posts</a>
+  </div>
+</main>
 
-    <th:block th:replace="~{fragments/layout :: footer}"/>
+<th:block th:replace="~{fragments/layout :: footer}"/>
 </body>
 </html>

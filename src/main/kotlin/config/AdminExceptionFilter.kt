@@ -25,19 +25,23 @@ class AdminExceptionFilter : HandlerFilterFunction<ServerResponse, ServerRespons
             }
             .onErrorResume(ApiException::class.java) { ex ->
                 ServerResponse.status(ex.status).contentType(MediaType.TEXT_HTML)
-                    .render("error", mapOf(
-                        "status" to ex.status.value(),
-                        "reason" to ex.status.reasonPhrase,
-                        "message" to ex.details
-                    ))
+                    .render(
+                        "error", mapOf(
+                            "status" to ex.status.value(),
+                            "reason" to ex.status.reasonPhrase,
+                            "message" to ex.details
+                        )
+                    )
             }
             .onErrorResume { ex ->
                 logger.error(ex) { "Unexpected error on admin route ${request.path()}" }
                 ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).contentType(MediaType.TEXT_HTML)
-                    .render("error", mapOf(
-                        "status" to 500,
-                        "reason" to "Internal Server Error",
-                        "message" to null
-                    ))
+                    .render(
+                        "error", mapOf(
+                            "status" to 500,
+                            "reason" to "Internal Server Error",
+                            "message" to null
+                        )
+                    )
             }
 }

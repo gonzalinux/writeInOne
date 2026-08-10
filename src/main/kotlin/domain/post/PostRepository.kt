@@ -352,14 +352,14 @@ class PostRepository(private val client: DatabaseClient) {
             .fetch().all()
             .map {
                 PostViewStat(
-                    postId    = it["id"] as Long,
+                    postId = it["id"] as Long,
                     viewCount = it["view_count"] as Long,
-                    siteId    = it["site_id"] as Long,
-                    siteName  = it["site_name"] as String,
-                    domain    = it["domain"] as String,
-                    title     = it["title"] as? String ?: "(untitled)",
-                    lang      = it["lang"] as? String ?: "",
-                    slug      = it["slug"] as? String ?: ""
+                    siteId = it["site_id"] as Long,
+                    siteName = it["site_name"] as String,
+                    domain = it["domain"] as String,
+                    title = it["title"] as? String ?: "(untitled)",
+                    lang = it["lang"] as? String ?: "",
+                    slug = it["slug"] as? String ?: ""
                 )
             }
 

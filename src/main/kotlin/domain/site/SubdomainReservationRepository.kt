@@ -23,11 +23,13 @@ class SubdomainReservationRepository(private val client: DatabaseClient) {
             }
 
     fun reserve(label: String, userId: Long): Mono<Void> =
-        client.sql("""
+        client.sql(
+            """
             INSERT INTO subdomain_reservations (label, user_id, released_at)
             VALUES (:label, :userId, now())
             ON CONFLICT (label) DO UPDATE SET user_id = :userId, released_at = now()
-        """)
+        """
+        )
             .bind("label", label)
             .bind("userId", userId)
             .then()

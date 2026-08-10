@@ -6,12 +6,14 @@ import com.gonzalinux.common.Page
 import com.gonzalinux.common.PostNotFoundException
 import com.gonzalinux.common.SiteNotFoundException
 import com.gonzalinux.common.SlugAlreadyExistsException
-import org.springframework.dao.DataIntegrityViolationException
 import com.gonzalinux.domain.site.SiteRepository
+import com.gonzalinux.domain.site.requirePublish
+import com.gonzalinux.domain.site.requireWrite
 import com.gonzalinux.domain.tag.Tag
 import com.gonzalinux.domain.tag.TagRepository
 import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -23,10 +25,16 @@ private val logger = KotlinLogging.logger {}
 
 
 @Service
-class PostService(private val postRepo: PostRepository, private val siteRepo: SiteRepository, private val tagRepo: TagRepository, private val registry: MeterRegistry) {
+class PostService(
+    private val postRepo: PostRepository,
+    private val siteRepo: SiteRepository,
+    private val tagRepo: TagRepository,
+    private val registry: MeterRegistry
+) {
 
     fun create(siteId: Long, userId: Long, request: CreatePostRequest): Mono<PostWithTranslations> =
         siteRepo.findById(siteId, userId)
+            .requireWrite()
             .switchIfEmpty(Mono.error(SiteNotFoundException(siteId)))
             .flatMap { postRepo.create(siteId, request.coverUrl) }
             .flatMap { post ->
@@ -64,7 +72,15 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
             .switchIfEmpty(Mono.error(PostNotFoundException(id)))
             .flatMap { post -> postWithTranslationsAndTags(post) }
 
-    fun list(siteId: Long, userId: Long, page: Int, size: Int, status: String? = null, tag: String? = null, search: String? = null): Mono<Page<PostSummary>> =
+    fun list(
+        siteId: Long,
+        userId: Long,
+        page: Int,
+        size: Int,
+        status: String? = null,
+        tag: String? = null,
+        search: String? = null
+    ): Mono<Page<PostSummary>> =
         siteRepo.findById(siteId, userId)
             .switchIfEmpty(Mono.error(SiteNotFoundException(siteId)))
             .flatMap {
@@ -81,9 +97,13 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
                         .zipWith(tagRepo.findByPostIds(ids).collectList())
                         .map { (translations, tagPairs) ->
                             val translsByPost = translations.groupBy { it.postId }
-                            val tagsByPost    = tagPairs.groupBy({ it.first }, { it.second })
+                            val tagsByPost = tagPairs.groupBy({ it.first }, { it.second })
                             val content = posts.map { post ->
-                                PostSummary(post, translsByPost[post.id] ?: emptyList(), tagsByPost[post.id] ?: emptyList())
+                                PostSummary(
+                                    post,
+                                    translsByPost[post.id] ?: emptyList(),
+                                    tagsByPost[post.id] ?: emptyList()
+                                )
                             }
                             Page(content, page, size, total, ((total + size - 1) / size).toInt())
                         }
@@ -93,6 +113,7 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
     fun update(id: Long, siteId: Long, userId: Long, request: UpdatePostRequest): Mono<PostWithTranslations> =
         siteRepo.findById(siteId, userId)
             .switchIfEmpty(Mono.error(SiteNotFoundException(siteId)))
+            .requireWrite()
             .flatMap { postRepo.findById(id, siteId) }
             .switchIfEmpty(Mono.error(PostNotFoundException(id)))
             .flatMap { post ->
@@ -100,7 +121,15 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
                     .flatMap { updated ->
                         val updateTranslations = request.translations?.entries?.map { (lang, input) ->
                             val slug = input.slug ?: generateSlug(input.title)
-                            postRepo.upsertTranslation(post.id, siteId, lang, input.title, slug, input.body, input.excerpt)
+                            postRepo.upsertTranslation(
+                                post.id,
+                                siteId,
+                                lang,
+                                input.title,
+                                slug,
+                                input.body,
+                                input.excerpt
+                            )
                         } ?: emptyList()
                         val tagsStep: Mono<List<Tag>> = if (request.tags != null) {
                             Flux.fromIterable(request.tags).flatMap { tagRepo.findOrCreate(siteId, it) }
@@ -126,6 +155,7 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
 
     fun delete(id: Long, siteId: Long, userId: Long): Mono<Void> =
         siteRepo.findById(siteId, userId)
+            .requirePublish()
             .switchIfEmpty(Mono.error(SiteNotFoundException(siteId)))
             .flatMap { postRepo.findById(id, siteId) }
             .switchIfEmpty(Mono.error(PostNotFoundException(id)))
@@ -134,17 +164,19 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
 
     fun publish(id: Long, siteId: Long, userId: Long): Mono<Post> =
         siteRepo.findById(siteId, userId)
+            .requirePublish()
             .switchIfEmpty(Mono.error(SiteNotFoundException(siteId)))
             .flatMap { postRepo.findById(id, siteId) }
             .switchIfEmpty(Mono.error(PostNotFoundException(id)))
             .flatMap { postRepo.update(id, siteId, null, PostStatus.PUBLISHED, OffsetDateTime.now(), null) }
-        .doOnSuccess {
-            logger.info { "Post published [postId=$id, siteId=$siteId]" }
-            registry.counter("posts.published", "source", "manual").increment()
-        }
+            .doOnSuccess {
+                logger.info { "Post published [postId=$id, siteId=$siteId]" }
+                registry.counter("posts.published", "source", "manual").increment()
+            }
 
     fun unpublish(id: Long, siteId: Long, userId: Long): Mono<Post> =
         siteRepo.findById(siteId, userId)
+            .requirePublish()
             .switchIfEmpty(Mono.error(SiteNotFoundException(siteId)))
             .flatMap { postRepo.findById(id, siteId) }
             .switchIfEmpty(Mono.error(PostNotFoundException(id)))
@@ -156,6 +188,7 @@ class PostService(private val postRepo: PostRepository, private val siteRepo: Si
 
     fun schedule(id: Long, siteId: Long, userId: Long, scheduledAt: OffsetDateTime): Mono<Post> =
         siteRepo.findById(siteId, userId)
+            .requirePublish()
             .switchIfEmpty(Mono.error(SiteNotFoundException(siteId)))
             .flatMap { postRepo.findById(id, siteId) }
             .switchIfEmpty(Mono.error(PostNotFoundException(id)))

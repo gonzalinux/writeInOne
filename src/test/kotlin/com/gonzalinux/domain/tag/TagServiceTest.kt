@@ -2,6 +2,7 @@ package com.gonzalinux.domain.tag
 
 import com.gonzalinux.common.SiteNotFoundException
 import com.gonzalinux.domain.Languages
+import com.gonzalinux.domain.site.Roles
 import com.gonzalinux.domain.site.Site
 import com.gonzalinux.domain.site.SiteConfig
 import com.gonzalinux.domain.site.SiteRepository
@@ -28,7 +29,7 @@ class TagServiceTest {
         prefix = "", description = null, stylesUrl = null, availableThemes = listOf(Theme.LIGHT),
         languages = listOf(Languages.ENGLISH), config = SiteConfig(), status = SiteStatus.NOT_VERIFIED,
         createdAt = OffsetDateTime.now(ZoneOffset.UTC), updatedAt = OffsetDateTime.now(ZoneOffset.UTC),
-        verifyDate = OffsetDateTime.now(ZoneOffset.UTC)
+        verifyDate = OffsetDateTime.now(ZoneOffset.UTC), role = Roles.ADMIN
     )
 
     private val tag = Tag(id = 1L, siteId = 1L, name = "kotlin", createdAt = OffsetDateTime.now(ZoneOffset.UTC))

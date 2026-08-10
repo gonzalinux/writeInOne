@@ -1,26 +1,26 @@
 // ── Read data ──────────────────────────────────────────────
 const data = document.getElementById('preview-data').dataset;
-const postId  = data.postId;
-const siteId  = data.siteId;
-const lang    = data.lang;
-let   status  = data.status; // mutable: updated after publish/unpublish/schedule
+const postId = data.postId;
+const siteId = data.siteId;
+const lang = data.lang;
+let status = data.status; // mutable: updated after publish/unpublish/schedule
 
 // ── Elements ──────────────────────────────────────────────
-const badge              = document.getElementById('status-badge');
-const btnEditMode        = document.getElementById('btn-edit-mode');
-const btnSplitMode       = document.getElementById('btn-split-mode');
-const btnPreviewMode     = document.getElementById('btn-preview-mode');
-const btnSave            = document.getElementById('btn-save');
-const btnPublish         = document.getElementById('btn-publish');
-const btnSchedule        = document.getElementById('btn-schedule');
-const schedulePanel      = document.getElementById('schedule-panel');
-const scheduleInput      = document.getElementById('schedule-input');
+const badge = document.getElementById('status-badge');
+const btnEditMode = document.getElementById('btn-edit-mode');
+const btnSplitMode = document.getElementById('btn-split-mode');
+const btnPreviewMode = document.getElementById('btn-preview-mode');
+const btnSave = document.getElementById('btn-save');
+const btnPublish = document.getElementById('btn-publish');
+const btnSchedule = document.getElementById('btn-schedule');
+const schedulePanel = document.getElementById('schedule-panel');
+const scheduleInput = document.getElementById('schedule-input');
 const btnScheduleConfirm = document.getElementById('btn-schedule-confirm');
-const btnScheduleCancel  = document.getElementById('btn-schedule-cancel');
-const editSection        = document.getElementById('edit-section');
-const previewSection     = document.getElementById('preview-section');
-const errorStrip         = document.getElementById('preview-error');
-const unsavedBadge       = document.getElementById('unsaved-badge');
+const btnScheduleCancel = document.getElementById('btn-schedule-cancel');
+const editSection = document.getElementById('edit-section');
+const previewSection = document.getElementById('preview-section');
+const errorStrip = document.getElementById('preview-error');
+const unsavedBadge = document.getElementById('unsaved-badge');
 
 // ── Status badge ──────────────────────────────────────────
 function applyStatus(s) {
@@ -45,10 +45,10 @@ function clearError() {
 
 // ── Sync preview DOM from edit inputs ─────────────────────
 function syncPreview() {
-  const title   = document.getElementById('edit-title').value;
+  const title = document.getElementById('edit-title').value;
   const excerpt = document.getElementById('edit-excerpt').value;
-  const body    = document.getElementById('edit-body').value;
-  const cover   = document.getElementById('edit-cover').value.trim();
+  const body = document.getElementById('edit-body').value;
+  const cover = document.getElementById('edit-cover').value.trim();
 
   const previewTitle = previewSection.querySelector('.post-header__title');
   if (previewTitle) previewTitle.textContent = title;
@@ -58,7 +58,7 @@ function syncPreview() {
 
   const previewCover = previewSection.querySelector('.post-header__cover');
   if (previewCover) {
-    previewCover.src    = cover;
+    previewCover.src = cover;
     previewCover.hidden = !cover;
   }
 
@@ -75,36 +75,38 @@ function setMode(mode) {
   main.classList.remove('split-pane');
 
   if (mode === 'edit') {
-    editSection.hidden    = false;
+    editSection.hidden = false;
     previewSection.hidden = true;
     btnEditMode.classList.add('preview-bar__btn--active');
   } else if (mode === 'split') {
     syncPreview();
-    editSection.hidden    = false;
+    editSection.hidden = false;
     previewSection.hidden = false;
     main.classList.add('split-pane');
     btnSplitMode.classList.add('preview-bar__btn--active');
     autoGrow();
   } else {
     syncPreview();
-    editSection.hidden    = true;
+    editSection.hidden = true;
     previewSection.hidden = false;
     btnPreviewMode.classList.add('preview-bar__btn--active');
   }
 }
 
-btnEditMode.addEventListener('click',    () => setMode('edit'));
-btnSplitMode.addEventListener('click',   () => setMode('split'));
+btnEditMode.addEventListener('click', () => setMode('edit'));
+btnSplitMode.addEventListener('click', () => setMode('split'));
 btnPreviewMode.addEventListener('click', () => setMode('preview'));
 
 // ── Auto-grow textarea ────────────────────────────────────
 const bodyEditor = document.getElementById('edit-body');
+
 function autoGrow() {
   const scrollY = window.scrollY;
   bodyEditor.style.height = 'auto';
   bodyEditor.style.height = bodyEditor.scrollHeight + 'px';
   window.scrollTo(0, scrollY);
 }
+
 bodyEditor.addEventListener('input', () => {
   autoGrow();
   if (!previewSection.hidden) syncPreview();
@@ -122,18 +124,18 @@ editInputs.forEach(el => el.addEventListener('input', () => {
 // ── Save ──────────────────────────────────────────────────
 btnSave.addEventListener('click', async () => {
   clearError();
-  const title    = document.getElementById('edit-title').value;
-  const body     = document.getElementById('edit-body').value;
-  const excerpt  = document.getElementById('edit-excerpt').value;
-  const slug     = document.getElementById('edit-slug').value;
+  const title = document.getElementById('edit-title').value;
+  const body = document.getElementById('edit-body').value;
+  const excerpt = document.getElementById('edit-excerpt').value;
+  const slug = document.getElementById('edit-slug').value;
   const coverUrl = document.getElementById('edit-cover').value.trim() || null;
-  const tagsRaw  = document.getElementById('edit-tags').value;
-  const tags     = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
+  const tagsRaw = document.getElementById('edit-tags').value;
+  const tags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
 
   const payload = {
     coverUrl,
     translations: {
-      [lang]: { title, body, slug, excerpt }
+      [lang]: {title, body, slug, excerpt}
     },
     tags
   };
@@ -193,7 +195,7 @@ btnScheduleConfirm.addEventListener('click', async () => {
 
   const res = await api(`/sites/${siteId}/posts/${postId}/schedule`, {
     method: 'POST',
-    body: JSON.stringify({ scheduledAt })
+    body: JSON.stringify({scheduledAt})
   });
 
   if (!res) return;
