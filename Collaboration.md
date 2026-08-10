@@ -20,6 +20,41 @@ separate entity — see [Service accounts](#service-accounts--api-access) below.
 Sites move from single-owner to multi-member. `site_members (site_id, user_id, role, created_at)` replaces the implicit
 owner — the creating user becomes the first `admin`.
 
+### Implementation status
+
+| Piece                                                       | State                                    |
+|-------------------------------------------------------------|------------------------------------------|
+| `site_members` schema + owner backfill (V14)                | ✓ shipped                                |
+| Membership-based authorization + role enforcement           | ✓ shipped                                |
+| Creator added as `ADMIN` on site creation                   | ✓ shipped                                |
+| `site_invitations` schema (V13)                             | ✓ shipped (table only, nothing reads it) |
+| Invite create / list / revoke / accept                      | not started                              |
+| Member list, role change, removal                           | not started                              |
+| Admin UI page                                               | not started                              |
+| Service accounts (V12 schema shipped, no code)              | not started                              |
+
+**How enforcement works.** `SiteRepository.findById` and `findAllByUserId` INNER JOIN `site_members`, and the caller's
+role rides back on `Site.role`. That field is `Roles?` **with no fallback value**: the queries that don't join
+membership leave it `null`, and every guard treats `null` as deny. This is deliberate — an earlier revision defaulted it
+to `WRITER`, which meant any `Site` loaded by one of those other queries silently claimed a role it had never actually
+loaded.
+
+Three extensions on `Mono<Site>` in `Roles.kt` — `requireWrite()`, `requirePublish()`, `requireAdmin()` — guard every
+write path in `PostService`, `TagService` and `SiteService`. They are applied *after* `findById`, so a non-member gets
+`404` and a member with an insufficient role gets `403`; the API never reveals a site's existence to someone with no
+membership at all.
+
+Two consequences worth remembering:
+
+- `SiteRepository.create` inserts the `site_members` row in the **same statement** as the site, via a data-modifying
+  CTE. The codebase has no transaction manager, and a site without a member row would be unreachable through the join —
+  so atomicity here is not optional.
+- `SiteRepository.update`/`delete` no longer carry `AND user_id = :userId`. Authorization lives entirely in the service
+  guards now; re-adding a `user_id` predicate would silently no-op writes for any admin who didn't create the site.
+
+`sites.user_id` survives as the creator/billing owner — it is what subdomain reservations are parked under, and what
+plan enforcement (Phase2.md #12/#14) will bill.
+
 ### Roles
 
 | Role     | Can do                                                                       |
@@ -27,6 +62,14 @@ owner — the creating user becomes the first `admin`.
 | `admin`  | Manage site settings, invite/remove members, plus everything `editor` can do |
 | `editor` | Create, edit, and publish any post; cannot manage members or site settings   |
 | `writer` | Create and edit post drafts only (see Phase2.md #17); cannot publish         |
+
+Written lowercase throughout this doc, but persisted and exposed **uppercase** (`ADMIN` / `EDITOR` / `WRITER`) — that's
+what V14 writes and what the `Roles` enum parses, matching how `SiteStatus` is already stored. `Roles.from` is lenient
+(case-insensitive, returns `null` on an unknown value) and exists for parsing untrusted input such as an invite request
+body; DB rows are read strictly.
+
+Deletion currently sits behind `requirePublish()` rather than `requireWrite()`, for both posts and tags — a `writer`
+whose remit is "create and edit drafts" should not be able to destroy a published post.
 
 ### Inviting a human
 
