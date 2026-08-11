@@ -172,6 +172,38 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             .fetch().first()
             .map { mapToSite(it) }
 
+    fun getAllUsers(siteId: Long): Flux<UserSite> {
+        return client.sql(
+            """SELECT site_members.role, site_members.site_id, site_members.created_at, users.* 
+            FROM site_members INNER JOIN users on site_members.user_id = users.id
+            WHERE site_members.site_id = :siteId 
+            """
+        )
+            .bind("siteId", siteId)
+            .fetch().all()
+            .map { mapToUserSite(it) }
+    }
+
+    fun deleteUser(siteId: Long, userId: Long): Mono<Unit> =
+        client.sql("""
+           DELETE FROM site_members WHERE site_id = :siteId AND user_id = :userId 
+        """)
+            .bind("siteId", siteId)
+            .bind("userId",userId)
+            .then().thenReturn(Unit)
+
+    @Suppress("UNCHECKED_CAST")
+    private fun mapToUserSite(row: Map<String, Any>): UserSite {
+        return UserSite(
+            role = Roles.from(row["role"] as String)!!,
+            siteId = row["site_id"] as Long,
+            userId = row["id"] as Long,
+            email = row["email"] as String,
+            displayName = row["display_name"] as String,
+            createdAt = row["created_at"] as OffsetDateTime
+        )
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun mapToSite(row: Map<String, Any>): Site {
         val languages = (row["languages"] as Array<String>)

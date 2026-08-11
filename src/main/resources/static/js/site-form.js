@@ -107,17 +107,22 @@ subdomainInput.addEventListener('input', () => {
 
 // ── Tab navigation ────────────────────────────────────────────────────────
 
+function activateTab(name) {
+  document.querySelectorAll('.form-tab')
+    .forEach(t => t.classList.toggle('form-tab--active', t.dataset.tab === name));
+  document.querySelectorAll('.tab-panel')
+    .forEach(p => p.hidden = p.id !== 'tab-' + name);
+  if (name === 'code') {
+    headEditor.refresh();
+    bodyEditor.refresh();
+  }
+  // The People tab reads from its own endpoint and saves nothing through this form,
+  // so the Save button would only be misleading there.
+  document.querySelector('.actions').hidden = name === 'people';
+}
+
 document.querySelectorAll('.form-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.form-tab').forEach(t => t.classList.remove('form-tab--active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.hidden = true);
-    tab.classList.add('form-tab--active');
-    document.getElementById('tab-' + tab.dataset.tab).hidden = false;
-    if (tab.dataset.tab === 'code') {
-      headEditor.refresh();
-      bodyEditor.refresh();
-    }
-  });
+  tab.addEventListener('click', () => activateTab(tab.dataset.tab));
 });
 
 // ── Language toggles ──────────────────────────────────────────────────────
@@ -239,6 +244,55 @@ async function loadSite() {
   esFooter.value = site.config?.es?.footer || '';
   esNav.innerHTML = '';
   (site.config?.es?.nav || []).forEach(link => esNav.appendChild(makeNavRow(link.label, link.url)));
+
+  // Every member may see who else has access, but only admins may touch the settings —
+  // so for anyone else this page collapses to the People tab alone.
+  document.getElementById('peopleTab').hidden = false;
+  loadMembers(site);
+
+  if (!can(site.role, 'admin')) {
+    document.querySelectorAll('.form-tab').forEach(t => t.hidden = t.dataset.tab !== 'people');
+    pageTitle.textContent = site.name;
+    document.title = `${site.name} — WriteInOne`;
+    activateTab('people');
+  } else if (location.hash === '#people') {
+    activateTab('people');
+  }
+}
+
+// ── People ────────────────────────────────────────────────────────────────
+
+async function loadMembers(site) {
+  const memberList = document.getElementById('memberList');
+  const memberEmpty = document.getElementById('memberEmpty');
+
+  const res = await api(`/sites/${siteId}/users`);
+  if (!res || !res.ok) {
+    memberList.innerHTML = '<p class="hint">Could not load the member list.</p>';
+    return;
+  }
+
+  const members = await res.json();
+  memberList.innerHTML = '';
+  memberEmpty.hidden = members.length > 1;
+
+  members.forEach(member => {
+    // sites.userId is the creator and billing owner — worth calling out, since that
+    // membership is the one that cannot be given up.
+    const owner = member.userId === site.userId;
+    const row = document.createElement('div');
+    row.className = 'member-row';
+    row.innerHTML = `
+      <div class="member-row__info">
+        <div class="member-row__name">
+          ${escHtml(member.displayName || member.email || 'Unknown user')}
+          ${owner ? '<span class="badge badge--owner">Owner</span>' : ''}
+        </div>
+        <div class="member-row__email">${escHtml(member.email || '')}</div>
+      </div>
+      ${roleBadge(member.role)}`;
+    memberList.appendChild(row);
+  });
 }
 
 async function init() {

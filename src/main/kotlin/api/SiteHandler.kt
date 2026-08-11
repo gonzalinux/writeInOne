@@ -7,6 +7,7 @@ import com.gonzalinux.common.RequestValidator
 import com.gonzalinux.common.pathVariableLong
 import com.gonzalinux.domain.site.Site
 import com.gonzalinux.domain.site.SiteService
+import com.gonzalinux.domain.site.UserSite
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
@@ -50,6 +51,7 @@ class SiteHandler(private val service: SiteService, private val validator: Reque
         }
     }
 
+
     fun get(request: ServerRequest): Mono<ServerResponse> {
         val id = request.pathVariableLong("id")
         return Mono.deferContextual { ctx ->
@@ -65,5 +67,23 @@ class SiteHandler(private val service: SiteService, private val validator: Reque
                 .then(ServerResponse.ok().build())
         }
     }
+
+    fun users(request: ServerRequest): Mono<ServerResponse> {
+        val id = request.pathVariableLong("id")
+        return Mono.deferContextual { ctx ->
+            ServerResponse.ok().body<UserSite>(service.getAllUsers(id, ctx.getUserId()!!))
+        }
+
+    }
+
+    fun deleteUser(request: ServerRequest): Mono<ServerResponse> {
+        val id = request.pathVariableLong("id")
+        val userId = request.pathVariableLong("userId")
+        return Mono.deferContextual { ctx ->
+            service.deleteUser(id, userId, ctx.getUserId()!!)
+                .then(ServerResponse.ok().build())
+        }
+    }
+
 
 }

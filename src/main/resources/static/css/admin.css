@@ -4,6 +4,12 @@
    WriteInOne Admin — shared stylesheet
    ============================================================ */
 
+/* Any class of ours that sets `display` outranks the browser's `[hidden]` rule, so
+   toggling `el.hidden` silently does nothing on those elements (.actions, for one). */
+[hidden] {
+    display: none !important;
+}
+
 /* ── Domain verification ── */
 .domain-row {
     display: flex;
@@ -70,6 +76,30 @@
 
 .badge--clickable:hover {
     filter: brightness(0.92);
+}
+
+.badge--role {
+    font-weight: 600;
+}
+
+.badge--role-admin {
+    background: #e6e0fa;
+    color: #4b32a8;
+}
+
+.badge--role-editor {
+    background: #e8f0fe;
+    color: #1a4fc4;
+}
+
+.badge--role-writer {
+    background: #f0f0f0;
+    color: #555;
+}
+
+.badge--owner {
+    background: #fdebd0;
+    color: #884400;
 }
 
 /* ── Modal ── */
@@ -740,6 +770,45 @@ tr:last-child td {
 .form-tab--active {
     color: #1a1a1a;
     border-bottom-color: #1a1a1a;
+}
+
+/* ── Member list (site form, People tab) ── */
+.member-list {
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    background: #fff;
+    margin-top: 1.25rem;
+}
+
+.member-list:empty {
+    display: none;
+}
+
+.member-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1.1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.member-row:last-child {
+    border-bottom: none;
+}
+
+.member-row__name {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.member-row__email {
+    font-size: 0.8125rem;
+    color: #888;
+    margin-top: 0.15rem;
 }
 
 /* ── Language tabs (post form) ── */

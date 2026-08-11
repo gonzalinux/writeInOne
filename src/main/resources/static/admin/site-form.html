@@ -36,6 +36,9 @@
     <button class="form-tab" data-tab="appearance" role="tab">Appearance</button>
     <button class="form-tab" data-tab="languages" role="tab">Languages</button>
     <button class="form-tab" data-tab="code" role="tab">Code</button>
+    <!-- Members live on their own endpoints and only exist once the site does, so this tab is
+         revealed by site-form.js in edit mode, and only for admins. -->
+    <button class="form-tab" data-tab="people" role="tab" id="peopleTab" hidden>People</button>
   </nav>
 
   <form id="siteForm" onsubmit="return false">
@@ -191,6 +194,15 @@
                   placeholder="<!-- Scripts or tags injected before </body> on every page -->"></textarea>
         <p class="hint">Injected at the start of <code>&lt;body&gt;</code> on every page.</p>
       </div>
+    </div>
+
+    <!-- People -->
+    <div class="tab-panel" id="tab-people" hidden>
+      <p class="hint">Everyone with access to this site. Roles decide what each person may do:
+        an <strong>admin</strong> manages settings and people, an <strong>editor</strong> writes and publishes,
+        a <strong>writer</strong> works on drafts only.</p>
+      <div class="member-list" id="memberList"></div>
+      <p class="hint" id="memberEmpty" hidden>Nobody else has access to this site yet.</p>
     </div>
 
     <p id="error" style="display:none;color:#c00;font-size:0.875rem;margin-top:0.75rem;"></p>

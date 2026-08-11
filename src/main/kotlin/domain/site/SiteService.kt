@@ -73,6 +73,26 @@ class SiteService(
         repo.findById(id, userId)
             .switchIfEmpty(Mono.error(SiteNotFoundException(id)))
 
+    fun getAllUsers(id: Long, userId: Long): Flux<UserSite> =
+        findById(id, userId)
+            .flatMapMany {
+                repo.getAllUsers(id)
+            }
+
+    fun deleteUser(id: Long, userIdToDelete: Long, userId: Long): Mono<Unit> {
+        return findById(id, userId)
+            .requireAdmin()
+            .flatMap {
+                when {
+                    it.userId == userIdToDelete -> Mono.error { BadRequestException("It is not posible to remove the owner of the site.") }
+                    // Not sure about this
+                    userId == userIdToDelete -> Mono.error { BadRequestException("You can't remove yourself") }
+                    else -> Mono.just(it)
+                }
+            }
+            .flatMap { repo.deleteUser(it.id, userIdToDelete) }
+    }
+
     fun update(id: Long, userId: Long, request: UpdateSiteRequest): Mono<Site> {
         return request.toMono()
             .map { validateNavLinks(it.config); validateCustomCss(it.customCss); it }
@@ -81,12 +101,11 @@ class SiteService(
             .switchIfEmpty(Mono.error(SiteNotFoundException(id)))
             .flatMap { existing ->
                 val newDomain = request.domain?.let { subdomainService.normalizeDomain(it) }
-                if (newDomain == null || newDomain == existing.domain) {
+                val updated = if (newDomain == null || newDomain == existing.domain) {
                     // A managed subdomain is always verified, so re-verification is meaningless there.
                     val reset = request.requestVerification && !subdomainService.isManaged(existing.domain)
                     performUpdate(
-                        id, userId, request,
-                        domain = null,
+                        id, request, domain = null,
                         status = if (reset) SiteStatus.NOT_VERIFIED else null,
                         prefix = prefixFor(existing.domain, request)
                     )
@@ -94,8 +113,7 @@ class SiteService(
                     claimDomain(userId, newDomain)
                         .flatMap { status ->
                             performUpdate(
-                                id, userId, request,
-                                domain = newDomain,
+                                id, request, domain = newDomain,
                                 status = status,
                                 prefix = prefixFor(newDomain, request)
                             )
@@ -103,12 +121,15 @@ class SiteService(
                         // The old label stays parked so its owner can move back to it.
                         .flatMap { updated -> subdomainService.park(existing.domain, userId).thenReturn(updated) }
                 }
+                // repo.update doesn't join membership, so it comes back with a null role. Carry
+                // the caller's over from the row we authorized against, otherwise the response
+                // would look like a demotion to whoever just saved.
+                updated.map { it.copy(role = existing.role) }
             }
     }
 
     private fun performUpdate(
         id: Long,
-        userId: Long,
         request: UpdateSiteRequest,
         domain: String?,
         status: SiteStatus?,

@@ -1,14 +1,6 @@
 const siteList = document.getElementById('siteList');
 const empty = document.getElementById('empty');
 
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
 let baseDomain = '';
 
 async function loadSubdomainConfig() {
@@ -21,6 +13,9 @@ async function loadDashboard() {
   if (!res) return;
 
   const sites = await res.json();
+
+  // Deleting a site re-runs this, so the previous render has to go or the cards stack up.
+  siteList.innerHTML = '';
 
   if (sites.length === 0) {
     empty.style.display = '';
@@ -44,18 +39,24 @@ async function loadDashboard() {
                      data-verify-date="${escHtml(site.verifyDate || '')}"
                      data-verify-site-id="${site.id}">${badgeText}</span>`;
 
+    // Settings and deletion are admin-only server-side, so offering them to an editor or
+    // writer would just produce a 403 on click. The member list is open to everyone,
+    // so non-admins get a direct link to that tab instead.
+    const siteActions = can(site.role, 'admin') ? `
+                <a class="btn btn-ghost" href="/admin/sites/${site.id}/edit">Edit</a>
+                <a class="btn btn-ghost" href="/admin/sites/${site.id}/style-editor">Style Editor</a>
+                <button class="btn btn-ghost btn--danger" data-delete-site="${site.id}" data-site-name="${escHtml(site.name)}">Delete</button>` : `
+                <a class="btn btn-ghost" href="/admin/sites/${site.id}/edit#people">People</a>`;
+
     const card = document.createElement('div');
     card.className = 'site-card';
     card.innerHTML = `
             <div class="site-card__info">
-                <div class="site-card__name">${escHtml(site.name)} ${badge}</div>
+                <div class="site-card__name">${escHtml(site.name)} ${badge} ${roleBadge(site.role)}</div>
                 <a class="site-card__domain" href="${siteUrl}" target="_blank" rel="noopener">${escHtml(site.domain)}${prefix}</a>
             </div>
             <div class="site-card__actions">
-                <a class="btn btn-ghost" href="/admin/sites/${site.id}/posts">Posts</a>
-                <a class="btn btn-ghost" href="/admin/sites/${site.id}/edit">Edit</a>
-                <a class="btn btn-ghost" href="/admin/sites/${site.id}/style-editor">Style Editor</a>
-                <button class="btn btn-ghost btn--danger" data-delete-site="${site.id}" data-site-name="${escHtml(site.name)}">Delete</button>
+                <a class="btn btn-ghost" href="/admin/sites/${site.id}/posts">Posts</a>${siteActions}
             </div>`;
     siteList.appendChild(card);
   });

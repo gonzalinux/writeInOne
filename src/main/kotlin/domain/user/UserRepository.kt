@@ -13,19 +13,19 @@ class UserRepository(private val client: DatabaseClient) {
         client.sql("SELECT * FROM users WHERE id = :id LIMIT 1")
             .bind("id", userId)
             .fetch().first()
-            .map { mapToUser(it) }
+            .map { User.fromData(it) }
 
     fun findByEmail(email: String): Mono<User> =
         client.sql("SELECT * FROM users WHERE email = :email LIMIT 1")
             .bind("email", email.lowercase())
             .fetch().first()
-            .map { mapToUser(it) }
+            .map { User.fromData(it) }
 
     fun findVerifiedByEmail(email: String): Mono<User> =
         client.sql("SELECT * FROM users WHERE email = :email AND email_verified = true LIMIT 1")
             .bind("email", email.lowercase())
             .fetch().first()
-            .map { mapToUser(it) }
+            .map { User.fromData(it) }
 
     fun deleteById(userId: Long): Mono<Void> =
         client.sql("DELETE FROM users WHERE id = :userId")
@@ -38,7 +38,7 @@ class UserRepository(private val client: DatabaseClient) {
             .bind("displayName", displayName)
             .bind("passwordHash", passwordHash)
             .fetch().first()
-            .map { mapToUser(it) }
+            .map { User.fromData(it) }
 
     fun saveRefreshToken(userId: Long, tokenHash: String, expiresAt: OffsetDateTime): Mono<Void> =
         client.sql("INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES (:userId, :tokenHash, :expiresAt)")
@@ -167,21 +167,11 @@ class UserRepository(private val client: DatabaseClient) {
         client.sql("SELECT * FROM users ORDER BY created_at DESC LIMIT :limit")
             .bind("limit", limit)
             .fetch().all()
-            .map { mapToUser(it) }
+            .map { User.fromData(it) }
 
     fun countAll(): Mono<Long> =
         client.sql("SELECT COUNT(*) as count FROM users")
             .fetch().first()
             .map { it["count"] as Long }
-
-    private fun mapToUser(row: Map<String, Any>): User =
-        User(
-            id = row["id"] as Long,
-            email = row["email"] as String,
-            displayName = row["display_name"] as String,
-            passwordHash = row["password"] as String,
-            emailVerified = row["email_verified"] as Boolean,
-            createdAt = row["created_at"] as OffsetDateTime,
-            updatedAt = row["updated_at"] as OffsetDateTime
-        )
+    
 }

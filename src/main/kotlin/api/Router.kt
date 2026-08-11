@@ -64,6 +64,8 @@ class Router(
                 .GET("/{id}", siteHandler::get)
                 .PATCH("/{id}", siteHandler::update)
                 .DELETE("/{id}", siteHandler::delete)
+                .GET("/{id}/users", siteHandler::users)
+                .DELETE("/{id}/users/{userId}", siteHandler::deleteUser)
                 .path("/{siteId}/posts") { posts ->
                     posts
                         .POST("/", postHandler::create)

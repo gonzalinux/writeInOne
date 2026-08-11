@@ -4,6 +4,38 @@ document.querySelectorAll('[data-confirm]').forEach(el => {
   });
 });
 
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── Roles ──────────────────────────────────────────────────────────────────
+// Mirrors the Roles enum in domain/site/Roles.kt. This only decides what the UI
+// offers — the server enforces the same table on every write, so a stale copy here
+// can never turn into a permission.
+
+const ROLE_PERMS = {
+  ADMIN: ['write', 'publish', 'admin'],
+  EDITOR: ['write', 'publish'],
+  WRITER: ['write'],
+};
+
+const ROLE_LABELS = {ADMIN: 'Admin', EDITOR: 'Editor', WRITER: 'Writer'};
+
+/** Fails closed: an unknown or missing role grants nothing, same as the Kotlin guards. */
+function can(role, permission) {
+  return ROLE_PERMS[role]?.includes(permission) ?? false;
+}
+
+function roleBadge(role) {
+  if (!role) return '';
+  const label = ROLE_LABELS[role] || role;
+  return `<span class="badge badge--role badge--role-${escHtml(role.toLowerCase())}">${escHtml(label)}</span>`;
+}
+
 // ── Verification modal ─────────────────────────────────────────────────────
 
 function showVerificationModal({status, domain, prefix, siteId, verifyDate}) {
