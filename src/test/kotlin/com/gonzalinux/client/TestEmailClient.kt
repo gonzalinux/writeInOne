@@ -14,6 +14,7 @@ class TestEmailClient : EmailClient {
 
     private val verificationCodes = ConcurrentHashMap<String, String>()
     private val resetCodes = ConcurrentHashMap<String, String>()
+    private val invitationUrls = ConcurrentHashMap<String, String>()
 
     override fun sendVerificationEmail(to: String, displayName: String, code: String): Mono<Void> {
         verificationCodes[to] = code
@@ -25,9 +26,15 @@ class TestEmailClient : EmailClient {
         return Mono.empty()
     }
 
+    override fun sendInvitationEmail(to: String, siteName: String, acceptUrl: String): Mono<Void> {
+        invitationUrls[to] = acceptUrl
+        return Mono.empty()
+    }
+
     fun getVerificationCode(email: String): String? = verificationCodes[email]
     fun getResetCode(email: String): String? = resetCodes[email]
+    fun getInvitationUrl(email: String): String? = invitationUrls[email]
     fun clear() {
-        verificationCodes.clear(); resetCodes.clear()
+        verificationCodes.clear(); resetCodes.clear(); invitationUrls.clear()
     }
 }

@@ -29,6 +29,13 @@ class GonemailClientImpl(
             data = mapOf("reset_code" to code)
         )
 
+    override fun sendInvitationEmail(to: String, siteName: String, acceptUrl: String): Mono<Void> =
+        send(
+            template = props.invitationTemplate,
+            to = to,
+            data = mapOf("site_name" to siteName, "accept_url" to acceptUrl)
+        )
+
     private fun send(template: String, to: String, data: Map<String, String>): Mono<Void> {
         val body = mapOf("app" to props.appName, "template" to template, "to" to to, "data" to data)
         return webClient.post()

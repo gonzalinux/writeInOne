@@ -7,5 +7,6 @@ data class GonemailProperties(
     val baseUrl: String,
     val appName: String,
     val verificationTemplate: String = "email-verification",
-    val passwordResetTemplate: String = "password-reset"
+    val passwordResetTemplate: String = "password-reset",
+    val invitationTemplate: String = "site-invitation"
 )

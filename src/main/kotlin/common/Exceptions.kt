@@ -69,3 +69,16 @@ class ForbiddenException(details: String) : ApiException(
     details = details
 )
 
+class InvitationNotFoundException(id: Long) : ApiException(
+    status = HttpStatus.NOT_FOUND,
+    error = "INVITATION_NOT_FOUND",
+    details = "Invitation with id $id not found"
+)
+
+/** Expired, revoked or simply wrong — all indistinguishable to whoever followed the link. */
+class InvalidInvitationException(details: String) : ApiException(
+    status = HttpStatus.BAD_REQUEST,
+    error = "INVALID_INVITATION",
+    details = details
+)
+

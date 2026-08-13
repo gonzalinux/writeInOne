@@ -22,6 +22,7 @@ class Router(
     private val tagHandler: TagHandler,
     private val blogsHandler: BlogsHandler,
     private val adminHandler: AdminHandler,
+    private val invitationHandler: InvitationHandler,
     private val docsHandler: DocsHandler,
     private val jwtAuthFilter: JwtAuthFilter,
     private val jwtNotEnforcedFilter: JwtNotEnforcedFilter,
@@ -55,6 +56,10 @@ class Router(
 
     private fun protectedRoutes(): RouterFunction<ServerResponse> = route()
 
+        // Outside /sites on purpose: whoever follows an invite link has no membership yet, so a
+        // site-scoped guard would reject exactly the person the link was made for.
+        .POST("/invitations/accept", invitationHandler::accept)
+
         .path("/sites") { sites ->
             sites
                 .POST("/", siteHandler::create)
@@ -66,6 +71,9 @@ class Router(
                 .DELETE("/{id}", siteHandler::delete)
                 .GET("/{id}/users", siteHandler::users)
                 .DELETE("/{id}/users/{userId}", siteHandler::deleteUser)
+                .GET("/{id}/invitations", invitationHandler::list)
+                .POST("/{id}/invitations", invitationHandler::create)
+                .DELETE("/{id}/invitations/{invitationId}", invitationHandler::revoke)
                 .path("/{siteId}/posts") { posts ->
                     posts
                         .POST("/", postHandler::create)

@@ -32,6 +32,7 @@ gonemail:
   app-name: ${GONEMAIL_APP:writeinone}
   verification-template: email-verification
   password-reset-template: password-reset
+  invitation-template: site-invitation
 
 schedulers:
   enabled: ${SCHEDULERS_ENABLED:true}
