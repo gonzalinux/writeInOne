@@ -772,6 +772,19 @@ tr:last-child td {
     border-bottom-color: #1a1a1a;
 }
 
+/* ── Invite box (site form, People tab) ── */
+.invite-box {
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    background: #fafafa;
+    padding: 1.1rem;
+    margin-top: 1.25rem;
+}
+
+.invite-box .field-row {
+    margin-bottom: 1rem;
+}
+
 /* ── Member list (site form, People tab) ── */
 .member-list {
     border: 1px solid #e5e5e5;
@@ -809,6 +822,13 @@ tr:last-child td {
     font-size: 0.8125rem;
     color: #888;
     margin-top: 0.15rem;
+}
+
+.member-row__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
 }
 
 /* ── Language tabs (post form) ── */

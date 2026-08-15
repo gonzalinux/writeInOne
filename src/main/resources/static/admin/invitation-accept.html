@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png"/>
+  <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png"/>
+  <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png"/>
+  <link rel="manifest" href="/manifest.json"/>
+  <title>Accept invitation — WriteInOne</title>
+  <link rel="stylesheet" href="/css/admin.css"/>
+  <script src="/js/api.js" defer></script>
+  <script src="/js/admin.js" defer></script>
+  <script src="/js/invitation-accept.js" defer></script>
+</head>
+<body class="auth-layout">
+<div class="card">
+  <a class="brand--muted" href="https://WriteInOne.com"><img src="/img/logoWriteInOneGrey.png" alt=""
+                                                             class="brand__img"/>WriteInOne</a>
+  <h1 id="pageTitle">Joining site…</h1>
+
+  <div id="pending">
+    <p class="hint">Checking your invitation…</p>
+  </div>
+
+  <div id="success" style="display:none">
+    <p id="successBody"></p>
+    <a class="btn btn--full" id="successLink" href="/admin">Go to the site</a>
+  </div>
+
+  <div id="failure" style="display:none">
+    <p id="failureBody" style="color:#c00;font-size:0.875rem;"></p>
+    <a class="btn btn--full btn-ghost" href="/admin">Go to dashboard</a>
+  </div>
+</div>
+</body>
+</html>

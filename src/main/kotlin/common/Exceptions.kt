@@ -82,3 +82,9 @@ class InvalidInvitationException(details: String) : ApiException(
     details = details
 )
 
+class ServiceAccountNotFoundException(id: Long) : ApiException(
+    status = HttpStatus.NOT_FOUND,
+    error = "SERVICE_ACCOUNT_NOT_FOUND",
+    details = "Service account with id $id not found"
+)
+

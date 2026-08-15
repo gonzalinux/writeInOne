@@ -248,6 +248,7 @@ async function loadSite() {
   // Every member may see who else has access, but only admins may touch the settings —
   // so for anyone else this page collapses to the People tab alone.
   document.getElementById('peopleTab').hidden = false;
+  document.getElementById('inviteBox').hidden = !can(site.role, 'admin');
   loadMembers(site);
 
   if (!can(site.role, 'admin')) {
@@ -280,6 +281,9 @@ async function loadMembers(site) {
     // sites.userId is the creator and billing owner — worth calling out, since that
     // membership is the one that cannot be given up.
     const owner = member.userId === site.userId;
+    // The server also refuses to remove the owner (and to remove yourself), so this is
+    // just sparing the admin a round-trip for the case that's always rejected.
+    const removable = !owner && can(site.role, 'admin');
     const row = document.createElement('div');
     row.className = 'member-row';
     row.innerHTML = `
@@ -290,10 +294,89 @@ async function loadMembers(site) {
         </div>
         <div class="member-row__email">${escHtml(member.email || '')}</div>
       </div>
-      ${roleBadge(member.role)}`;
+      <div class="member-row__actions">
+        ${roleBadge(member.role)}
+        ${removable ? `<button type="button" class="btn-icon" data-remove-member="${member.userId}" title="Remove access">×</button>` : ''}
+      </div>`;
     memberList.appendChild(row);
   });
+
+  memberList.querySelectorAll('[data-remove-member]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm("Remove this person's access to the site?")) return;
+      const res = await api(`/sites/${siteId}/users/${btn.dataset.removeMember}`, {method: 'DELETE'});
+      if (!res) return;
+      if (res.ok) {
+        loadMembers(site);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.details || 'Failed to remove member');
+      }
+    });
+  });
 }
+
+// ── Invitations ──────────────────────────────────────────────────────────
+
+const inviteRoleSelect = document.getElementById('inviteRole');
+const inviteEmailInput = document.getElementById('inviteEmail');
+const createInviteBtn = document.getElementById('createInviteBtn');
+const inviteError = document.getElementById('inviteError');
+const inviteModal = document.getElementById('inviteModal');
+const inviteModalBody = document.getElementById('inviteModalBody');
+const inviteLinkInput = document.getElementById('inviteLinkInput');
+const copyInviteLinkBtn = document.getElementById('copyInviteLinkBtn');
+const inviteCopyHint = document.getElementById('inviteCopyHint');
+
+createInviteBtn.addEventListener('click', async () => {
+  inviteError.style.display = 'none';
+  const email = inviteEmailInput.value.trim();
+  const role = inviteRoleSelect.value;
+  const body = {role, delivery: email ? 'EMAIL' : 'LINK'};
+  if (email) body.email = email;
+
+  createInviteBtn.disabled = true;
+  const res = await api(`/sites/${siteId}/invitations`, {method: 'POST', body: JSON.stringify(body)});
+  createInviteBtn.disabled = false;
+  if (!res) return;
+
+  if (res.ok) {
+    const created = await res.json();
+    const roleLabel = ROLE_LABELS[role] || role;
+    inviteModalBody.textContent = email
+      ? `An invite for the ${roleLabel} role was sent to ${email}. You can also copy the link below and share it yourself.`
+      : `Share this link with the person you want to invite. It grants the ${roleLabel} role and expires in 48 hours.`;
+    inviteLinkInput.value = created.acceptUrl;
+    inviteCopyHint.style.display = 'none';
+    inviteEmailInput.value = '';
+    inviteModal.style.display = 'flex';
+  } else {
+    const data = await res.json().catch(() => ({}));
+    inviteError.textContent = data.details || 'Could not create the invitation';
+    inviteError.style.display = 'block';
+  }
+});
+
+copyInviteLinkBtn.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(inviteLinkInput.value);
+    inviteCopyHint.textContent = 'Copied!';
+  } catch {
+    inviteLinkInput.select();
+    inviteCopyHint.textContent = 'Press Ctrl+C / Cmd+C to copy.';
+  }
+  inviteCopyHint.style.display = 'block';
+});
+
+function closeInviteModal() {
+  inviteModal.style.display = 'none';
+}
+
+document.getElementById('inviteModalClose').addEventListener('click', closeInviteModal);
+document.getElementById('inviteModalCloseBtn').addEventListener('click', closeInviteModal);
+inviteModal.addEventListener('click', e => {
+  if (e.target === inviteModal) closeInviteModal();
+});
 
 async function init() {
   await loadSubdomainConfig();   // loadSite needs baseDomain to pick the hosting mode

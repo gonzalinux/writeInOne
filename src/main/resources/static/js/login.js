@@ -9,6 +9,16 @@ const resetEmailDisplay = document.getElementById('resetEmailDisplay');
 
 let resetEmail = '';
 
+// Only ever a same-origin relative path — an open '//host/path' would hand control to
+// whatever query string produced the redirect.
+function redirectTarget() {
+  const r = new URLSearchParams(location.search).get('redirect');
+  return (r && r.startsWith('/') && !r.startsWith('//')) ? r : '/admin';
+}
+
+const registerLink = document.querySelector('.footer-link a[href="/admin/register"]');
+if (registerLink && location.search) registerLink.href = '/admin/register' + location.search;
+
 function show(form, title) {
   loginForm.style.display = 'none';
   forgotForm.style.display = 'none';
@@ -33,7 +43,7 @@ loginForm.addEventListener('submit', async e => {
 
   if (res.ok) {
     setTimeout(() => {
-      location.href = '/admin';
+      location.href = redirectTarget();
     }, 0);
   } else {
     const data = await res.json().catch(() => ({}));
@@ -89,8 +99,10 @@ resetForm.addEventListener('submit', async e => {
     resetErr.textContent = 'Password reset. Redirecting to log in…';
     resetErr.style.color = '#2a7d2a';
     resetErr.style.display = 'block';
+    // Keep the redirect param alive across the bounce back to the plain login form, so a
+    // password reset started from an invite link still lands back on the invite after login.
     setTimeout(() => {
-      location.href = '/admin/login';
+      location.href = '/admin/login' + location.search;
     }, 1500);
   } else {
     const data = await res.json().catch(() => ({}));

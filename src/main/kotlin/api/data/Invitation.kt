@@ -31,3 +31,8 @@ data class CreateInvitationRequest(
 data class AcceptInvitationRequest(
     @field:NotBlank val token: String
 )
+
+data class InviteServiceAccountRequest(
+    @field:NotBlank val role: String,
+    val serviceAccountId: Long
+)

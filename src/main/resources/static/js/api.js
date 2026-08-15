@@ -18,7 +18,8 @@ async function api(url, options = {}) {
   if (res.status === 401) {
     const refreshRes = await doRefresh();
     if (!refreshRes.ok) {
-      location.href = '/admin/login';
+      const here = encodeURIComponent(location.pathname + location.search);
+      location.href = `/admin/login?redirect=${here}`;
       return null;
     }
     return fetch(url, {...options, credentials: 'include', headers});

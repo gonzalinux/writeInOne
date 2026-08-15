@@ -6,6 +6,16 @@ const emailDisplay = document.getElementById('emailDisplay');
 
 let submittedEmail = '';
 
+// Only ever a same-origin relative path — an open '//host/path' would hand control to
+// whatever query string produced the redirect.
+function redirectTarget() {
+  const r = new URLSearchParams(location.search).get('redirect');
+  return (r && r.startsWith('/') && !r.startsWith('//')) ? r : '/admin';
+}
+
+const loginLink = document.querySelector('.footer-link a[href="/admin/login"]');
+if (loginLink && location.search) loginLink.href = '/admin/login' + location.search;
+
 registerForm.addEventListener('submit', async e => {
   e.preventDefault();
   err.style.display = 'none';
@@ -49,7 +59,7 @@ otpForm.addEventListener('submit', async e => {
   });
 
   if (res.ok) {
-    location.href = '/admin';
+    location.href = redirectTarget();
   } else {
     const data = await res.json().catch(() => ({}));
     otpErr.textContent = data.message || 'Invalid or expired code';

@@ -51,7 +51,8 @@ class UserService(
                 encoder.encode("Just to prevent timing attacks")
                 Mono.empty()
             }
-            .filter { encoder.matches(password, it.passwordHash) }
+            .requireNotServiceAccount()
+            .filter { it.passwordHash != null && encoder.matches(password, it.passwordHash) }
             .flatMap { user ->
                 logger.info { "User logged in [userId=${user.id}]" }
                 issueTokens(user.id)
@@ -98,6 +99,7 @@ class UserService(
         val tokenHash = tokenService.hashToken(code)
         return repo.findByEmail(email)
             .switchIfEmpty { Mono.error(BadRequestException("Invalid or expired code")) }
+            .requireNotServiceAccount()
             .flatMap { user ->
                 repo.findEmailVerificationToken(user.id, tokenHash)
                     .switchIfEmpty { Mono.error(BadRequestException("Invalid or expired code")) }
@@ -112,6 +114,7 @@ class UserService(
 
     fun requestPasswordReset(email: String): Mono<Void> {
         return repo.findVerifiedByEmail(email)
+            .filter { it.serviceAccountTokenHash == null }
             .flatMap { user ->
                 val otp = tokenService.generateOtp(RESET_EXPIRY_MIN)
                 val tokenHash = tokenService.hashToken(otp.value)
@@ -127,6 +130,7 @@ class UserService(
         val tokenHash = tokenService.hashToken(code)
         return repo.findVerifiedByEmail(email)
             .switchIfEmpty { Mono.error(BadRequestException("Invalid or expired code")) }
+            .requireNotServiceAccount()
             .flatMap { user ->
                 repo.findPasswordResetToken(user.id, tokenHash)
                     .switchIfEmpty { Mono.error(BadRequestException("Invalid or expired code")) }
@@ -140,7 +144,7 @@ class UserService(
 
     fun resendVerificationEmail(email: String): Mono<Void> {
         return repo.findByEmail(email)
-            .filter { !it.emailVerified }
+            .filter { !it.emailVerified && it.serviceAccountTokenHash == null }
             .flatMap { user -> sendVerificationEmail(user.id, user.email, user.displayName) }
             .then()
     }

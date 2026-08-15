@@ -32,11 +32,21 @@ class UserServiceTest {
         passwordHash = "hashed",
         displayName = "Test User",
         emailVerified = true,
+        ownerId = null,
+        serviceAccountTokenHash = null,
         createdAt = now,
         updatedAt = now
     )
 
     private val unverifiedUser = verifiedUser.copy(id = 2L, emailVerified = false)
+
+    private val serviceAccount = verifiedUser.copy(
+        id = 3L,
+        email = "sa@test.com",
+        passwordHash = null,
+        ownerId = 1L,
+        serviceAccountTokenHash = "hashed-service-token"
+    )
 
     private val otp = OpaqueToken("123456", now.plusMinutes(5))
     private val accessToken = AccessToken("access-jwt")
@@ -138,6 +148,15 @@ class UserServiceTest {
             .verify()
     }
 
+    @Test
+    fun `login throws UnauthorizedException for a service account`() {
+        every { repo.findVerifiedByEmail("sa@test.com") } returns Mono.just(serviceAccount)
+
+        StepVerifier.create(service.login("sa@test.com", "anything"))
+            .expectError(UnauthorizedException::class.java)
+            .verify()
+    }
+
     // --- verifyEmail ---
 
     @Test
@@ -169,6 +188,16 @@ class UserServiceTest {
             .verify()
     }
 
+    @Test
+    fun `verifyEmail throws UnauthorizedException for a service account`() {
+        every { tokenService.hashToken("123456") } returns "hashed-otp"
+        every { repo.findByEmail("sa@test.com") } returns Mono.just(serviceAccount)
+
+        StepVerifier.create(service.verifyEmail("sa@test.com", "123456"))
+            .expectError(UnauthorizedException::class.java)
+            .verify()
+    }
+
     // --- requestPasswordReset ---
 
     @Test
@@ -187,6 +216,16 @@ class UserServiceTest {
         every { repo.findVerifiedByEmail("ghost@test.com") } returns Mono.empty()
 
         StepVerifier.create(service.requestPasswordReset("ghost@test.com"))
+            .verifyComplete()
+
+        verify(exactly = 0) { emailClient.sendPasswordResetEmail(any(), any()) }
+    }
+
+    @Test
+    fun `requestPasswordReset completes silently for a service account`() {
+        every { repo.findVerifiedByEmail("sa@test.com") } returns Mono.just(serviceAccount)
+
+        StepVerifier.create(service.requestPasswordReset("sa@test.com"))
             .verifyComplete()
 
         verify(exactly = 0) { emailClient.sendPasswordResetEmail(any(), any()) }
@@ -220,6 +259,40 @@ class UserServiceTest {
         StepVerifier.create(service.resetPassword("test@test.com", "wrong", "newpassword"))
             .expectError(BadRequestException::class.java)
             .verify()
+    }
+
+    @Test
+    fun `resetPassword throws UnauthorizedException for a service account`() {
+        every { tokenService.hashToken("123456") } returns "hashed-otp"
+        every { repo.findVerifiedByEmail("sa@test.com") } returns Mono.just(serviceAccount)
+
+        StepVerifier.create(service.resetPassword("sa@test.com", "123456", "newpassword"))
+            .expectError(UnauthorizedException::class.java)
+            .verify()
+    }
+
+    // --- resendVerificationEmail ---
+
+    @Test
+    fun `resendVerificationEmail sends a new code for an unverified human account`() {
+        every { repo.findByEmail("test@test.com") } returns Mono.just(unverifiedUser)
+        mockVerificationEmail(unverifiedUser.id)
+
+        StepVerifier.create(service.resendVerificationEmail("test@test.com"))
+            .verifyComplete()
+
+        verify { emailClient.sendVerificationEmail("test@test.com", "Test User", "123456") }
+    }
+
+    @Test
+    fun `resendVerificationEmail completes silently for a service account`() {
+        val unverifiedServiceAccount = serviceAccount.copy(emailVerified = false)
+        every { repo.findByEmail("sa@test.com") } returns Mono.just(unverifiedServiceAccount)
+
+        StepVerifier.create(service.resendVerificationEmail("sa@test.com"))
+            .verifyComplete()
+
+        verify(exactly = 0) { emailClient.sendVerificationEmail(any(), any(), any()) }
     }
 
     // --- logout / refresh (unchanged logic, keep coverage) ---

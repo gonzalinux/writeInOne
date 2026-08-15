@@ -56,8 +56,8 @@ class SiteInvitationRepository(private val client: DatabaseClient) {
      * `ON CONFLICT DO NOTHING` keeps an existing member's role intact — a stale writer invite
      * must never demote an admin. Returns false when nothing was granted.
      */
-    fun redeem(id: Long, userId: Long): Mono<Boolean> =
-        client.sql(
+    fun redeem(id: Long, userId: Long): Mono<Boolean> {
+        return client.sql(
             """
             WITH claim AS (
                 UPDATE site_invitations SET accepted_at = now()
@@ -75,6 +75,7 @@ class SiteInvitationRepository(private val client: DatabaseClient) {
             .fetch().first()
             .map { true }
             .defaultIfEmpty(false)
+    }
 
     private fun mapToInvitation(row: Map<String, Any>): SiteInvitation =
         SiteInvitation(

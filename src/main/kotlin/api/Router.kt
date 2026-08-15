@@ -23,6 +23,7 @@ class Router(
     private val blogsHandler: BlogsHandler,
     private val adminHandler: AdminHandler,
     private val invitationHandler: InvitationHandler,
+    private val serviceAccountHandler: ServiceAccountHandler,
     private val docsHandler: DocsHandler,
     private val jwtAuthFilter: JwtAuthFilter,
     private val jwtNotEnforcedFilter: JwtNotEnforcedFilter,
@@ -60,6 +61,14 @@ class Router(
         // site-scoped guard would reject exactly the person the link was made for.
         .POST("/invitations/accept", invitationHandler::accept)
 
+        .path("/service-accounts") { serviceAccounts ->
+            serviceAccounts
+                .POST("/", serviceAccountHandler::create)
+                .GET("/", serviceAccountHandler::list)
+                .DELETE("/{id}", serviceAccountHandler::revoke)
+                .POST("/{id}/rotate", serviceAccountHandler::rotate)
+        }
+
         .path("/sites") { sites ->
             sites
                 .POST("/", siteHandler::create)
@@ -74,6 +83,7 @@ class Router(
                 .GET("/{id}/invitations", invitationHandler::list)
                 .POST("/{id}/invitations", invitationHandler::create)
                 .DELETE("/{id}/invitations/{invitationId}", invitationHandler::revoke)
+                .POST("/{id}/invitations/service-account", invitationHandler::inviteServiceAccount)
                 .path("/{siteId}/posts") { posts ->
                     posts
                         .POST("/", postHandler::create)

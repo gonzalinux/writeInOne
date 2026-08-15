@@ -201,6 +201,26 @@
       <p class="hint">Everyone with access to this site. Roles decide what each person may do:
         an <strong>admin</strong> manages settings and people, an <strong>editor</strong> writes and publishes,
         a <strong>writer</strong> works on drafts only.</p>
+
+      <div class="invite-box" id="inviteBox">
+        <div class="field-row">
+          <div>
+            <label for="inviteRole">Invite as</label>
+            <select id="inviteRole">
+              <option value="WRITER">Writer</option>
+              <option value="EDITOR">Editor</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          </div>
+          <div>
+            <label for="inviteEmail">Email <span style="color:#aaa">(optional)</span></label>
+            <input id="inviteEmail" type="email" placeholder="Leave blank to just get a link"/>
+          </div>
+        </div>
+        <button type="button" class="btn" id="createInviteBtn">Create invite</button>
+        <p class="hint" id="inviteError" style="display:none;color:#c00;"></p>
+      </div>
+
       <div class="member-list" id="memberList"></div>
       <p class="hint" id="memberEmpty" hidden>Nobody else has access to this site yet.</p>
     </div>
@@ -223,6 +243,22 @@
       <button class="btn modal__action"></button>
       <button class="btn btn-ghost modal__close">Close</button>
     </div>
+  </div>
+</div>
+
+<div id="inviteModal" class="modal" style="display:none">
+  <div class="modal__box">
+    <button class="modal__close" aria-label="Close" id="inviteModalClose">×</button>
+    <h2 class="modal__title">Invite created</h2>
+    <p class="modal__body" id="inviteModalBody"></p>
+    <div class="field" style="margin-top:0">
+      <input id="inviteLinkInput" type="text" readonly onclick="this.select()"/>
+    </div>
+    <div class="modal__footer">
+      <button class="btn" id="copyInviteLinkBtn">Copy link</button>
+      <button class="btn btn-ghost" id="inviteModalCloseBtn">Close</button>
+    </div>
+    <p class="hint" id="inviteCopyHint" style="display:none;margin-top:0.5rem"></p>
   </div>
 </div>
 </body>

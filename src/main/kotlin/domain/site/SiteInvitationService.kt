@@ -2,14 +2,17 @@ package com.gonzalinux.domain.site
 
 import com.gonzalinux.common.InvalidInvitationException
 import com.gonzalinux.common.InvitationNotFoundException
+import com.gonzalinux.common.ServiceAccountNotFoundException
 import com.gonzalinux.common.SiteNotFoundException
 import com.gonzalinux.config.SubdomainProperties
 import com.gonzalinux.domain.user.EmailClient
+import com.gonzalinux.domain.user.ServiceAccountRepository
 import com.gonzalinux.domain.user.TokenService
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.toMono
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.*
@@ -23,6 +26,7 @@ private const val EXPIRY_HOURS = 48L
 class SiteInvitationService(
     private val repo: SiteInvitationRepository,
     private val siteRepo: SiteRepository,
+    private val serviceAccountRepo: ServiceAccountRepository,
     private val tokenService: TokenService,
     private val emailClient: EmailClient,
     private val subdomainProperties: SubdomainProperties
@@ -41,6 +45,21 @@ class SiteInvitationService(
                         // a copy-paste rather than the whole invitation.
                         deliver(email, site.name, acceptUrl)
                             .thenReturn(CreatedInvitation(invitation, token, acceptUrl))
+                    }
+            }
+
+    /**
+     * Skips the token/email round-trip entirely — the row goes straight into `site_members`.
+     * Constraint enforced here, not at the DB: [serviceAccountId] must be owned by [userId], the
+     * same admin who must hold ADMIN on [siteId] — see Collaboration.md.
+     */
+    fun inviteServiceAccount(siteId: Long, userId: Long, serviceAccountId: Long, role: Roles): Mono<Unit> =
+        requireAdminOn(siteId, userId)
+            .flatMap {
+                serviceAccountRepo.existsByIdAndOwnerId(serviceAccountId, userId)
+                    .flatMap { owned ->
+                        if (!owned) Mono.error(ServiceAccountNotFoundException(serviceAccountId))
+                        else siteRepo.addMember(siteId, serviceAccountId, role).map { Unit }
                     }
             }
 
@@ -77,7 +96,7 @@ class SiteInvitationService(
     private fun redeem(invitation: SiteInvitation, userId: Long): Mono<SiteInvitation> =
         repo.redeem(invitation.id, userId)
             .flatMap { granted ->
-                if (granted) Mono.just(invitation)
+                if (granted) invitation.toMono()
                 else Mono.error(InvalidInvitationException("This invitation is no longer valid."))
             }
 

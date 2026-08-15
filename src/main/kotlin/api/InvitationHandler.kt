@@ -3,6 +3,7 @@ package com.gonzalinux.api
 import com.gonzalinux.api.data.AcceptInvitationRequest
 import com.gonzalinux.api.data.CreateInvitationRequest
 import com.gonzalinux.api.data.InvitationDelivery
+import com.gonzalinux.api.data.InviteServiceAccountRequest
 import com.gonzalinux.common.BadRequestException
 import com.gonzalinux.common.RequestContextHolder.getUserId
 import com.gonzalinux.common.RequestValidator
@@ -37,7 +38,6 @@ class InvitationHandler(
     private fun roleOf(body: CreateInvitationRequest): Roles =
         Roles.from(body.role) ?: throw BadRequestException("Unknown role '${body.role}'")
 
-    /** Null means "just give me the link" — the service mails nothing. */
     private fun recipientOf(body: CreateInvitationRequest): String? {
         val delivery = InvitationDelivery.from(body.delivery)
             ?: throw BadRequestException("Unknown delivery '${body.delivery}'")
@@ -45,6 +45,22 @@ class InvitationHandler(
         return body.email?.trim()?.takeIf { it.isNotEmpty() }
             ?: throw BadRequestException("An email address is required to send an invitation by email")
     }
+
+    fun inviteServiceAccount(request: ServerRequest): Mono<ServerResponse> {
+        val siteId = request.pathVariableLong("id")
+        return Mono.deferContextual { ctx ->
+            request.bodyToMono<InviteServiceAccountRequest>()
+                .map { validator.validate(it) }
+                .flatMap { body ->
+                    service.inviteServiceAccount(siteId, ctx.getUserId()!!, body.serviceAccountId, roleOf(body))
+                }
+                .flatMap { ServerResponse.ok().build() }
+        }
+    }
+
+    /** Roles.from is lenient because this value arrives on an untrusted request body. */
+    private fun roleOf(body: InviteServiceAccountRequest): Roles =
+        Roles.from(body.role) ?: throw BadRequestException("Unknown role '${body.role}'")
 
     fun list(request: ServerRequest): Mono<ServerResponse> {
         val siteId = request.pathVariableLong("id")
@@ -62,7 +78,6 @@ class InvitationHandler(
         }
     }
 
-    /** Not under /sites — the caller is not a member yet, so the token is the only authorization. */
     fun accept(request: ServerRequest): Mono<ServerResponse> =
         Mono.deferContextual { ctx ->
             request.bodyToMono<AcceptInvitationRequest>()

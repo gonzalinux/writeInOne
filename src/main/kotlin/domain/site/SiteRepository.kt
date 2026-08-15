@@ -184,6 +184,26 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             .map { mapToUserSite(it) }
     }
 
+    /**
+     * Direct add, skipping the token/accept round-trip — used to invite service accounts.
+     * `ON CONFLICT DO NOTHING` keeps an existing member's role intact.
+     */
+    fun addMember(siteId: Long, userId: Long, role: Roles): Mono<Boolean> =
+        client.sql(
+            """
+            INSERT INTO site_members (site_id, user_id, role)
+            VALUES (:siteId, :userId, :role)
+            ON CONFLICT (user_id, site_id) DO NOTHING
+            RETURNING user_id
+            """
+        )
+            .bind("siteId", siteId)
+            .bind("userId", userId)
+            .bind("role", role.name)
+            .fetch().first()
+            .map { true }
+            .defaultIfEmpty(false)
+
     fun deleteUser(siteId: Long, userId: Long): Mono<Unit> =
         client.sql("""
            DELETE FROM site_members WHERE site_id = :siteId AND user_id = :userId 

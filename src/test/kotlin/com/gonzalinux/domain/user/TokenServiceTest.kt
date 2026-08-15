@@ -25,6 +25,8 @@ class TokenServiceTest {
         passwordHash = "hash",
         displayName = "Test User",
         emailVerified = true,
+        ownerId = null,
+        serviceAccountTokenHash = null,
         createdAt = OffsetDateTime.now(ZoneOffset.UTC),
         updatedAt = OffsetDateTime.now(ZoneOffset.UTC)
     )
