@@ -6,6 +6,7 @@ import com.gonzalinux.config.BlogExceptionFilter
 import com.gonzalinux.config.HostFilter
 import com.gonzalinux.config.JwtAuthFilter
 import com.gonzalinux.config.JwtNotEnforcedFilter
+import com.gonzalinux.config.ServiceAccountAuthFilter
 import com.gonzalinux.config.SubdomainProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -26,6 +27,7 @@ class Router(
     private val serviceAccountHandler: ServiceAccountHandler,
     private val docsHandler: DocsHandler,
     private val jwtAuthFilter: JwtAuthFilter,
+    private val serviceAccountAuthFilter: ServiceAccountAuthFilter,
     private val jwtNotEnforcedFilter: JwtNotEnforcedFilter,
     private val hostFilter: HostFilter,
     private val adminHostFilter: AdminHostFilter,
@@ -80,6 +82,7 @@ class Router(
                 .DELETE("/{id}", siteHandler::delete)
                 .GET("/{id}/users", siteHandler::users)
                 .DELETE("/{id}/users/{userId}", siteHandler::deleteUser)
+                .PATCH("/{id}/users/{userId}", siteHandler::updateUserRole)
                 .GET("/{id}/invitations", invitationHandler::list)
                 .POST("/{id}/invitations", invitationHandler::create)
                 .DELETE("/{id}/invitations/{invitationId}", invitationHandler::revoke)
@@ -104,7 +107,7 @@ class Router(
         }
 
         .build()
-        .filter(jwtAuthFilter)
+        .filter(serviceAccountAuthFilter)
 
     private fun adminPreviewRoute(): RouterFunction<ServerResponse> = route()
         .GET("/admin/preview/{siteId}/{lang}/{slug}", adminHandler::preview)

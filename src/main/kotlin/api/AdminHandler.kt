@@ -21,6 +21,7 @@ class AdminHandler(
             path == "/admin/login" -> "login.html"
             path == "/admin/register" -> "register.html"
             path == "/admin/invitations/accept" -> "invitation-accept.html"
+            path == "/admin/service-accounts" -> "service-accounts.html"
             path.matches(Regex(".*/sites/[^/]+/posts/[^/]+/edit")) -> "post-form.html"
             path.matches(Regex(".*/sites/[^/]+/posts/new")) -> "post-form.html"
             path.matches(Regex(".*/sites/[^/]+/posts")) -> "post-list.html"

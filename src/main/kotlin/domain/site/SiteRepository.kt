@@ -204,6 +204,17 @@ class SiteRepository(private val client: DatabaseClient, private val objectMappe
             .map { true }
             .defaultIfEmpty(false)
 
+    fun updateMemberRole(siteId: Long, userId: Long, role: Roles): Mono<Unit> =
+        client.sql(
+            """
+           UPDATE site_members SET role = :role WHERE site_id = :siteId AND user_id = :userId
+        """
+        )
+            .bind("siteId", siteId)
+            .bind("userId", userId)
+            .bind("role", role.name)
+            .then().thenReturn(Unit)
+
     fun deleteUser(siteId: Long, userId: Long): Mono<Unit> =
         client.sql("""
            DELETE FROM site_members WHERE site_id = :siteId AND user_id = :userId 

@@ -284,6 +284,9 @@ async function loadMembers(site) {
     // The server also refuses to remove the owner (and to remove yourself), so this is
     // just sparing the admin a round-trip for the case that's always rejected.
     const removable = !owner && can(site.role, 'admin');
+    // Same as removal: the server also rejects changing the owner's role, so this just
+    // spares the admin a round-trip. Self role-change is left to the server to reject.
+    const roleEditable = !owner && can(site.role, 'admin');
     const row = document.createElement('div');
     row.className = 'member-row';
     row.innerHTML = `
@@ -295,7 +298,7 @@ async function loadMembers(site) {
         <div class="member-row__email">${escHtml(member.email || '')}</div>
       </div>
       <div class="member-row__actions">
-        ${roleBadge(member.role)}
+        ${roleEditable ? roleSelect(member.role, member.userId) : roleBadge(member.role)}
         ${removable ? `<button type="button" class="btn-icon" data-remove-member="${member.userId}" title="Remove access">×</button>` : ''}
       </div>`;
     memberList.appendChild(row);
@@ -303,17 +306,47 @@ async function loadMembers(site) {
 
   memberList.querySelectorAll('[data-remove-member]').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if (!confirm("Remove this person's access to the site?")) return;
+      const ok = await confirmModal("Remove this person's access to the site?", {
+        title: 'Remove member', confirmLabel: 'Remove', danger: true
+      });
+      if (!ok) return;
       const res = await api(`/sites/${siteId}/users/${btn.dataset.removeMember}`, {method: 'DELETE'});
       if (!res) return;
       if (res.ok) {
         loadMembers(site);
       } else {
         const data = await res.json().catch(() => ({}));
-        alert(data.details || 'Failed to remove member');
+        await alertModal(data.details || 'Failed to remove member');
       }
     });
   });
+
+  memberList.querySelectorAll('[data-role-select]').forEach(select => {
+    const previous = select.value;
+    select.addEventListener('change', async () => {
+      const role = select.value;
+      select.disabled = true;
+      const res = await api(`/sites/${siteId}/users/${select.dataset.roleSelect}`, {
+        method: 'PATCH',
+        body: JSON.stringify({role})
+      });
+      select.disabled = false;
+      if (!res) return;
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        await alertModal(data.details || "Failed to change this member's role");
+        select.value = previous;
+      }
+    });
+  });
+}
+
+function roleSelect(role, userId) {
+  return `<select class="role-select" data-role-select="${userId}">
+    ${Object.entries(ROLE_LABELS).map(([value, label]) =>
+      `<option value="${value}"${value === role ? ' selected' : ''}>${escHtml(label)}</option>`
+    ).join('')}
+  </select>`;
 }
 
 // ── Invitations ──────────────────────────────────────────────────────────

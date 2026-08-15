@@ -93,6 +93,19 @@ class SiteService(
             .flatMap { repo.deleteUser(it.id, userIdToDelete) }
     }
 
+    fun updateUserRole(id: Long, userIdToUpdate: Long, role: Roles, userId: Long): Mono<Unit> {
+        return findById(id, userId)
+            .requireAdmin()
+            .flatMap {
+                when {
+                    it.userId == userIdToUpdate -> Mono.error { BadRequestException("It is not posible to change the role of the owner of the site.") }
+                    userId == userIdToUpdate -> Mono.error { BadRequestException("You can't change your own role") }
+                    else -> Mono.just(it)
+                }
+            }
+            .flatMap { repo.updateMemberRole(it.id, userIdToUpdate, role) }
+    }
+
     fun update(id: Long, userId: Long, request: UpdateSiteRequest): Mono<Site> {
         return request.toMono()
             .map { validateNavLinks(it.config); validateCustomCss(it.customCss); it }

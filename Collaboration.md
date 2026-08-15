@@ -22,22 +22,23 @@ owner — the creating user becomes the first `admin`.
 
 ### Implementation status
 
-| Piece                                                       | State                                    |
-|-------------------------------------------------------------|------------------------------------------|
-| `site_members` schema + owner backfill (V14)                | ✓ shipped                                |
-| Membership-based authorization + role enforcement           | ✓ shipped                                |
-| Creator added as `ADMIN` on site creation                   | ✓ shipped                                |
-| `site_invitations` schema (V13)                             | ✓ shipped (table only, nothing reads it) |
-| Invite create / list / revoke / accept (backend)             | ✓ shipped                                |
-| Member list, removal (backend)                               | ✓ shipped (`SiteHandler`/`SiteService`: `getAllUsers`, `deleteUser`) |
-| Member role change                                          | not started                              |
-| Admin UI — People tab (invite creation, member list, member removal) | ✓ shipped, see [Frontend](#frontend--people-tab--accept-page) below |
-| Admin UI — pending-invitations list (view/copy/revoke an existing invite) | not started — see note below |
-| Admin UI — service accounts page                             | not started                              |
-| `site-invitation` email template (local reference copy)      | ✓ shipped (`email-templates/site-invitation.html`) — **not yet registered with Gonemail**, see note below |
-| Service accounts — `User` model + CRUD (repo/service/handler/routes) | ✓ shipped, see status note below |
-| Service accounts — bearer-token auth filter                 | not started — a service account token cannot yet authenticate a request |
-| Invite a service account into `site_members`                | ✓ shipped, 1 test currently failing, see status note below |
+| Piece                                                                     | State                                                                                                     |
+|---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| `site_members` schema + owner backfill (V14)                              | ✓ shipped                                                                                                 |
+| Membership-based authorization + role enforcement                         | ✓ shipped                                                                                                 |
+| Creator added as `ADMIN` on site creation                                 | ✓ shipped                                                                                                 |
+| `site_invitations` schema (V13)                                           | ✓ shipped (table only, nothing reads it)                                                                  |
+| Invite create / list / revoke / accept (backend)                          | ✓ shipped                                                                                                 |
+| Member list, removal (backend)                                            | ✓ shipped (`SiteHandler`/`SiteService`: `getAllUsers`, `deleteUser`)                                      |
+| Member role change                                                        | ✓ shipped (`SiteHandler`/`SiteService`: `updateUserRole`), admin-only, owner/self excluded                |
+| Admin UI — People tab (invite creation, member list, member removal)      | ✓ shipped, see [Frontend](#frontend--people-tab--accept-page) below                                       |
+| Admin UI — pending-invitations list (view/copy/revoke an existing invite) | not started — see note below                                                                              |
+| Admin UI — service accounts page                                          | ✓ shipped — see [Implementation notes](#implementation-notes) below                                      |
+| `site-invitation` email template (local reference copy)                   | ✓ shipped (`email-templates/site-invitation.html`) — **not yet registered with Gonemail**, see note below |
+| Service accounts — `User` model + CRUD (repo/service/handler/routes)      | ✓ shipped, tested — see [Implementation notes](#implementation-notes) below                               |
+| Service accounts — bearer-token auth filter                               | ✓ shipped, tested — see [Implementation notes](#implementation-notes) below                               |
+| Invite a service account into `site_members`                              | ✓ shipped, tested                                                                                          |
+| Expired `site_invitations` cleanup                                        | ✓ shipped — `ExpiredInvitationScheduler`, see [Implementation notes](#implementation-notes) below         |
 
 **How enforcement works.** `SiteRepository.findById` and `findAllByUserId` INNER JOIN `site_members`, and the caller's
 role rides back on `Site.role`. That field is `Roles?` **with no fallback value**: the queries that don't join
@@ -184,40 +185,53 @@ entire operation, immediate effect on next request.
 Allows programmatic access to the REST API — no browser, no JWT cookie. Target users: the MCP server, automation
 pipelines, AI agent accounts.
 
-### Current status (in progress, paused here)
+### Implementation notes
 
-What's shipped:
-
-- `User` (`domain/user/User.kt`): `passwordHash` is now nullable, plus `ownerId` and `serviceAccountTokenHash` fields.
-- `Mono<User>.requireNotServiceAccount()` guard, next to `User`, applied in the **service** layer (not the repository —
-  deliberate, so a service account row is never filtered out by a query predicate but is always readable/manageable by
-  code that has a legitimate reason to touch it, e.g. the CRUD below). Wired into `UserService`:
-  - `login`, `verifyEmail`, `resetPassword` — guard throws `UnauthorizedException`, matching those methods' existing
-    explicit-error behavior.
-  - `requestPasswordReset`, `resendVerificationEmail` — guard is an inline `.filter { it.serviceAccountTokenHash == null }`
-    instead, to preserve their existing silent-no-op-on-unknown-email behavior (throwing here would leak that an email
-    belongs to a service account).
-- CRUD: `domain/user/ServiceAccountRepository.kt`, `domain/user/ServiceAccountService.kt`, `api/data/ServiceAccount.kt`,
-  `api/ServiceAccountHandler.kt`, routed at `/service-accounts` (create/list/revoke/rotate). `email` is **not** reused as
-  the human-readable name as originally speced below — a throwaway unique value (`sa-<uuid>@service.internal`) is
-  generated instead, and `display_name` carries the name the user typed. Revisit if the literal spec matters later.
-- Invite-time ownership constraint: `SiteInvitationService.inviteServiceAccount(siteId, userId, serviceAccountId, role)`
-  — checks admin-on-site via the existing `requireAdminOn`, then owner-of-service-account via new
-  `ServiceAccountRepository.existsByIdAndOwnerId`, then inserts directly via new `SiteRepository.addMember` (no
-  `site_invitations` row, matches the spec below). Routed at `POST /sites/{id}/invitations/service-account`.
-- Tests added: `ServiceAccountServiceTest`, `SiteInvitationServiceTest` (new file, covers only `inviteServiceAccount` —
-  the pre-existing human-invite flow had no test file and was left alone), plus service-account-rejection cases added
-  to `UserServiceTest`.
-
-**Left off here:** `SiteInvitationServiceTest > inviteServiceAccount adds the membership...` is failing —
-`inviteServiceAccount` returns `Mono<Unit>`, which emits `Unit` before completing, so the test's bare `.verifyComplete()`
-chokes on the unexpected `onNext`. Fix is mechanical: either assert `.expectNext(Unit).verifyComplete()`, or (probably
-better, for consistency — most no-body service methods in this codebase return `Mono<Void>`) change
-`inviteServiceAccount`'s return type to `Mono<Void>`. Full suite hasn't been re-run since.
-
-Still not started: the bearer-token auth filter (so a service account token can actually authenticate a request —
-nothing in `config/` reads `service_account_token_hash` yet), member role change, and both admin UI pages (service
-accounts, member management).
+- `Mono<User>.requireNotServiceAccount()` guard (next to `User` in `domain/user/User.kt`), applied in the **service**
+  layer, not the repository — so a service account row is never filtered out by a query predicate but stays readable by
+  code that has a legitimate reason to touch it (e.g. the CRUD below). Wired into `UserService`: `login`,
+  `verifyEmail`, `resetPassword` throw `UnauthorizedException` on a service account, matching those methods' existing
+  explicit-error behavior; `requestPasswordReset`/`resendVerificationEmail` use an inline
+  `.filter { it.serviceAccountTokenHash == null }` instead, to preserve their existing silent-no-op-on-unknown-email
+  behavior (throwing there would leak that an email belongs to a service account).
+- **Deviates from the spec below:** `email` is not reused as the human-readable name — a throwaway unique value
+  (`sa-<uuid>@service.internal`) is generated instead, and `display_name` carries the name the user typed. Revisit if
+  the literal spec matters later.
+- `SiteInvitationService.inviteServiceAccount(siteId, userId, serviceAccountId, role)` implements
+  [Inviting a service account](#inviting-a-service-account-ai-agent) above: admin-on-site via the existing
+  `requireAdminOn`, then owner-of-service-account via `ServiceAccountRepository.existsByIdAndOwnerId`, then a direct
+  insert via `SiteRepository.addMember` (no `site_invitations` row). Routed at
+  `POST /sites/{id}/invitations/service-account`, driven from the "Grant access" button on the service-accounts page
+  below.
+- Tested: `ServiceAccountServiceTest`, `SiteInvitationServiceTest` (new file, covers only `inviteServiceAccount` — the
+  human-invite flow has no test file of its own), plus service-account-rejection cases in `UserServiceTest`. Full
+  `./gradlew test` (unit + integration against the real DB) is green.
+- `ServiceAccountAuthFilter` (`config/`) implements the [Auth flow](#auth-flow) below. It sits in front of
+  `JwtAuthFilter` on `protectedRoutes()` only (the REST API) — `JwtAuthFilter` itself is untouched and still guards the
+  admin-UI preview route directly, since a service account has no admin-UI use case. When the request carries
+  `Authorization: Bearer <token>`, it hashes the token, looks the row up via new
+  `UserRepository.findByServiceAccountTokenHash`, and writes `userId` into the Reactor context exactly like
+  `JwtAuthFilter` does; anything else (no header, or a non-Bearer scheme) delegates straight through to
+  `JwtAuthFilter.filter(...)`, so cookie-based human sessions are unaffected. Tested in `ServiceAccountAuthFilterTest`.
+- Admin UI: new standalone page (`static/admin/service-accounts.html` + `service-accounts.js`, routed at
+  `/admin/service-accounts`, linked from the dashboard header) rather than a tab on a site — service accounts belong
+  to the user (`owner_id`), not a site. Covers create (token shown once), list, rotate, revoke, and "Grant access"
+  (site + role picker, filtered client-side to sites the user administers, calling `inviteServiceAccount` above).
+  **Known gap:** no way to see which sites a service account already has access to — there's no
+  `GET /service-accounts/{id}/sites`-shaped endpoint yet, so "Grant access" is one-directional. Manually verified
+  end-to-end in the browser (create → grant → confirmed the `site_members` row in Postgres → rotate → revoke →
+  confirmed the cascade deleted it), not covered by automated browser tests.
+- While reviewing the service-accounts page, replaced native `confirm()`/`alert()` with a proper modal
+  (`static/js/confirm-modal.js`, `confirmModal()`/`alertModal()`, Promise-based) everywhere in the admin UI —
+  dashboard's delete-site, the People tab's remove-member/role-change, post-list's publish/unpublish/delete, and
+  style-editor's error dialogs, in addition to the new service-accounts page. Motivated by more than aesthetics: a
+  native `confirm()` blocks the page's JS thread entirely while open, which was actively breaking browser-automation
+  testing (Chrome DevTools Protocol mouse dispatch times out against a blocked renderer).
+- `ExpiredInvitationScheduler` (`scheduler/`) sweeps expired `site_invitations` rows nobody accepted, reusing
+  `SiteInvitationRepository.deleteExpired` and the existing `token-scheduler` cadence/limit (30 min, 100 rows) via
+  `TokenCleanerProperties` — the same shape of cleanup `ExpiredTokenScheduler` already does for `refresh_tokens`. This
+  closed a real gap: unlike `refresh_tokens`/`email_verification_tokens`/`password_reset_tokens`, expired invitations
+  had no cleanup at all before this — they'd have accumulated in the table forever.
 
 ### Core decision: no separate table
 
@@ -236,13 +250,6 @@ service account is simply another row in `users`:
 - `email` — reused as the account's human-readable name, e.g. `claude-desktop@service.writeinone.com`. Satisfies the
   existing `NOT NULL UNIQUE` constraint for free, no schema change needed there.
 - `password` — becomes nullable (`ALTER COLUMN password DROP NOT NULL`); service accounts never log in with a password.
-
-**Rejected: reusing `password` for the token.** `password` is BCrypt-hashed (`SecurityConfig.kt`, cost 12, salted) — the
-same input hashes differently every time, so it can't be looked up via `WHERE password = ?`, only verified against a row
-you already found via `encoder.matches()`. A single opaque bearer token (matching the UX of every other API-key
-convention — GitHub PAT, OpenAI key, etc.) needs a deterministic hash to look up by, which is exactly what
-`refresh_tokens` already does for a different kind of token. Hence a dedicated `service_account_token_hash` column
-instead of overloading `password`.
 
 ### Auth flow
 

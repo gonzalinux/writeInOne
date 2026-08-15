@@ -76,11 +76,14 @@ async function loadDashboard() {
   siteList.querySelectorAll('[data-delete-site]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const name = btn.dataset.siteName;
-      if (!confirm(`Delete "${name}" and all its posts? This cannot be undone.`)) return;
+      const ok = await confirmModal(`Delete "${name}" and all its posts? This cannot be undone.`, {
+        title: 'Delete site', confirmLabel: 'Delete', danger: true
+      });
+      if (!ok) return;
       const res = await api(`/sites/${btn.dataset.deleteSite}`, {method: 'DELETE'});
       if (!res) return;
       if (res.ok) loadDashboard();
-      else alert('Failed to delete site');
+      else await alertModal('Failed to delete site');
     });
   });
 }

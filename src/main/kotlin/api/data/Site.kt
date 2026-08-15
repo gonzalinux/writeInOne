@@ -38,3 +38,7 @@ data class UpdateSiteRequest(
         message = "prefix must be alphanumeric with dashes, max 20 chars"
     ) val prefix: String? = null
 )
+
+data class UpdateUserRoleRequest(
+    @field:NotBlank val role: String
+)

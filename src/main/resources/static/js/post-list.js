@@ -58,7 +58,7 @@ function attachActionListeners() {
       const res = await api(`/sites/${siteId}/posts/${postId}/publish`, {method: 'POST'});
       if (!res) return;
       if (res.ok) loadPosts();
-      else alert('Failed to publish post');
+      else await alertModal('Failed to publish post');
     });
   });
 
@@ -68,7 +68,7 @@ function attachActionListeners() {
       const res = await api(`/sites/${siteId}/posts/${postId}/unpublish`, {method: 'POST'});
       if (!res) return;
       if (res.ok) loadPosts();
-      else alert('Failed to unpublish post');
+      else await alertModal('Failed to unpublish post');
     });
   });
 
@@ -78,18 +78,21 @@ function attachActionListeners() {
       const res = await api(`/sites/${siteId}/posts/${postId}/unpublish`, {method: 'POST'});
       if (!res) return;
       if (res.ok) loadPosts();
-      else alert('Failed to unschedule post');
+      else await alertModal('Failed to unschedule post');
     });
   });
 
   postTableBody.querySelectorAll('[data-delete-post]').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if (!confirm('Delete this post? This cannot be undone.')) return;
+      const ok = await confirmModal('Delete this post? This cannot be undone.', {
+        title: 'Delete post', confirmLabel: 'Delete', danger: true
+      });
+      if (!ok) return;
       const postId = btn.dataset.deletePost;
       const res = await api(`/sites/${siteId}/posts/${postId}`, {method: 'DELETE'});
       if (!res) return;
       if (res.ok) loadPosts();
-      else alert('Failed to delete post');
+      else await alertModal('Failed to delete post');
     });
   });
 }

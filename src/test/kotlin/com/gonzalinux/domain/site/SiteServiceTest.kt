@@ -323,6 +323,38 @@ class SiteServiceTest {
             .verify()
     }
 
+    // ── updateUserRole ─────────────────────────────────────────────────────
+
+    @Test
+    fun `updateUserRole updates the role when caller is admin and target is another member`() {
+        every { repo.findById(1L, 1L) } returns Mono.just(site)
+        every { repo.updateMemberRole(1L, 2L, Roles.EDITOR) } returns Mono.just(Unit)
+
+        StepVerifier.create(service.updateUserRole(1L, 2L, Roles.EDITOR, 1L))
+            .expectNext(Unit)
+            .verifyComplete()
+
+        verify { repo.updateMemberRole(1L, 2L, Roles.EDITOR) }
+    }
+
+    @Test
+    fun `updateUserRole throws BadRequestException when changing the owner's role`() {
+        every { repo.findById(1L, 2L) } returns Mono.just(site)
+
+        StepVerifier.create(service.updateUserRole(1L, site.userId, Roles.EDITOR, 2L))
+            .expectError(BadRequestException::class.java)
+            .verify()
+    }
+
+    @Test
+    fun `updateUserRole throws BadRequestException when changing own role`() {
+        every { repo.findById(1L, 2L) } returns Mono.just(site)
+
+        StepVerifier.create(service.updateUserRole(1L, 2L, Roles.EDITOR, 2L))
+            .expectError(BadRequestException::class.java)
+            .verify()
+    }
+
     // ── nav link validation ────────────────────────────────────────────────
 
     @Test

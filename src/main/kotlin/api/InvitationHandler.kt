@@ -54,7 +54,7 @@ class InvitationHandler(
                 .flatMap { body ->
                     service.inviteServiceAccount(siteId, ctx.getUserId()!!, body.serviceAccountId, roleOf(body))
                 }
-                .flatMap { ServerResponse.ok().build() }
+                .then(ServerResponse.ok().build())
         }
     }
 

@@ -481,7 +481,7 @@
 
   loadBtn.addEventListener('click', async () => {
     if (!site?.stylesUrl) {
-      alert('This site has no stylesUrl configured. Edit the site to add one.');
+      await alertModal('This site has no stylesUrl configured. Edit the site to add one.');
       return;
     }
     loadBtn.textContent = 'Loading…';
@@ -493,9 +493,9 @@
       updateCssOnly();
     } catch (err) {
       if (err.message.includes('Failed to fetch') || err instanceof TypeError) {
-        alert('Could not fetch the CSS (CORS error or network issue). Try pasting the CSS manually.');
+        await alertModal('Could not fetch the CSS (CORS error or network issue). Try pasting the CSS manually.');
       } else {
-        alert(`Failed to load CSS: ${err.message}`);
+        await alertModal(`Failed to load CSS: ${err.message}`);
       }
     } finally {
       loadBtn.textContent = 'Load from site';
@@ -519,7 +519,7 @@
   saveBtn.addEventListener('click', async () => {
     const css = editor.getValue();
     if (css.length > 25000) {
-      alert('CSS exceeds the 25000 character limit. Please reduce it before saving.');
+      await alertModal('CSS exceeds the 25000 character limit. Please reduce it before saving.');
       return;
     }
     saveBtn.textContent = 'Saving…';
@@ -532,7 +532,7 @@
         saveBtn.textContent = 'Save';
       }, 2000);
     } catch (_) {
-      alert('Failed to save CSS. Please try again.');
+      await alertModal('Failed to save CSS. Please try again.');
       saveBtn.textContent = 'Save';
     } finally {
       saveBtn.disabled = false;

@@ -2,9 +2,12 @@ package com.gonzalinux.api
 
 import com.gonzalinux.api.data.CreateSiteRequest
 import com.gonzalinux.api.data.UpdateSiteRequest
+import com.gonzalinux.api.data.UpdateUserRoleRequest
+import com.gonzalinux.common.BadRequestException
 import com.gonzalinux.common.RequestContextHolder.getUserId
 import com.gonzalinux.common.RequestValidator
 import com.gonzalinux.common.pathVariableLong
+import com.gonzalinux.domain.site.Roles
 import com.gonzalinux.domain.site.Site
 import com.gonzalinux.domain.site.SiteService
 import com.gonzalinux.domain.site.UserSite
@@ -85,5 +88,19 @@ class SiteHandler(private val service: SiteService, private val validator: Reque
         }
     }
 
+    fun updateUserRole(request: ServerRequest): Mono<ServerResponse> {
+        val id = request.pathVariableLong("id")
+        val userIdToUpdate = request.pathVariableLong("userId")
+        return Mono.deferContextual { ctx ->
+            request.bodyToMono<UpdateUserRoleRequest>()
+                .map { validator.validate(it) }
+                .flatMap { body -> service.updateUserRole(id, userIdToUpdate, roleOf(body), ctx.getUserId()!!) }
+                .then(ServerResponse.ok().build())
+        }
+    }
+
+    /** Roles.from is lenient because this value arrives on an untrusted request body. */
+    private fun roleOf(body: UpdateUserRoleRequest): Roles =
+        Roles.from(body.role) ?: throw BadRequestException("Unknown role '${body.role}'")
 
 }

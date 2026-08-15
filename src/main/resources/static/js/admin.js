@@ -1,9 +1,3 @@
-document.querySelectorAll('[data-confirm]').forEach(el => {
-  el.addEventListener('click', e => {
-    if (!confirm(el.dataset.confirm)) e.preventDefault();
-  });
-});
-
 function escHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -79,7 +73,7 @@ function showVerificationModal({status, domain, prefix, siteId, verifyDate}) {
         body: JSON.stringify({requestVerification: true})
       });
       if (res?.ok) location.reload();
-      else alert('Failed to request re-verification');
+      else await alertModal('Failed to request re-verification');
     };
   } else {
     btn.style.display = 'none';

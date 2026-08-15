@@ -57,7 +57,7 @@ class SiteInvitationServiceTest {
         StepVerifier.create(service.inviteServiceAccount(1L, 1L, 10L, Roles.WRITER))
             .verifyComplete()
 
-        verify { siteRepo.addMember(1L, 10L, Roles.WRITER) }
+        verify(exactly = 1) { siteRepo.addMember(1L, 10L, Roles.WRITER) }
     }
 
     @Test

@@ -53,13 +53,13 @@ class SiteInvitationService(
      * Constraint enforced here, not at the DB: [serviceAccountId] must be owned by [userId], the
      * same admin who must hold ADMIN on [siteId] — see Collaboration.md.
      */
-    fun inviteServiceAccount(siteId: Long, userId: Long, serviceAccountId: Long, role: Roles): Mono<Unit> =
+    fun inviteServiceAccount(siteId: Long, userId: Long, serviceAccountId: Long, role: Roles): Mono<Void> =
         requireAdminOn(siteId, userId)
             .flatMap {
                 serviceAccountRepo.existsByIdAndOwnerId(serviceAccountId, userId)
-                    .flatMap { owned ->
+                    .flatMap<Void> { owned ->
                         if (!owned) Mono.error(ServiceAccountNotFoundException(serviceAccountId))
-                        else siteRepo.addMember(siteId, serviceAccountId, role).map { Unit }
+                        else siteRepo.addMember(siteId, serviceAccountId, role).then()
                     }
             }
 

@@ -77,6 +77,12 @@ class SiteInvitationRepository(private val client: DatabaseClient) {
             .defaultIfEmpty(false)
     }
 
+    /** Sweeps invitations nobody ever accepted — same pattern as `UserRepository.deleteExpiredTokens`. */
+    fun deleteExpired(limit: Int): Mono<Void> =
+        client.sql("DELETE FROM site_invitations WHERE ctid IN (SELECT ctid FROM site_invitations WHERE expires_at < now() LIMIT :limit)")
+            .bind("limit", limit)
+            .then()
+
     private fun mapToInvitation(row: Map<String, Any>): SiteInvitation =
         SiteInvitation(
             id = row["id"] as Long,

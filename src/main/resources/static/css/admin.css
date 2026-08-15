@@ -831,6 +831,12 @@ tr:last-child td {
     flex-shrink: 0;
 }
 
+.role-select {
+    width: auto;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.8125rem;
+}
+
 /* ── Language tabs (post form) ── */
 .lang-tabs {
     display: flex;

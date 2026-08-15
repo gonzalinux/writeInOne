@@ -27,6 +27,12 @@ class UserRepository(private val client: DatabaseClient) {
             .fetch().first()
             .map { User.fromData(it) }
 
+    fun findByServiceAccountTokenHash(tokenHash: String): Mono<User> =
+        client.sql("SELECT * FROM users WHERE service_account_token_hash = :tokenHash LIMIT 1")
+            .bind("tokenHash", tokenHash)
+            .fetch().first()
+            .map { User.fromData(it) }
+
     fun deleteById(userId: Long): Mono<Void> =
         client.sql("DELETE FROM users WHERE id = :userId")
             .bind("userId", userId)
