@@ -7,6 +7,7 @@ import com.gonzalinux.api.data.ServiceAccountTokenResponse
 import com.gonzalinux.common.RequestContextHolder.getUserId
 import com.gonzalinux.common.RequestValidator
 import com.gonzalinux.common.pathVariableLong
+import com.gonzalinux.domain.site.Site
 import com.gonzalinux.domain.user.ServiceAccountService
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
@@ -59,6 +60,13 @@ class ServiceAccountHandler(
         return Mono.deferContextual { ctx ->
             service.rotate(id, ctx.getUserId()!!)
                 .flatMap { ServerResponse.ok().bodyValue(ServiceAccountTokenResponse(it)) }
+        }
+    }
+
+    fun sites(request: ServerRequest): Mono<ServerResponse> {
+        val id = request.pathVariableLong("id")
+        return Mono.deferContextual { ctx ->
+            ServerResponse.ok().body<Site>(service.listSites(id, ctx.getUserId()!!))
         }
     }
 }

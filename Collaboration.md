@@ -32,9 +32,10 @@ owner — the creating user becomes the first `admin`.
 | Member list, removal (backend)                                            | ✓ shipped (`SiteHandler`/`SiteService`: `getAllUsers`, `deleteUser`)                                      |
 | Member role change                                                        | ✓ shipped (`SiteHandler`/`SiteService`: `updateUserRole`), admin-only, owner/self excluded                |
 | Admin UI — People tab (invite creation, member list, member removal)      | ✓ shipped, see [Frontend](#frontend--people-tab--accept-page) below                                       |
-| Admin UI — pending-invitations list (view/copy/revoke an existing invite) | not started — see note below                                                                              |
+| Admin UI — pending-invitations list (view/revoke an existing invite)      | ✓ shipped — see note below                                                                                |
 | Admin UI — service accounts page                                          | ✓ shipped — see [Implementation notes](#implementation-notes) below                                      |
-| `site-invitation` email template (local reference copy)                   | ✓ shipped (`email-templates/site-invitation.html`) — **not yet registered with Gonemail**, see note below |
+| Admin UI — service account site-access page                              | ✓ shipped — see [Implementation notes](#implementation-notes) below                                      |
+| `site-invitation` email template                                          | ✓ shipped and registered with Gonemail — email-delivery invites work end to end                          |
 | Service accounts — `User` model + CRUD (repo/service/handler/routes)      | ✓ shipped, tested — see [Implementation notes](#implementation-notes) below                               |
 | Service accounts — bearer-token auth filter                               | ✓ shipped, tested — see [Implementation notes](#implementation-notes) below                               |
 | Invite a service account into `site_members`                              | ✓ shipped, tested                                                                                          |
@@ -119,19 +120,17 @@ Shipped in the People tab of `site-form.html` (admin-only; hidden entirely for `
   target is validated to be a same-origin relative path (must start with `/`, not `//`) before use, to avoid an open
   redirect.
 
-**Known limitation — no pending-invitations list.** `GET /sites/{id}/invitations` and
-`DELETE /sites/{id}/invitations/{invitationId}` exist and work, but nothing in the UI calls them: a created invite is
-shown once in the confirmation modal and then effectively forgotten by the frontend (it stays live in the DB until it
-expires or someone accepts it). There is currently no way to see what invites are outstanding for a site, re-copy an
-old link, or revoke one, except by calling the API directly. Deliberate scope cut for the first pass — revisit if this
-turns out to matter in practice.
+**Pending-invitations list — shipped.** A "Pending invitations" section on the People tab (below the member list)
+lists live, unaccepted invitations for the site — role and a relative expiry ("in 6h" / "in 2d") — with a revoke
+button per row. Loaded via the existing `GET /sites/{id}/invitations` and revoked via the existing
+`DELETE /sites/{id}/invitations/{invitationId}`; no backend change needed. `findActiveBySiteId` returns unexpired rows
+whether or not they've been accepted, so the frontend filters out `acceptedAt != null` client-side — an already-used
+invitation isn't "pending" from an admin's point of view, and re-showing it would be confusing. Still can't re-copy an
+old accept link (no `email` or token is stored server-side to reconstruct it — see [Inviting a
+human](#inviting-a-human) above), only view role/expiry and revoke.
 
-**Known gap — email template not registered.** `GonemailClientImpl.sendInvitationEmail` POSTs to the external
-Gonemail service with `template: "site-invitation"`. The local `email-templates/site-invitation.html` file is a
-reference copy only — nothing in this repo reads it — so until that HTML is registered as the `site-invitation`
-template on the Gonemail side, an email-delivery invite will silently fail to send (caught and logged in
-`SiteInvitationService.deliver`) while the call still succeeds overall, since the accept link is always returned in
-the API response regardless of whether the email went out.
+**Email template registered.** The `site-invitation` template is now registered on the Gonemail side, so
+email-delivery invites actually send.
 
 ### Manual test checklist (human invite frontend)
 
@@ -139,8 +138,7 @@ None of this shipped with automated tests, so it needs a manual pass before rely
 
 - [ ] As a site admin, create a **link-only** invite (leave email blank) for each role (writer/editor/admin); confirm
   the modal's link and copy button work and the role/expiry text matches what was picked.
-- [ ] Create an **email** invite; confirm the accept link still appears in the modal even though delivery currently
-  fails silently until Gonemail has the `site-invitation` template registered (see gap above).
+- [ ] Create an **email** invite; confirm the accept link appears in the modal and the email actually arrives.
 - [ ] Open an invite link **while logged out**: confirm it redirects to `/admin/login?redirect=...`, and that
   completing login lands back on the accept page and completes the accept automatically.
 - [ ] Same, but choose "Create one" from the login page instead: confirm the `redirect` param survives into
@@ -217,10 +215,18 @@ pipelines, AI agent accounts.
   `/admin/service-accounts`, linked from the dashboard header) rather than a tab on a site — service accounts belong
   to the user (`owner_id`), not a site. Covers create (token shown once), list, rotate, revoke, and "Grant access"
   (site + role picker, filtered client-side to sites the user administers, calling `inviteServiceAccount` above).
-  **Known gap:** no way to see which sites a service account already has access to — there's no
-  `GET /service-accounts/{id}/sites`-shaped endpoint yet, so "Grant access" is one-directional. Manually verified
-  end-to-end in the browser (create → grant → confirmed the `site_members` row in Postgres → rotate → revoke →
-  confirmed the cascade deleted it), not covered by automated browser tests.
+  Manually verified end-to-end in the browser (create → grant → confirmed the `site_members` row in Postgres →
+  rotate → revoke → confirmed the cascade deleted it), not covered by automated browser tests.
+- Admin UI — site access: a "Sites" link per account on the page above opens
+  `/admin/service-accounts/{id}/sites` (new `service-account-sites.html` + `.js`), listing every site the account
+  belongs to with its role there, and a "Remove access" button per row. Backed by new
+  `ServiceAccountService.listSites(id, ownerId)` — same ownership check as the rest of the service-account endpoints,
+  then reuses `SiteRepository.findAllByUserId` (the exact query a human's own site list is built from — a service
+  account is just another row in `users`, so it works unmodified) — routed at `GET /service-accounts/{id}/sites`.
+  "Remove access" calls the *existing* `DELETE /sites/{id}/users/{userId}` member-removal endpoint with the service
+  account's id — no new revoke endpoint needed, and it inherits that endpoint's own admin-on-that-site guard, so
+  removing access from here requires the caller to currently be admin on that particular site, not just own the
+  service account.
 - While reviewing the service-accounts page, replaced native `confirm()`/`alert()` with a proper modal
   (`static/js/confirm-modal.js`, `confirmModal()`/`alertModal()`, Promise-based) everywhere in the admin UI —
   dashboard's delete-site, the People tab's remove-member/role-change, post-list's publish/unpublish/delete, and

@@ -249,7 +249,9 @@ async function loadSite() {
   // so for anyone else this page collapses to the People tab alone.
   document.getElementById('peopleTab').hidden = false;
   document.getElementById('inviteBox').hidden = !can(site.role, 'admin');
+  document.getElementById('invitationsSection').hidden = !can(site.role, 'admin');
   loadMembers(site);
+  if (can(site.role, 'admin')) loadInvitations();
 
   if (!can(site.role, 'admin')) {
     document.querySelectorAll('.form-tab').forEach(t => t.hidden = t.dataset.tab !== 'people');
@@ -351,6 +353,56 @@ function roleSelect(role, userId) {
 
 // ── Invitations ──────────────────────────────────────────────────────────
 
+async function loadInvitations() {
+  const invitationList = document.getElementById('invitationList');
+  const invitationEmpty = document.getElementById('invitationEmpty');
+
+  const res = await api(`/sites/${siteId}/invitations`);
+  if (!res || !res.ok) {
+    invitationList.innerHTML = '<p class="hint">Could not load pending invitations.</p>';
+    return;
+  }
+
+  // The endpoint returns unexpired rows, accepted or not — an accepted one isn't "pending"
+  // from an admin's point of view, so it's filtered out here rather than on the server.
+  const invitations = (await res.json()).filter(inv => !inv.acceptedAt);
+  invitationList.innerHTML = '';
+  invitationEmpty.hidden = invitations.length > 0;
+
+  invitations.forEach(inv => {
+    const row = document.createElement('div');
+    row.className = 'member-row';
+    row.innerHTML = `
+      <div class="member-row__info">
+        <div class="member-row__name">Pending invite ${roleBadge(inv.role)}</div>
+        <div class="member-row__email">Expires ${expiryText(inv.expiresAt)}</div>
+      </div>
+      <div class="member-row__actions">
+        <button type="button" class="btn-icon" data-revoke-invite="${inv.id}" title="Revoke invitation">×</button>
+      </div>`;
+    invitationList.appendChild(row);
+  });
+
+  invitationList.querySelectorAll('[data-revoke-invite]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const ok = await confirmModal('Revoke this invitation? The link will stop working immediately.', {
+        title: 'Revoke invitation', confirmLabel: 'Revoke', danger: true
+      });
+      if (!ok) return;
+      const res = await api(`/sites/${siteId}/invitations/${btn.dataset.revokeInvite}`, {method: 'DELETE'});
+      if (!res) return;
+      if (res.ok) loadInvitations();
+      else await alertModal('Failed to revoke the invitation');
+    });
+  });
+}
+
+function expiryText(expiresAt) {
+  const hoursLeft = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 3600000));
+  if (hoursLeft <= 0) return 'shortly';
+  return hoursLeft >= 24 ? `in ${Math.floor(hoursLeft / 24)}d` : `in ${hoursLeft}h`;
+}
+
 const inviteRoleSelect = document.getElementById('inviteRole');
 const inviteEmailInput = document.getElementById('inviteEmail');
 const createInviteBtn = document.getElementById('createInviteBtn');
@@ -383,6 +435,7 @@ createInviteBtn.addEventListener('click', async () => {
     inviteCopyHint.style.display = 'none';
     inviteEmailInput.value = '';
     inviteModal.style.display = 'flex';
+    loadInvitations();
   } else {
     const data = await res.json().catch(() => ({}));
     inviteError.textContent = data.details || 'Could not create the invitation';

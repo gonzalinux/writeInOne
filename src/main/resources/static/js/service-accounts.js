@@ -33,6 +33,7 @@ async function loadServiceAccounts() {
         <div class="member-row__email">Created ${created}</div>
       </div>
       <div class="member-row__actions">
+        <a class="btn btn-ghost" href="/admin/service-accounts/${account.id}/sites">Sites</a>
         <button type="button" class="btn btn-ghost" data-grant="${account.id}" data-grant-name="${escHtml(account.name)}">Grant access</button>
         <button type="button" class="btn btn-ghost" data-rotate="${account.id}" data-rotate-name="${escHtml(account.name)}">Rotate</button>
         <button type="button" class="btn btn-ghost btn--danger" data-revoke="${account.id}" data-revoke-name="${escHtml(account.name)}">Revoke</button>

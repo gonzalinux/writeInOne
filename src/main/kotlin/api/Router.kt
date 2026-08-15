@@ -69,6 +69,7 @@ class Router(
                 .GET("/", serviceAccountHandler::list)
                 .DELETE("/{id}", serviceAccountHandler::revoke)
                 .POST("/{id}/rotate", serviceAccountHandler::rotate)
+                .GET("/{id}/sites", serviceAccountHandler::sites)
         }
 
         .path("/sites") { sites ->

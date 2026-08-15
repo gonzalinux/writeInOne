@@ -1,6 +1,8 @@
 package com.gonzalinux.domain.user
 
 import com.gonzalinux.common.ServiceAccountNotFoundException
+import com.gonzalinux.domain.site.Site
+import com.gonzalinux.domain.site.SiteRepository
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
@@ -10,7 +12,11 @@ import java.util.UUID
 private val logger = KotlinLogging.logger {}
 
 @Service
-class ServiceAccountService(private val repo: ServiceAccountRepository, private val tokenService: TokenService) {
+class ServiceAccountService(
+    private val repo: ServiceAccountRepository,
+    private val siteRepo: SiteRepository,
+    private val tokenService: TokenService
+) {
 
     /** The raw [CreatedServiceAccount.token] is only ever available here — only its hash is persisted. */
     fun create(ownerId: Long, name: String): Mono<CreatedServiceAccount> {
@@ -21,6 +27,17 @@ class ServiceAccountService(private val repo: ServiceAccountRepository, private 
     }
 
     fun list(ownerId: Long): Flux<User> = repo.findAllByOwnerId(ownerId)
+
+    /**
+     * [Site.role] here is the *service account's* role on each site, not the caller's — this reuses
+     * `SiteRepository.findAllByUserId`, the same query a human's own site list is built from.
+     */
+    fun listSites(id: Long, ownerId: Long): Flux<Site> =
+        repo.existsByIdAndOwnerId(id, ownerId)
+            .flatMapMany { owned ->
+                if (owned) siteRepo.findAllByUserId(id)
+                else Flux.error(ServiceAccountNotFoundException(id))
+            }
 
     fun revoke(id: Long, ownerId: Long): Mono<Void> =
         repo.deleteByIdAndOwnerId(id, ownerId)

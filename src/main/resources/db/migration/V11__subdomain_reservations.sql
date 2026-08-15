@@ -2,7 +2,7 @@
 -- owner for a configurable window, so nobody else can grab the handle in the meantime.
 CREATE TABLE subdomain_reservations
 (
-    label       TEXT PRIMARY KEY,
+    label       TEXT        PRIMARY KEY,
     user_id     BIGINT      NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     released_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
