@@ -122,6 +122,16 @@
     position: relative;
 }
 
+/* Wider variant for modals whose content doesn't fit 480px comfortably — e.g. a full-length token. */
+.modal__box--wide {
+    max-width: 620px;
+}
+
+.token-input {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+}
+
 .modal__close {
     position: absolute;
     top: 1rem;

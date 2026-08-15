@@ -16,7 +16,7 @@ class WebClientConfig {
 
     // TODO hardcoded times
     @Bean
-    fun webClient(): WebClient {
+    fun webClient(builder: WebClient.Builder): WebClient {
         val base = HttpClient.create()
             .followRedirect(true)
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
@@ -26,8 +26,8 @@ class WebClientConfig {
                     .addHandlerLast(WriteTimeoutHandler(5000, TimeUnit.MILLISECONDS))
             }
 
-        return WebClient.builder()
+        return builder
             .clientConnector(ReactorClientHttpConnector(base))
-            .build();
+            .build()
     }
 }
