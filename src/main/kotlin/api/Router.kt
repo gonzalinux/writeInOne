@@ -26,6 +26,7 @@ class Router(
     private val invitationHandler: InvitationHandler,
     private val serviceAccountHandler: ServiceAccountHandler,
     private val docsHandler: DocsHandler,
+    private val mcpHandler: McpHandler,
     private val jwtAuthFilter: JwtAuthFilter,
     private val serviceAccountAuthFilter: ServiceAccountAuthFilter,
     private val jwtNotEnforcedFilter: JwtNotEnforcedFilter,
@@ -43,6 +44,7 @@ class Router(
             .and(adminRoutes())
             .and(docsRoutes())
             .and(protectedRoutes())
+            .and(mcpRoutes())
             .and(blogUiRoutes())
             .and(blogApiRoutes())
 
@@ -107,6 +109,14 @@ class Router(
 
         }
 
+        .build()
+        .filter(serviceAccountAuthFilter)
+
+    // Stateless: no HostFilter (not site-domain-scoped — operates over whatever sites the
+    // caller's site_members rows grant, same as protectedRoutes) and no Mcp-Session-Id ever
+    // issued.
+    private fun mcpRoutes(): RouterFunction<ServerResponse> = route()
+        .POST("/mcp", mcpHandler::handle)
         .build()
         .filter(serviceAccountAuthFilter)
 

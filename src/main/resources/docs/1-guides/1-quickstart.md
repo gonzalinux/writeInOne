@@ -61,6 +61,7 @@ at your site's URL, e.g. `https://my-blog.writeinone.com/en/articles/hello-world
 - [Subdomains](/docs/guides/subdomains) — the fastest way to get a blog live.
 - [Your Own Domain](/docs/guides/proxy-domains) — host under a domain you control.
 - [Theming](/docs/guides/theming) — restyle a blog with the Style Editor or your own stylesheet.
-- Building an integration instead of clicking through the UI (e.g. the WriteInOne MCP
-  server)? See the [API reference](/docs/api/authentication), which covers the same
-  actions as plain HTTP calls.
+- Building an integration instead of clicking through the UI? See the
+  [API reference](/docs/api/authentication) for plain HTTP calls, or the
+  [MCP server](/docs/api/mcp) docs to connect an AI agent (Claude Code, Cursor, etc.)
+  directly.

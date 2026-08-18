@@ -31,3 +31,6 @@ wording isn't guaranteed to stay stable between releases.
 The [Public Blog API](/docs/api/public-blog) is unauthenticated, so it never returns
 `401` — a domain that doesn't resolve to any site, or a slug with no published match,
 comes back as a plain `404` instead.
+
+The [MCP server](/docs/api/mcp) is the one exception to this envelope — it returns
+standard JSON-RPC errors instead, since that's the format MCP clients expect.

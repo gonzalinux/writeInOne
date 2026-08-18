@@ -162,6 +162,35 @@ class PostServiceTest {
     }
 
     @Test
+    fun `getPublished returns post and translation when found`() {
+        every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
+        every { postRepo.findPublishedBySlug(1L, "en", "test-post") } returns Mono.just(post to translation)
+
+        StepVerifier.create(service.getPublished(1L, "en", "test-post", 1L))
+            .expectNext(post to translation)
+            .verifyComplete()
+    }
+
+    @Test
+    fun `getPublished throws SiteNotFoundException when caller is not a member`() {
+        every { siteRepo.findById(1L, 1L) } returns Mono.empty()
+
+        StepVerifier.create(service.getPublished(1L, "en", "test-post", 1L))
+            .expectError(SiteNotFoundException::class.java)
+            .verify()
+    }
+
+    @Test
+    fun `getPublished throws PostNotFoundException when no published post has that slug`() {
+        every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
+        every { postRepo.findPublishedBySlug(1L, "en", "missing") } returns Mono.empty()
+
+        StepVerifier.create(service.getPublished(1L, "en", "missing", 1L))
+            .expectError(PostNotFoundException::class.java)
+            .verify()
+    }
+
+    @Test
     fun `delete removes post when found`() {
         every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
         every { postRepo.findById(1L, 1L) } returns Mono.just(post)

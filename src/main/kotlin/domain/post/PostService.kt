@@ -72,6 +72,13 @@ class PostService(
             .switchIfEmpty(Mono.error(PostNotFoundException(id)))
             .flatMap { post -> postWithTranslationsAndTags(post) }
 
+    /** Live content only — used by the MCP `get_post` tool, which must never surface a draft. */
+    fun getPublished(siteId: Long, lang: String, slug: String, userId: Long): Mono<Pair<Post, PostTranslation>> =
+        siteRepo.findById(siteId, userId)
+            .switchIfEmpty(Mono.error(SiteNotFoundException(siteId)))
+            .flatMap { postRepo.findPublishedBySlug(siteId, lang, slug) }
+            .switchIfEmpty(Mono.error(PostNotFoundException(slug = slug)))
+
     fun list(
         siteId: Long,
         userId: Long,

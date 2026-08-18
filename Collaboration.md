@@ -306,6 +306,12 @@ Publishing stays out of MCP tools regardless of role, per Phase2.md #16 — that
 simply aren't exposed), not something enforced by the `writer` role alone, since an `editor`-scoped service account is
 technically possible if someone deliberately grants it.
 
+**Shipped ✓, hosted in-process rather than as a distributed package** — `POST /mcp` (`McpHandler`, stateless
+hand-rolled JSON-RPC, no MCP SDK) sits behind `ServiceAccountAuthFilter` exactly like the rest of `protectedRoutes()`,
+so this auth flow is exercised unmodified. 5 of the 7 planned tools are live; `propose_edit`/`list_versions` wait on
+the post-versioning system (Phase2.md #17). Full detail and the reasoning behind hosting it in-process is in
+Phase2.md #16.
+
 ---
 
 ## Open questions carried over from Phase2.md
