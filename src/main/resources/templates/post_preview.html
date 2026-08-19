@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en" th:lang="${lang}">
 <head>
-  <th:block th:replace="~{fragments/layout :: head(${translation.title + ' — ' + (langConfig?.title ?: site.name)})}"/>
+  <th:block th:replace="~{fragments/layout :: head(${selectedVersion.title + ' — ' + (langConfig?.title ?: site.name)})}"/>
 
   <!-- Primary meta -->
-  <meta th:if="${translation.excerpt != null}" name="description" th:content="${translation.excerpt}"/>
+  <meta th:if="${selectedVersion.excerpt != null}" name="description" th:content="${selectedVersion.excerpt}"/>
 
   <!-- Open Graph -->
   <meta property="og:type" content="article"/>
   <meta property="og:site_name" th:content="${site.name}"/>
-  <meta property="og:title" th:content="${translation.title}"/>
-  <meta property="og:description" th:if="${translation.excerpt != null}" th:content="${translation.excerpt}"/>
+  <meta property="og:title" th:content="${selectedVersion.title}"/>
+  <meta property="og:description" th:if="${selectedVersion.excerpt != null}" th:content="${selectedVersion.excerpt}"/>
   <meta property="og:image" th:if="${post.coverUrl != null}" th:content="${post.coverUrl}"/>
   <meta property="og:url"
         th:content="'https://' + ${site.domain} + ${prefix} + '/' + ${lang} + '/articles/' + ${translation.slug}"/>
@@ -18,8 +18,8 @@
 
   <!-- Twitter / X -->
   <meta name="twitter:card" th:content="${post.coverUrl != null ? 'summary_large_image' : 'summary'}"/>
-  <meta name="twitter:title" th:content="${translation.title}"/>
-  <meta name="twitter:description" th:if="${translation.excerpt != null}" th:content="${translation.excerpt}"/>
+  <meta name="twitter:title" th:content="${selectedVersion.title}"/>
+  <meta name="twitter:description" th:if="${selectedVersion.excerpt != null}" th:content="${selectedVersion.excerpt}"/>
   <meta name="twitter:image" th:if="${post.coverUrl != null}" th:content="${post.coverUrl}"/>
 
   <!-- href is updated by theme.js on DOMContentLoaded to match the active theme -->
@@ -49,6 +49,18 @@
     <span id="unsaved-badge" class="unsaved-badge" hidden>● not saved</span>
   </div>
   <div class="preview-bar__right">
+    <select id="version-select" class="preview-bar__btn">
+      <option th:each="v : ${versions}"
+              th:value="${v.id}"
+              th:selected="${v.id == selectedVersion.id}"
+              th:text="'v' + ${v.versionNumber} + ' · ' + ${v.status.name().toLowerCase()} + ' · ' + ${#temporals.format(v.updatedAt, 'MMM d, HH:mm')}">
+        v1 · draft
+      </option>
+    </select>
+    <button id="btn-publish-version" class="preview-bar__btn preview-bar__btn--publish"
+            th:if="${canPublish}" th:disabled="${selectedVersion.status.name() == 'PUBLISHED'}">
+      Publish this version
+    </button>
     <a th:href="'/admin/sites/' + ${post.siteId} + '/posts'" class="preview-bar__btn">← Admin</a>
     <button th:if="${#lists.contains(site.availableThemes, T(com.gonzalinux.domain.site.Theme).LIGHT)
                          and #lists.contains(site.availableThemes, T(com.gonzalinux.domain.site.Theme).DARK)}"
@@ -90,11 +102,11 @@
           </time>
         </div>
 
-        <h1 class="post-header__title" th:text="${translation.title}">Post Title</h1>
+        <h1 class="post-header__title" th:text="${selectedVersion.title}">Post Title</h1>
 
         <p class="post-header__excerpt"
-           th:if="${translation.excerpt != null}"
-           th:text="${translation.excerpt}">Excerpt</p>
+           th:if="${selectedVersion.excerpt != null}"
+           th:text="${selectedVersion.excerpt}">Excerpt</p>
 
         <div class="post-header__tags" th:if="${!tags.isEmpty()}">
           <a class="tag"
@@ -106,10 +118,10 @@
         <img class="post-header__cover"
              th:if="${not #strings.isEmpty(post.coverUrl)}"
              th:src="${post.coverUrl}"
-             th:alt="${translation.title}"/>
+             th:alt="${selectedVersion.title}"/>
       </header>
 
-      <div class="post-body" th:utext="${renderedBody}">Post content</div>
+      <div class="post-body" th:utext="${renderedSelectedBody}">Post content</div>
     </article>
   </section>
 
@@ -126,9 +138,9 @@
           </time>
         </div>
 
-        <input id="edit-title" type="text" class="edit-input" th:value="${translation.title}"/>
+        <input id="edit-title" type="text" class="edit-input" th:value="${selectedVersion.title}"/>
 
-        <input id="edit-excerpt" type="text" class="edit-input" th:value="${translation.excerpt}"/>
+        <input id="edit-excerpt" type="text" class="edit-input" th:value="${selectedVersion.excerpt}"/>
 
         <div class="post-header__tags" th:if="${!tags.isEmpty()}">
           <a class="tag"
@@ -140,12 +152,12 @@
         <img class="post-header__cover"
              th:if="${not #strings.isEmpty(post.coverUrl)}"
              th:src="${post.coverUrl}"
-             th:alt="${translation.title}"/>
+             th:alt="${selectedVersion.title}"/>
 
         <div class="edit-meta">
                         <span class="edit-meta__field">
                             <span class="edit-meta__label">Slug</span>
-                            <input id="edit-slug" type="text" class="edit-input" th:value="${translation.slug}"/>
+                            <input id="edit-slug" type="text" class="edit-input" th:value="${selectedVersion.slug}"/>
                         </span>
           <span class="edit-meta__field">
                             <span class="edit-meta__label">Tags</span>
@@ -159,7 +171,7 @@
         </div>
       </header>
 
-      <textarea id="edit-body" class="edit-input" th:text="${translation.body}"></textarea>
+      <textarea id="edit-body" class="edit-input" th:text="${selectedVersion.body}"></textarea>
     </article>
   </section>
 

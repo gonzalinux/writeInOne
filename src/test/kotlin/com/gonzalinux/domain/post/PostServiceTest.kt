@@ -3,7 +3,9 @@ package com.gonzalinux.domain.post
 import com.gonzalinux.api.data.CreatePostRequest
 import com.gonzalinux.api.data.TranslationInput
 import com.gonzalinux.api.data.UpdatePostRequest
+import com.gonzalinux.common.ForbiddenException
 import com.gonzalinux.common.PostNotFoundException
+import com.gonzalinux.common.PostVersionNotFoundException
 import com.gonzalinux.common.SiteNotFoundException
 import com.gonzalinux.common.SlugAlreadyExistsException
 import com.gonzalinux.domain.Languages
@@ -52,7 +54,13 @@ class PostServiceTest {
     private val translation = PostTranslation(
         id = 1L, postId = 1L, siteId = 1L, lang = "en",
         title = "Test Post", slug = "test-post", body = "Body",
-        excerpt = null, createdAt = now, updatedAt = now
+        excerpt = null, currentVersionId = null, createdAt = now, updatedAt = now
+    )
+
+    private val version = PostTranslationVersion(
+        id = 1L, postTranslationId = 1L, versionNumber = 1, status = VersionStatus.DRAFT,
+        title = "Test Post", slug = "test-post", body = "Body", excerpt = null,
+        authorId = 1L, createdAt = now, publishedAt = null, updatedAt = now
     )
 
     private val tag = Tag(id = 1L, siteId = 1L, name = "kotlin", createdAt = now)
@@ -65,9 +73,12 @@ class PostServiceTest {
 
         every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
         every { postRepo.create(1L, null) } returns Mono.just(post)
-        every { postRepo.createTranslation(1L, 1L, "en", "Test Post", "test-post", "Body", null) } returns Mono.just(
-            translation
-        )
+        every {
+            postRepo.createTranslationShell(1L, 1L, "en", "Test Post", "test-post", "Body", null)
+        } returns Mono.just(translation)
+        every {
+            postRepo.createVersion(1L, "Test Post", "test-post", "Body", null, 1L)
+        } returns Mono.just(version)
 
         StepVerifier.create(service.create(1L, 1L, request))
             .expectNext(PostWithTranslations(post, listOf(translation), emptyList()))
@@ -83,22 +94,17 @@ class PostServiceTest {
         every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
         every { postRepo.create(1L, null) } returns Mono.just(post)
         every {
-            postRepo.createTranslation(
-                1L,
-                1L,
-                "en",
-                "Hello World!",
-                "hello-world",
-                "Body",
-                null
-            )
+            postRepo.createTranslationShell(1L, 1L, "en", "Hello World!", "hello-world", "Body", null)
         } returns Mono.just(translation)
+        every {
+            postRepo.createVersion(1L, "Hello World!", "hello-world", "Body", null, 1L)
+        } returns Mono.just(version)
 
         StepVerifier.create(service.create(1L, 1L, request))
             .expectNextCount(1)
             .verifyComplete()
 
-        verify { postRepo.createTranslation(1L, 1L, "en", "Hello World!", "hello-world", "Body", null) }
+        verify { postRepo.createTranslationShell(1L, 1L, "en", "Hello World!", "hello-world", "Body", null) }
     }
 
     @Test
@@ -110,9 +116,12 @@ class PostServiceTest {
 
         every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
         every { postRepo.create(1L, null) } returns Mono.just(post)
-        every { postRepo.createTranslation(1L, 1L, "en", "Test Post", "test-post", "Body", null) } returns Mono.just(
-            translation
-        )
+        every {
+            postRepo.createTranslationShell(1L, 1L, "en", "Test Post", "test-post", "Body", null)
+        } returns Mono.just(translation)
+        every {
+            postRepo.createVersion(1L, "Test Post", "test-post", "Body", null, 1L)
+        } returns Mono.just(version)
         every { tagRepo.findOrCreate(1L, "kotlin") } returns Mono.just(tag)
         every { tagRepo.assignToPost(1L, 1L) } returns Mono.empty()
 
@@ -131,14 +140,15 @@ class PostServiceTest {
     }
 
     @Test
-    fun `get returns post with translations when found`() {
+    fun `get returns post with translations and latest versions when found`() {
         every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
         every { postRepo.findById(1L, 1L) } returns Mono.just(post)
         every { postRepo.findTranslationsByPostId(1L) } returns Flux.just(translation)
         every { tagRepo.findByPostId(1L) } returns Flux.empty()
+        every { postRepo.findLatestVersionsByPostId(1L) } returns Flux.just("en" to version)
 
         StepVerifier.create(service.get(1L, 1L, 1L))
-            .expectNext(PostWithTranslations(post, listOf(translation), emptyList()))
+            .expectNext(PostWithTranslations(post, listOf(translation), emptyList(), mapOf("en" to version)))
             .verifyComplete()
     }
 
@@ -222,15 +232,18 @@ class PostServiceTest {
     }
 
     @Test
-    fun `publish sets status to PUBLISHED`() {
+    fun `publish sets status to PUBLISHED and publishes translations that never went live`() {
         val published = post.copy(status = PostStatus.PUBLISHED, publishedAt = now)
         every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
         every { postRepo.findById(1L, 1L) } returns Mono.just(post)
         every { postRepo.update(1L, 1L, null, PostStatus.PUBLISHED, any(), null) } returns Mono.just(published)
+        every { postRepo.publishInitialVersions(1L) } returns Mono.empty()
 
         StepVerifier.create(service.publish(1L, 1L, 1L))
             .expectNextMatches { it.status == PostStatus.PUBLISHED }
             .verifyComplete()
+
+        verify { postRepo.publishInitialVersions(1L) }
     }
 
     @Test
@@ -279,9 +292,67 @@ class PostServiceTest {
         every { tagRepo.findOrCreate(1L, "kotlin") } returns Mono.just(tag)
         every { tagRepo.replacePostTags(1L, listOf(1L)) } returns Mono.empty()
         every { postRepo.findTranslationsByPostId(1L) } returns Flux.just(translation)
+        every { postRepo.findLatestVersionsByPostId(1L) } returns Flux.empty()
 
         StepVerifier.create(service.update(1L, 1L, 1L, updateRequest))
             .expectNextMatches { it.tags == listOf(tag) }
+            .verifyComplete()
+    }
+
+    @Test
+    fun `update creates a new draft version for an existing translation`() {
+        val updateRequest = UpdatePostRequest(
+            translations = mapOf("en" to TranslationInput(title = "Updated", body = "New body", slug = "test-post"))
+        )
+        val updatedPost = post.copy(updatedAt = now)
+        val newVersion = version.copy(id = 2L, versionNumber = 2, title = "Updated", body = "New body")
+
+        every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
+        every { postRepo.findById(1L, 1L) } returns Mono.just(post)
+        every { postRepo.update(1L, 1L, null, null, null, null) } returns Mono.just(updatedPost)
+        every { postRepo.findTranslationsByPostId(1L) } returns Flux.just(translation)
+        every { tagRepo.findByPostId(1L) } returns Flux.empty()
+        every {
+            postRepo.createVersion(1L, "Updated", "test-post", "New body", null, 1L)
+        } returns Mono.just(newVersion)
+        every { postRepo.pruneOldDrafts(1L) } returns Mono.empty()
+        every { postRepo.findLatestVersionsByPostId(1L) } returns Flux.just("en" to newVersion)
+
+        StepVerifier.create(service.update(1L, 1L, 1L, updateRequest))
+            .expectNextMatches { it.latestVersions["en"] == newVersion }
+            .verifyComplete()
+
+        verify { postRepo.createVersion(1L, "Updated", "test-post", "New body", null, 1L) }
+        verify { postRepo.pruneOldDrafts(1L) }
+    }
+
+    @Test
+    fun `update creates the initial draft when adding a new language to an existing post`() {
+        val updateRequest = UpdatePostRequest(
+            translations = mapOf("es" to TranslationInput(title = "Hola", body = "Cuerpo", slug = "hola"))
+        )
+        val updatedPost = post.copy(updatedAt = now)
+        val esTranslation = translation.copy(id = 2L, lang = "es", title = "Hola", slug = "hola", body = "Cuerpo")
+        val esVersion = version.copy(id = 2L, postTranslationId = 2L, title = "Hola", slug = "hola", body = "Cuerpo")
+
+        every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
+        every { postRepo.findById(1L, 1L) } returns Mono.just(post)
+        every { postRepo.update(1L, 1L, null, null, null, null) } returns Mono.just(updatedPost)
+        every { postRepo.findTranslationsByPostId(1L) } returns Flux.just(translation) andThen Flux.just(
+            translation,
+            esTranslation
+        )
+        every { tagRepo.findByPostId(1L) } returns Flux.empty()
+        every {
+            postRepo.createTranslationShell(1L, 1L, "es", "Hola", "hola", "Cuerpo", null)
+        } returns Mono.just(esTranslation)
+        every {
+            postRepo.createVersion(2L, "Hola", "hola", "Cuerpo", null, 1L)
+        } returns Mono.just(esVersion)
+        every { postRepo.findLatestVersionsByPostId(1L) } returns Flux.just("es" to esVersion)
+
+        StepVerifier.create(service.update(1L, 1L, 1L, updateRequest))
+            .expectNextMatches { it.translations.size == 2 && it.latestVersions["es"] == esVersion }
             .verifyComplete()
     }
 
@@ -292,6 +363,80 @@ class PostServiceTest {
 
         StepVerifier.create(service.update(99L, 1L, 1L, UpdatePostRequest()))
             .expectError(PostNotFoundException::class.java)
+            .verify()
+    }
+
+    @Test
+    fun `listVersions returns version history for a translation`() {
+        every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
+        every { postRepo.findById(1L, 1L) } returns Mono.just(post)
+        every { postRepo.findTranslationsByPostId(1L) } returns Flux.just(translation)
+        every { postRepo.findVersionsByTranslationId(1L) } returns Flux.just(version)
+
+        StepVerifier.create(service.listVersions(1L, 1L, 1L, "en"))
+            .expectNext(version)
+            .verifyComplete()
+    }
+
+    @Test
+    fun `getVersion returns a specific version`() {
+        every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
+        every { postRepo.findById(1L, 1L) } returns Mono.just(post)
+        every { postRepo.findTranslationsByPostId(1L) } returns Flux.just(translation)
+        every { postRepo.findVersionById(1L, 1L) } returns Mono.just(version)
+
+        StepVerifier.create(service.getVersion(1L, 1L, 1L, "en", 1L))
+            .expectNext(version)
+            .verifyComplete()
+    }
+
+    @Test
+    fun `getVersion throws PostVersionNotFoundException when version does not belong to translation`() {
+        every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
+        every { postRepo.findById(1L, 1L) } returns Mono.just(post)
+        every { postRepo.findTranslationsByPostId(1L) } returns Flux.just(translation)
+        every { postRepo.findVersionById(99L, 1L) } returns Mono.empty()
+
+        StepVerifier.create(service.getVersion(1L, 1L, 1L, "en", 99L))
+            .expectError(PostVersionNotFoundException::class.java)
+            .verify()
+    }
+
+    @Test
+    fun `publishVersion copies version content into the live translation`() {
+        val published = translation.copy(currentVersionId = 1L)
+        every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
+        every { postRepo.findById(1L, 1L) } returns Mono.just(post)
+        every { postRepo.findTranslationsByPostId(1L) } returns Flux.just(translation)
+        every { postRepo.findVersionById(1L, 1L) } returns Mono.just(version)
+        every { postRepo.publishVersion(1L, 1L) } returns Mono.just(published)
+
+        StepVerifier.create(service.publishVersion(1L, 1L, 1L, "en", 1L))
+            .expectNext(published)
+            .verifyComplete()
+    }
+
+    @Test
+    fun `publishVersion is forbidden for a writer`() {
+        val writerSite = site.copy(role = Roles.WRITER)
+        every { siteRepo.findById(1L, 1L) } returns Mono.just(writerSite)
+
+        StepVerifier.create(service.publishVersion(1L, 1L, 1L, "en", 1L))
+            .expectError(ForbiddenException::class.java)
+            .verify()
+    }
+
+    @Test
+    fun `publishVersion maps a slug conflict to SlugAlreadyExistsException`() {
+        every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
+        every { postRepo.findById(1L, 1L) } returns Mono.just(post)
+        every { postRepo.findTranslationsByPostId(1L) } returns Flux.just(translation)
+        every { postRepo.findVersionById(1L, 1L) } returns Mono.just(version)
+        every { postRepo.publishVersion(1L, 1L) } returns
+                Mono.error(DataIntegrityViolationException("duplicate key value violates unique constraint"))
+
+        StepVerifier.create(service.publishVersion(1L, 1L, 1L, "en", 1L))
+            .expectError(SlugAlreadyExistsException::class.java)
             .verify()
     }
 
@@ -361,42 +506,18 @@ class PostServiceTest {
     }
 
     @Test
-    fun `create throws SlugAlreadyExistsException when slug conflicts`() {
+    fun `create throws SlugAlreadyExistsException when the translation shell insert conflicts`() {
         val request = CreatePostRequest(
             translations = mapOf("en" to TranslationInput(title = "Test Post", body = "Body", slug = "test-post"))
         )
 
         every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
         every { postRepo.create(1L, null) } returns Mono.just(post)
-        every { postRepo.createTranslation(1L, 1L, "en", "Test Post", "test-post", "Body", null) } returns
-                Mono.error(DataIntegrityViolationException("duplicate key value violates unique constraint"))
+        every {
+            postRepo.createTranslationShell(1L, 1L, "en", "Test Post", "test-post", "Body", null)
+        } returns Mono.error(DataIntegrityViolationException("duplicate key value violates unique constraint"))
 
         StepVerifier.create(service.create(1L, 1L, request))
-            .expectError(SlugAlreadyExistsException::class.java)
-            .verify()
-    }
-
-    @Test
-    fun `update throws SlugAlreadyExistsException when slug conflicts`() {
-        val request = UpdatePostRequest(
-            translations = mapOf(
-                "en" to TranslationInput(
-                    title = "Updated Title",
-                    body = "Body",
-                    slug = "existing-slug"
-                )
-            )
-        )
-        val updatedPost = post.copy(updatedAt = now)
-
-        every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
-        every { postRepo.findById(1L, 1L) } returns Mono.just(post)
-        every { postRepo.update(1L, 1L, null, null, null, null) } returns Mono.just(updatedPost)
-        every { tagRepo.findByPostId(1L) } returns Flux.empty()
-        every { postRepo.upsertTranslation(1L, 1L, "en", "Updated Title", "existing-slug", "Body", null) } returns
-                Mono.error(DataIntegrityViolationException("duplicate key value violates unique constraint"))
-
-        StepVerifier.create(service.update(1L, 1L, 1L, request))
             .expectError(SlugAlreadyExistsException::class.java)
             .verify()
     }

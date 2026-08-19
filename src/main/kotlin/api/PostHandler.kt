@@ -94,4 +94,36 @@ class PostHandler(private val service: PostService) {
                 .flatMap { ServerResponse.ok().bodyValue(it) }
         }
     }
+
+    fun listVersions(request: ServerRequest): Mono<ServerResponse> {
+        val siteId = request.pathVariableLong("siteId")
+        val postId = request.pathVariableLong("postId")
+        val lang = request.pathVariable("lang")
+        return Mono.deferContextual { ctx ->
+            service.listVersions(postId, siteId, ctx.getUserId()!!, lang).collectList()
+                .flatMap { ServerResponse.ok().bodyValue(it) }
+        }
+    }
+
+    fun getVersion(request: ServerRequest): Mono<ServerResponse> {
+        val siteId = request.pathVariableLong("siteId")
+        val postId = request.pathVariableLong("postId")
+        val lang = request.pathVariable("lang")
+        val versionId = request.pathVariableLong("versionId")
+        return Mono.deferContextual { ctx ->
+            service.getVersion(postId, siteId, ctx.getUserId()!!, lang, versionId)
+                .flatMap { ServerResponse.ok().bodyValue(it) }
+        }
+    }
+
+    fun publishVersion(request: ServerRequest): Mono<ServerResponse> {
+        val siteId = request.pathVariableLong("siteId")
+        val postId = request.pathVariableLong("postId")
+        val lang = request.pathVariable("lang")
+        val versionId = request.pathVariableLong("versionId")
+        return Mono.deferContextual { ctx ->
+            service.publishVersion(postId, siteId, ctx.getUserId()!!, lang, versionId)
+                .flatMap { ServerResponse.ok().bodyValue(it) }
+        }
+    }
 }

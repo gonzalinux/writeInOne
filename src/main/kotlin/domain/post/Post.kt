@@ -5,6 +5,8 @@ import java.time.OffsetDateTime
 
 enum class PostStatus { DRAFT, SCHEDULED, PUBLISHED, ARCHIVED }
 
+enum class VersionStatus { DRAFT, PUBLISHED }
+
 data class Post(
     val id: Long,
     val siteId: Long,
@@ -26,14 +28,31 @@ data class PostTranslation(
     val slug: String,
     val body: String,
     val excerpt: String?,
+    val currentVersionId: Long?,
     val createdAt: OffsetDateTime,
+    val updatedAt: OffsetDateTime
+)
+
+data class PostTranslationVersion(
+    val id: Long,
+    val postTranslationId: Long,
+    val versionNumber: Int,
+    val status: VersionStatus,
+    val title: String,
+    val slug: String,
+    val body: String,
+    val excerpt: String?,
+    val authorId: Long?,
+    val createdAt: OffsetDateTime,
+    val publishedAt: OffsetDateTime?,
     val updatedAt: OffsetDateTime
 )
 
 data class PostWithTranslations(
     val post: Post,
     val translations: List<PostTranslation>,
-    val tags: List<Tag> = emptyList()
+    val tags: List<Tag> = emptyList(),
+    val latestVersions: Map<String, PostTranslationVersion> = emptyMap()
 )
 
 data class PostTranslationSummary(

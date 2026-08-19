@@ -100,6 +100,9 @@ class Router(
                         .POST("/{postId}/publish", postHandler::publish)
                         .POST("/{postId}/unpublish", postHandler::unpublish)
                         .POST("/{postId}/schedule", postHandler::schedule)
+                        .GET("/{postId}/translations/{lang}/versions", postHandler::listVersions)
+                        .GET("/{postId}/translations/{lang}/versions/{versionId}", postHandler::getVersion)
+                        .POST("/{postId}/translations/{lang}/versions/{versionId}/publish", postHandler::publishVersion)
                 }
                 .path("/{siteId}/tags") { tags ->
                     tags
@@ -110,15 +113,21 @@ class Router(
         }
 
         .build()
+        // The last .filter() call is the outermost/first-to-run one, so this ordering runs the
+        // (cheap) domain check before the (DB-hitting) auth check.
         .filter(serviceAccountAuthFilter)
+        .filter(adminHostFilter)
 
-    // Stateless: no HostFilter (not site-domain-scoped — operates over whatever sites the
-    // caller's site_members rows grant, same as protectedRoutes) and no Mcp-Session-Id ever
-    // issued.
+    // Stateless: not site-domain-scoped (operates over whatever sites the caller's
+    // site_members rows grant, same as protectedRoutes) and no Mcp-Session-Id ever issued.
+    // adminHostFilter here isn't about the admin UI — it's reused to restrict this
+    // account-level endpoint to the home domain, same as protectedRoutes above, rather than
+    // answering on every *.writeinone.com subdomain and any proxied custom domain.
     private fun mcpRoutes(): RouterFunction<ServerResponse> = route()
         .POST("/mcp", mcpHandler::handle)
         .build()
         .filter(serviceAccountAuthFilter)
+        .filter(adminHostFilter)
 
     private fun adminPreviewRoute(): RouterFunction<ServerResponse> = route()
         .GET("/admin/preview/{siteId}/{lang}/{slug}", adminHandler::preview)

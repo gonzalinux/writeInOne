@@ -47,14 +47,10 @@
 <script>
   const toggleBtn = document.getElementById('docsViewToggle');
   const copyBtn = document.getElementById('docsCopyBtn');
-  const rendered = document.getElementById('docsRendered');
   const raw = document.getElementById('docsRaw');
 
   toggleBtn.addEventListener('click', () => {
-    const showingRaw = !raw.hidden;
-    raw.hidden = showingRaw;
-    rendered.hidden = !showingRaw;
-    toggleBtn.textContent = showingRaw ? 'View as Markdown' : 'View Rendered';
+    window.location.href = window.location.pathname + '.md';
   });
 
   copyBtn.addEventListener('click', () => {

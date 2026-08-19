@@ -84,11 +84,29 @@ class BlogService(
             }
             .then()
 
-    fun getPreviewPost(siteId: Long, userId: Long, lang: String, slug: String): Mono<PreviewContext> =
+    fun getPreviewPost(siteId: Long, userId: Long, lang: String, slug: String, versionId: Long?): Mono<PreviewContext> =
         siteRepo.findById(siteId, userId)
             .flatMap { site ->
                 getBySlug(site.id, lang, slug, userId)
-                    .map { detail -> PreviewContext(site, detail) }
+                    .flatMap { detail ->
+                        postRepo.findVersionsByTranslationId(detail.translation.id).collectList()
+                            .flatMap { versions ->
+                                val selected = versionId?.let { id -> versions.firstOrNull { it.id == id } }
+                                    ?: versions.firstOrNull { it.id == detail.translation.currentVersionId }
+                                    ?: versions.maxByOrNull { it.versionNumber }
+                                    ?: return@flatMap Mono.error<PreviewContext>(PostNotFoundException(slug = slug))
+                                Mono.just(
+                                    PreviewContext(
+                                        site,
+                                        detail,
+                                        versions,
+                                        selected,
+                                        renderMarkdown(selected.body),
+                                        site.role?.publish == true
+                                    )
+                                )
+                            }
+                    }
             }
 
     private fun renderMarkdown(markdown: String): String =

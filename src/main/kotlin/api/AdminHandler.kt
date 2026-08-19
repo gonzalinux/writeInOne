@@ -40,10 +40,11 @@ class AdminHandler(
         val slug = request.pathVariable("slug")
         val siteId = request.pathVariable("siteId").toLongOrNull()
             ?: return ServerResponse.badRequest().build()
+        val versionId = request.queryParam("versionId").orElse(null)?.toLongOrNull()
 
         return Mono.deferContextual { ctx ->
             val userId = ctx.getUserId()!!
-            blogService.getPreviewPost(siteId, userId, lang, slug)
+            blogService.getPreviewPost(siteId, userId, lang, slug, versionId)
                 .flatMap { preview ->
                     val langSlugs = preview.detail.allTranslations.associate { it.lang to it.slug }
                     ServerResponse.ok().contentType(MediaType.TEXT_HTML)
@@ -57,8 +58,11 @@ class AdminHandler(
                                 "post" to preview.detail.post,
                                 "translation" to preview.detail.translation,
                                 "tags" to preview.detail.tags,
-                                "renderedBody" to preview.detail.renderedBody,
                                 "langSlugs" to langSlugs,
+                                "versions" to preview.versions,
+                                "selectedVersion" to preview.selectedVersion,
+                                "renderedSelectedBody" to preview.renderedSelectedBody,
+                                "canPublish" to preview.canPublish,
                             )
                         )
                 }

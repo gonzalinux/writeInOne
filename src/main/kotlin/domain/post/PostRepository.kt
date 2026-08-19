@@ -131,7 +131,7 @@ class PostRepository(private val client: DatabaseClient) {
             .bind("siteId", siteId)
             .then()
 
-    fun createTranslation(
+    fun createTranslationShell(
         postId: Long,
         siteId: Long,
         lang: String,
@@ -144,38 +144,6 @@ class PostRepository(private val client: DatabaseClient) {
             """
             INSERT INTO post_translations (post_id, site_id, lang, title, slug, body, excerpt)
             VALUES (:postId, :siteId, :lang, :title, :slug, :body, :excerpt)
-            RETURNING *
-        """
-        )
-            .bind("postId", postId)
-            .bind("siteId", siteId)
-            .bind("lang", lang)
-            .bind("title", title)
-            .bind("slug", slug)
-            .bind("body", body)
-            .bindNullable<String>("excerpt", excerpt)
-            .fetch().first()
-            .map { mapToTranslation(it) }
-
-    fun upsertTranslation(
-        postId: Long,
-        siteId: Long,
-        lang: String,
-        title: String,
-        slug: String,
-        body: String,
-        excerpt: String?
-    ): Mono<PostTranslation> =
-        client.sql(
-            """
-            INSERT INTO post_translations (post_id, site_id, lang, title, slug, body, excerpt)
-            VALUES (:postId, :siteId, :lang, :title, :slug, :body, :excerpt)
-            ON CONFLICT (post_id, lang) DO UPDATE SET
-                title      = EXCLUDED.title,
-                slug       = EXCLUDED.slug,
-                body       = EXCLUDED.body,
-                excerpt    = EXCLUDED.excerpt,
-                updated_at = now()
             RETURNING *
         """
         )
@@ -194,6 +162,133 @@ class PostRepository(private val client: DatabaseClient) {
             .bind("postId", postId)
             .fetch().all()
             .map { mapToTranslation(it) }
+
+    fun createVersion(
+        postTranslationId: Long,
+        title: String,
+        slug: String,
+        body: String,
+        excerpt: String?,
+        authorId: Long?
+    ): Mono<PostTranslationVersion> =
+        client.sql(
+            """
+            INSERT INTO post_translation_versions
+                (post_translation_id, version_number, title, slug, body, excerpt, author_id)
+            SELECT :postTranslationId,
+                   COALESCE(MAX(version_number), 0) + 1,
+                   :title, :slug, :body, :excerpt, :authorId
+            FROM post_translation_versions WHERE post_translation_id = :postTranslationId
+            RETURNING *
+        """
+        )
+            .bind("postTranslationId", postTranslationId)
+            .bind("title", title)
+            .bind("slug", slug)
+            .bind("body", body)
+            .bindNullable<String>("excerpt", excerpt)
+            .bindNullable<Long>("authorId", authorId)
+            .fetch().first()
+            .map { mapToVersion(it) }
+
+    fun pruneOldDrafts(postTranslationId: Long, cap: Int = 30): Mono<Void> =
+        client.sql(
+            """
+            DELETE FROM post_translation_versions
+            WHERE id IN (
+                SELECT id FROM post_translation_versions
+                WHERE post_translation_id = :postTranslationId AND status = 'draft'
+                ORDER BY version_number ASC
+                LIMIT GREATEST(
+                    0,
+                    (SELECT COUNT(*) FROM post_translation_versions WHERE post_translation_id = :postTranslationId) - :cap
+                )
+            )
+        """
+        )
+            .bind("postTranslationId", postTranslationId)
+            .bind("cap", cap)
+            .then()
+
+    fun findVersionsByTranslationId(postTranslationId: Long): Flux<PostTranslationVersion> =
+        client.sql(
+            "SELECT * FROM post_translation_versions WHERE post_translation_id = :postTranslationId ORDER BY version_number DESC"
+        )
+            .bind("postTranslationId", postTranslationId)
+            .fetch().all()
+            .map { mapToVersion(it) }
+
+    fun findVersionById(id: Long, postTranslationId: Long): Mono<PostTranslationVersion> =
+        client.sql("SELECT * FROM post_translation_versions WHERE id = :id AND post_translation_id = :postTranslationId")
+            .bind("id", id)
+            .bind("postTranslationId", postTranslationId)
+            .fetch().first()
+            .map { mapToVersion(it) }
+
+    fun findLatestVersionsByPostId(postId: Long): Flux<Pair<String, PostTranslationVersion>> =
+        client.sql(
+            """
+            SELECT DISTINCT ON (pt.lang) pt.lang, ptv.*
+            FROM post_translations pt
+            JOIN post_translation_versions ptv ON ptv.post_translation_id = pt.id
+            WHERE pt.post_id = :postId
+            ORDER BY pt.lang, ptv.version_number DESC
+        """
+        )
+            .bind("postId", postId)
+            .fetch().all()
+            .map { (it["lang"] as String) to mapToVersion(it) }
+
+    fun publishVersion(versionId: Long, postTranslationId: Long): Mono<PostTranslation> =
+        client.sql(
+            """
+            WITH v AS (
+                UPDATE post_translation_versions
+                SET status = 'published', published_at = COALESCE(published_at, now()), updated_at = now()
+                WHERE id = :versionId AND post_translation_id = :postTranslationId
+                RETURNING *
+            )
+            UPDATE post_translations pt
+            SET title = v.title, slug = v.slug, body = v.body, excerpt = v.excerpt,
+                current_version_id = v.id, updated_at = now()
+            FROM v WHERE pt.id = v.post_translation_id
+            RETURNING pt.*
+        """
+        )
+            .bind("versionId", versionId)
+            .bind("postTranslationId", postTranslationId)
+            .fetch().first()
+            .map { mapToTranslation(it) }
+
+    /**
+     * Publishes the latest draft of every translation on this post that has never gone live —
+     * lets the post-level "Publish" action put a brand-new post's first drafts online in one
+     * click, without touching translations that already have a deliberately-chosen live version.
+     */
+    fun publishInitialVersions(postId: Long): Mono<Void> =
+        client.sql(
+            """
+            WITH latest AS (
+                SELECT DISTINCT ON (pt.id) pt.id AS post_translation_id, ptv.id AS version_id,
+                       ptv.title, ptv.slug, ptv.body, ptv.excerpt
+                FROM post_translations pt
+                JOIN post_translation_versions ptv ON ptv.post_translation_id = pt.id
+                WHERE pt.post_id = :postId AND pt.current_version_id IS NULL
+                ORDER BY pt.id, ptv.version_number DESC
+            ),
+            marked AS (
+                UPDATE post_translation_versions v
+                SET status = 'published', published_at = COALESCE(v.published_at, now()), updated_at = now()
+                FROM latest l WHERE v.id = l.version_id
+            )
+            UPDATE post_translations pt
+            SET title = l.title, slug = l.slug, body = l.body, excerpt = l.excerpt,
+                current_version_id = l.version_id, updated_at = now()
+            FROM latest l WHERE pt.id = l.post_translation_id
+        """
+        )
+            .bind("postId", postId)
+            .then()
 
     fun findTranslationSummariesByPostIds(postIds: List<Long>): Flux<PostTranslationSummary> {
         if (postIds.isEmpty()) return Flux.empty()
@@ -225,7 +320,7 @@ class PostRepository(private val client: DatabaseClient) {
                       p.published_at, p.scheduled_at, p.created_at, p.updated_at,
                       pt.id AS pt_id, pt.post_id AS pt_post_id, pt.site_id AS pt_site_id,
                       pt.lang AS pt_lang, pt.title AS pt_title, pt.slug AS pt_slug,
-                      pt.body AS pt_body, pt.excerpt AS pt_excerpt,
+                      pt.body AS pt_body, pt.excerpt AS pt_excerpt, pt.current_version_id AS pt_current_version_id,
                       pt.created_at AS pt_created_at, pt.updated_at AS pt_updated_at
                       """,
             "ORDER BY p.published_at DESC LIMIT :limit OFFSET :offset", siteId, lang, tag, search
@@ -255,7 +350,7 @@ class PostRepository(private val client: DatabaseClient) {
     ): Pair<String, (org.springframework.r2dbc.core.DatabaseClient.GenericExecuteSpec) -> org.springframework.r2dbc.core.DatabaseClient.GenericExecuteSpec> {
         val tagJoin =
             if (tag != null) "JOIN post_tags ptags ON ptags.post_id = p.id JOIN tags t ON t.id = ptags.tag_id" else ""
-        val conditions = mutableListOf("p.site_id = :siteId", "p.status = 'published'")
+        val conditions = mutableListOf("p.site_id = :siteId", "p.status = 'published'", "pt.current_version_id IS NOT NULL")
         if (tag != null) conditions.add("t.name = :tag")
         if (search != null) conditions.add("(pt.title ILIKE :search OR pt.excerpt ILIKE :search)")
         val sql =
@@ -291,12 +386,14 @@ class PostRepository(private val client: DatabaseClient) {
                 pt.slug       AS pt_slug,
                 pt.body       AS pt_body,
                 pt.excerpt    AS pt_excerpt,
+                pt.current_version_id AS pt_current_version_id,
                 pt.created_at AS pt_created_at,
                 pt.updated_at AS pt_updated_at
             FROM posts p
             JOIN post_translations pt ON pt.post_id = p.id AND pt.lang = :lang AND pt.site_id = :siteId
             JOIN sites s ON s.id = p.site_id
-            WHERE p.site_id = :siteId AND (p.status = 'published' OR s.user_id = :user) AND pt.slug = :slug
+            WHERE p.site_id = :siteId AND (p.status = 'published' OR s.user_id = :user)
+                AND pt.slug = :slug AND (pt.current_version_id IS NOT NULL OR s.user_id = :user)
         """
         )
             .bind("siteId", siteId)
@@ -312,7 +409,7 @@ class PostRepository(private val client: DatabaseClient) {
             SELECT pt.lang, pt.slug, GREATEST(p.updated_at, pt.updated_at) AS last_mod
             FROM posts p
             JOIN post_translations pt ON pt.post_id = p.id AND pt.site_id = :siteId
-            WHERE p.site_id = :siteId AND p.status = 'published'
+            WHERE p.site_id = :siteId AND p.status = 'published' AND pt.current_version_id IS NOT NULL
             ORDER BY p.published_at DESC
         """
         )
@@ -384,6 +481,7 @@ class PostRepository(private val client: DatabaseClient) {
         slug = row["slug"] as String,
         body = row["body"] as String,
         excerpt = row["excerpt"] as? String,
+        currentVersionId = row["current_version_id"] as? Long,
         createdAt = row["created_at"] as OffsetDateTime,
         updatedAt = row["updated_at"] as OffsetDateTime
     )
@@ -398,7 +496,23 @@ class PostRepository(private val client: DatabaseClient) {
             slug = row["pt_slug"] as String,
             body = row["pt_body"] as String,
             excerpt = row["pt_excerpt"] as? String,
+            currentVersionId = row["pt_current_version_id"] as? Long,
             createdAt = row["pt_created_at"] as OffsetDateTime,
             updatedAt = row["pt_updated_at"] as OffsetDateTime
         )
+
+    private fun mapToVersion(row: Map<String, Any>): PostTranslationVersion = PostTranslationVersion(
+        id = row["id"] as Long,
+        postTranslationId = row["post_translation_id"] as Long,
+        versionNumber = row["version_number"] as Int,
+        status = VersionStatus.valueOf((row["status"] as String).uppercase()),
+        title = row["title"] as String,
+        slug = row["slug"] as String,
+        body = row["body"] as String,
+        excerpt = row["excerpt"] as? String,
+        authorId = row["author_id"] as? Long,
+        createdAt = row["created_at"] as OffsetDateTime,
+        publishedAt = row["published_at"] as? OffsetDateTime,
+        updatedAt = row["updated_at"] as OffsetDateTime
+    )
 }

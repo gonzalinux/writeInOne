@@ -1,6 +1,7 @@
 package com.gonzalinux.api
 
 import com.gonzalinux.docs.DocsService
+import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
@@ -17,9 +18,17 @@ class DocsHandler(private val docsService: DocsService) {
     }
 
     fun page(request: ServerRequest): Mono<ServerResponse> {
-        val slug = request.path().removePrefix("/docs/").trim('/')
+        val path = request.path().removePrefix("/docs/").trim('/')
+        val isMarkdown = path.endsWith(".md")
+        val slug = if (isMarkdown) path.removeSuffix(".md") else path
         val page = docsService.find(slug)
             ?: return ServerResponse.notFound().build()
+
+        if (isMarkdown) {
+            return ServerResponse.ok()
+                .contentType(MediaType.TEXT_MARKDOWN)
+                .bodyValue(page.rawMarkdown)
+        }
 
         return ServerResponse.ok().render(
             "docs",

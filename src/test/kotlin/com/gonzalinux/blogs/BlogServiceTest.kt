@@ -5,6 +5,8 @@ import com.gonzalinux.domain.post.PostEventService
 import com.gonzalinux.domain.post.PostRepository
 import com.gonzalinux.domain.post.PostStatus
 import com.gonzalinux.domain.post.PostTranslation
+import com.gonzalinux.domain.post.PostTranslationVersion
+import com.gonzalinux.domain.post.VersionStatus
 import com.gonzalinux.domain.site.Site
 import com.gonzalinux.domain.site.SiteConfig
 import com.gonzalinux.domain.site.SiteRepository
@@ -56,7 +58,13 @@ class BlogServiceTest {
     private fun translation(body: String) = PostTranslation(
         id = 1L, postId = 1L, siteId = 1L, lang = "en",
         title = "Test", slug = "test", body = body,
-        excerpt = null, createdAt = now, updatedAt = now
+        excerpt = null, currentVersionId = null, createdAt = now, updatedAt = now
+    )
+
+    private fun version(body: String) = PostTranslationVersion(
+        id = 1L, postTranslationId = 1L, versionNumber = 1, status = VersionStatus.PUBLISHED,
+        title = "Test", slug = "test", body = body, excerpt = null,
+        authorId = null, createdAt = now, publishedAt = now, updatedAt = now
     )
 
     private fun getBySlug(body: String): BlogPostDetail? {
@@ -117,11 +125,13 @@ class BlogServiceTest {
         every { tagRepo.findByPostId(1L) } returns Flux.empty()
         every { postRepo.findTranslationsByPostId(1L) } returns Flux.just(translation("Hello"))
         every { postRepo.incrementViewCount(1L) } returns Mono.empty()
+        every { postRepo.findVersionsByTranslationId(1L) } returns Flux.just(version("Hello"))
 
-        StepVerifier.create(service.getPreviewPost(1L, 42L, "en", "test"))
+        StepVerifier.create(service.getPreviewPost(1L, 42L, "en", "test", null))
             .assertNext { ctx ->
                 assert(ctx.site.id == 1L) { "site id should match" }
                 assert(ctx.detail.post.id == 1L) { "post id should match" }
+                assert(ctx.selectedVersion.body == "Hello") { "selectedVersion should default to the latest version" }
             }
             .verifyComplete()
     }
@@ -130,7 +140,7 @@ class BlogServiceTest {
     fun `getPreviewPost returns empty when site does not belong to user`() {
         every { siteRepo.findById(1L, 99L) } returns Mono.empty()
 
-        StepVerifier.create(service.getPreviewPost(1L, 99L, "en", "test"))
+        StepVerifier.create(service.getPreviewPost(1L, 99L, "en", "test", null))
             .verifyComplete()
     }
 }

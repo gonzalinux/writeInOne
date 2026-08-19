@@ -173,6 +173,50 @@ class BlogPostListJsonIntegrationTest {
     }
 
     @Test
+    fun `a language added after the post is already published stays hidden until its version is published`() {
+        val postId = createPost("Hello World", "Post body content")
+        publishPost(postId)
+
+        // add a Spanish draft to an already-published post — must not leak onto the public blog
+        webTestClient.put().uri("/sites/$siteId/posts/$postId")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(mapOf("translations" to mapOf("es" to mapOf("title" to "Hola Mundo", "body" to "Cuerpo"))))
+            .exchange()
+            .expectStatus().isOk
+
+        webTestClient.get().uri("/es/posts")
+            .header("X-Site-Host", siteDomain)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.content.length()").isEqualTo(0)
+
+        val versions = webTestClient.get().uri("/sites/$siteId/posts/$postId/translations/es/versions")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody(List::class.java)
+            .returnResult()
+            .responseBody!!
+        @Suppress("UNCHECKED_CAST")
+        val versionId = (versions[0] as Map<String, Any>)["id"] as Int
+
+        webTestClient.post().uri("/sites/$siteId/posts/$postId/translations/es/versions/$versionId/publish")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .exchange()
+            .expectStatus().isOk
+
+        webTestClient.get().uri("/es/posts")
+            .header("X-Site-Host", siteDomain)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.content.length()").isEqualTo(1)
+            .jsonPath("$.content[0].translation.title").isEqualTo("Hola Mundo")
+    }
+
+    @Test
     fun `returns landing page when no site matches the host`() {
         webTestClient.get().uri("/en/posts")
             .header("X-Site-Host", "nonexistent.example.com")

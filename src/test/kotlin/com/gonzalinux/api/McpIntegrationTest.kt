@@ -226,6 +226,18 @@ class McpIntegrationTest {
     }
 
     @Test
+    fun `a request on a non-home domain is rejected before auth is even checked`() {
+        // No Authorization header either — if the host check didn't run first, this would come
+        // back 401 (unauthorized) instead of 404 (host rejected).
+        webTestClient.post().uri("/mcp")
+            .header("X-Site-Host", "test.writeinone.com")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(mapOf("jsonrpc" to "2.0", "id" to 1, "method" to "initialize"))
+            .exchange()
+            .expectStatus().isNotFound
+    }
+
+    @Test
     fun `a request without a bearer token is unauthorized`() {
         webTestClient.post().uri("/mcp")
             .contentType(MediaType.APPLICATION_JSON)

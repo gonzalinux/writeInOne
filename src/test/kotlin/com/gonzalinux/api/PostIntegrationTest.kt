@@ -168,7 +168,7 @@ class PostIntegrationTest {
     }
 
     @Test
-    fun `update post returns 200 with updated translation`() {
+    fun `update post returns 200 with the edit as a new draft version, not the live translation`() {
         val postId = createPost("Original Title", "Original body")
 
         webTestClient.put().uri("/sites/$siteId/posts/$postId")
@@ -184,7 +184,10 @@ class PostIntegrationTest {
             .exchange()
             .expectStatus().isOk
             .expectBody()
-            .jsonPath("$.translations[0].title").isEqualTo("Updated Title")
+            // never published, so the live translation still reflects the very first draft...
+            .jsonPath("$.translations[0].title").isEqualTo("Original Title")
+            // ...while the new draft is captured as a version, ready to be published or reviewed.
+            .jsonPath("$.latestVersions.en.title").isEqualTo("Updated Title")
     }
 
     @Test
@@ -256,7 +259,9 @@ class PostIntegrationTest {
     }
 
     @Test
-    fun `create post returns 409 when slug already exists`() {
+    fun `create post with a duplicate slug succeeds while both stay unpublished drafts`() {
+        // Draft slugs aren't required to be unique — only publishing enforces that, since an
+        // unpublished draft never appears anywhere else a slug collision could matter.
         webTestClient.post().uri("/sites/$siteId/posts/")
             .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
             .contentType(MediaType.APPLICATION_JSON)
@@ -269,9 +274,95 @@ class PostIntegrationTest {
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(mapOf("translations" to mapOf("en" to mapOf("title" to "Duplicate", "body" to "Body"))))
             .exchange()
+            .expectStatus().isOk
+    }
+
+    @Test
+    fun `publishing a post returns 409 when its slug is already live elsewhere`() {
+        val firstPostId = createPost("Duplicate", "Body")
+        webTestClient.post().uri("/sites/$siteId/posts/$firstPostId/publish")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .exchange()
+            .expectStatus().isOk
+
+        val secondPostId = createPost("Duplicate", "Body")
+        webTestClient.post().uri("/sites/$siteId/posts/$secondPostId/publish")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .exchange()
             .expectStatus().isEqualTo(409)
             .expectBody()
             .jsonPath("$.error").isEqualTo("SLUG_ALREADY_EXISTS")
+    }
+
+    @Test
+    fun `saving a translation twice creates two versions without touching the live translation`() {
+        val postId = createPost("Original Title", "Original body")
+
+        webTestClient.put().uri("/sites/$siteId/posts/$postId")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(mapOf("translations" to mapOf("en" to mapOf("title" to "Second draft", "body" to "v2"))))
+            .exchange()
+            .expectStatus().isOk
+
+        webTestClient.get().uri("/sites/$siteId/posts/$postId/translations/en/versions")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.length()").isEqualTo(2)
+            .jsonPath("$[0].versionNumber").isEqualTo(2)
+            .jsonPath("$[0].status").isEqualTo("DRAFT")
+            .jsonPath("$[1].versionNumber").isEqualTo(1)
+
+        // the live post_translations row is untouched by drafting — never published
+        webTestClient.get().uri("/sites/$siteId/posts/$postId")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.translations[0].title").isEqualTo("Original Title")
+            .jsonPath("$.latestVersions.en.title").isEqualTo("Second draft")
+    }
+
+    @Test
+    fun `publishing an older version rolls the live translation back`() {
+        val postId = createPost("v1 title", "v1 body")
+
+        webTestClient.put().uri("/sites/$siteId/posts/$postId")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(mapOf("translations" to mapOf("en" to mapOf("title" to "v2 title", "body" to "v2 body"))))
+            .exchange()
+            .expectStatus().isOk
+
+        val versions = webTestClient.get().uri("/sites/$siteId/posts/$postId/translations/en/versions")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody(List::class.java)
+            .returnResult()
+            .responseBody!!
+
+        @Suppress("UNCHECKED_CAST")
+        val v2Id = (versions[0] as Map<String, Any>)["id"] as Int
+        @Suppress("UNCHECKED_CAST")
+        val v1Id = (versions[1] as Map<String, Any>)["id"] as Int
+
+        webTestClient.post().uri("/sites/$siteId/posts/$postId/translations/en/versions/$v2Id/publish")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.title").isEqualTo("v2 title")
+
+        // rollback: publish v1 again
+        webTestClient.post().uri("/sites/$siteId/posts/$postId/translations/en/versions/$v1Id/publish")
+            .cookie(ACCESS_TOKEN_COOKIE, accessTokenCookie)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.title").isEqualTo("v1 title")
     }
 
     @Test

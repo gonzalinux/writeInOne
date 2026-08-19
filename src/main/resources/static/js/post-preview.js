@@ -21,6 +21,34 @@ const editSection = document.getElementById('edit-section');
 const previewSection = document.getElementById('preview-section');
 const errorStrip = document.getElementById('preview-error');
 const unsavedBadge = document.getElementById('unsaved-badge');
+const versionSelect = document.getElementById('version-select');
+const btnPublishVersion = document.getElementById('btn-publish-version');
+
+// ── Version selector ──────────────────────────────────────
+function reloadWithVersion(versionId) {
+  const url = new URL(location.href);
+  url.searchParams.set('versionId', versionId);
+  location.href = url.toString();
+}
+
+versionSelect.addEventListener('change', () => reloadWithVersion(versionSelect.value));
+
+if (btnPublishVersion) {
+  btnPublishVersion.addEventListener('click', async () => {
+    clearError();
+    const versionId = versionSelect.value;
+    const res = await api(`/sites/${siteId}/posts/${postId}/translations/${lang}/versions/${versionId}/publish`, {
+      method: 'POST'
+    });
+    if (!res) return;
+    if (res.ok) {
+      location.reload();
+    } else {
+      const text = await res.text().catch(() => res.statusText);
+      showError('Publish version failed: ' + text);
+    }
+  });
+}
 
 // ── Status badge ──────────────────────────────────────────
 function applyStatus(s) {
@@ -149,7 +177,10 @@ btnSave.addEventListener('click', async () => {
   if (res.ok) {
     unsavedBadge.hidden = true;
     window.onbeforeunload = null;
-    location.reload();
+    const result = await res.json();
+    const newVersionId = result.latestVersions?.[lang]?.id;
+    if (newVersionId) reloadWithVersion(newVersionId);
+    else location.reload();
   } else {
     const data = await res.json().catch(() => ({}));
     showError('Save failed: ' + (data.details || data.error || res.statusText));

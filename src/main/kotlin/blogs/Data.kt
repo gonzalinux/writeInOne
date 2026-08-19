@@ -2,6 +2,7 @@ package com.gonzalinux.blogs
 
 import com.gonzalinux.domain.post.Post
 import com.gonzalinux.domain.post.PostTranslation
+import com.gonzalinux.domain.post.PostTranslationVersion
 import com.gonzalinux.domain.site.Site
 import com.gonzalinux.domain.tag.Tag
 
@@ -20,4 +21,11 @@ data class BlogPostDetail(
     val allTranslations: List<PostTranslation>
 )
 
-data class PreviewContext(val site: Site, val detail: BlogPostDetail)
+data class PreviewContext(
+    val site: Site,
+    val detail: BlogPostDetail,
+    val versions: List<PostTranslationVersion>,
+    val selectedVersion: PostTranslationVersion,
+    val renderedSelectedBody: String,
+    val canPublish: Boolean
+)

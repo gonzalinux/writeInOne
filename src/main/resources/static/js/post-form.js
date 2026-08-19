@@ -163,11 +163,14 @@ async function loadPost() {
   data.translations?.forEach(t => {
     const titleEl = document.getElementById(`title-${t.lang}`);
     if (!titleEl) return;
-    titleEl.value = t.title || '';
-    document.getElementById(`excerpt-${t.lang}`).value = t.excerpt || '';
-    if (editors[t.lang]) editors[t.lang].setValue(t.body || '');
-    else document.getElementById(`body-${t.lang}`).value = t.body || '';
-    if (t.slug) slugInput.value = t.slug;
+    // latestVersions reflects the most recently saved draft, which may be ahead of the
+    // live translation row if it hasn't been published yet — prefer it when present.
+    const latest = data.latestVersions?.[t.lang] || t;
+    titleEl.value = latest.title || '';
+    document.getElementById(`excerpt-${t.lang}`).value = latest.excerpt || '';
+    if (editors[t.lang]) editors[t.lang].setValue(latest.body || '');
+    else document.getElementById(`body-${t.lang}`).value = latest.body || '';
+    if (latest.slug) slugInput.value = latest.slug;
     updateDot(t.lang);
   });
 
