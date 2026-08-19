@@ -45,27 +45,37 @@
 <div class="preview-bar">
   <div class="preview-bar__left">
     <span class="preview-bar__label">Preview</span>
-    <span id="status-badge" class="status">DRAFT</span>
+
+    <div class="version-dropdown">
+      <button id="version-dropdown-btn" type="button"
+              th:class="'version-dropdown__trigger status status--' + ${selectedVersion.status.name().toLowerCase()}"
+              aria-haspopup="listbox" aria-expanded="false">
+        <span id="version-dropdown-label"
+              th:text="${selectedVersion.status.name().toLowerCase()} + ' · v' + ${selectedVersion.versionNumber}">draft · v1</span>
+        <span class="version-dropdown__caret">&#9662;</span>
+      </button>
+      <ul id="version-dropdown-menu" class="version-dropdown__menu" role="listbox" hidden>
+        <li th:each="v : ${versions}"
+            class="version-dropdown__item"
+            th:classappend="${v.id == selectedVersion.id} ? ' version-dropdown__item--active' : ''"
+            th:data-version-id="${v.id}"
+            role="option" tabindex="0">
+          <span th:class="'status status--' + ${v.status.name().toLowerCase()}"
+                th:text="${v.status.name().toLowerCase()}">draft</span>
+          <span class="version-dropdown__version" th:text="'v' + ${v.versionNumber}">v1</span>
+          <span class="version-dropdown__date" th:text="${#temporals.format(v.updatedAt, 'MMM d, HH:mm')}">Jan 1</span>
+        </li>
+      </ul>
+    </div>
+
     <span id="unsaved-badge" class="unsaved-badge" hidden>● not saved</span>
   </div>
   <div class="preview-bar__right">
-    <select id="version-select" class="preview-bar__btn">
-      <option th:each="v : ${versions}"
-              th:value="${v.id}"
-              th:selected="${v.id == selectedVersion.id}"
-              th:text="'v' + ${v.versionNumber} + ' · ' + ${v.status.name().toLowerCase()} + ' · ' + ${#temporals.format(v.updatedAt, 'MMM d, HH:mm')}">
-        v1 · draft
-      </option>
-    </select>
     <button id="btn-publish-version" class="preview-bar__btn preview-bar__btn--publish"
-            th:if="${canPublish}" th:disabled="${selectedVersion.status.name() == 'PUBLISHED'}">
+            th:if="${canPublish and selectedVersion.status.name() != 'PUBLISHED'}">
       Publish this version
     </button>
     <a th:href="'/admin/sites/' + ${post.siteId} + '/posts'" class="preview-bar__btn">← Admin</a>
-    <button th:if="${#lists.contains(site.availableThemes, T(com.gonzalinux.domain.site.Theme).LIGHT)
-                         and #lists.contains(site.availableThemes, T(com.gonzalinux.domain.site.Theme).DARK)}"
-            class="preview-bar__btn" onclick="toggleTheme()" aria-label="Toggle theme">&#9789;
-    </button>
     <button id="btn-edit-mode" class="preview-bar__btn">Edit</button>
     <button id="btn-split-mode" class="preview-bar__btn">Split</button>
     <button id="btn-preview-mode" class="preview-bar__btn preview-bar__btn--active">Preview</button>

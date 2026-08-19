@@ -42,6 +42,10 @@ function createPanel(lang) {
       <div class="field">
         <label for="body-${lang}">Body <span style="color:#aaa">(Markdown)</span></label>
         <textarea id="body-${lang}" class="body-editor post-body" placeholder="Write your post in Markdown..."></textarea>
+      </div>
+      <div class="field">
+        <label>Version history</label>
+        <ul id="versions-${lang}" class="version-history"></ul>
       </div>`;
   } else {
     panel.innerHTML = `
@@ -150,6 +154,30 @@ async function handleError(res) {
   err.style.display = 'block';
 }
 
+async function loadVersions(lang, slug) {
+  const list = document.getElementById(`versions-${lang}`);
+  if (!list) return;
+
+  const res = await api(`/sites/${siteId}/posts/${postId}/translations/${lang}/versions`);
+  if (!res || !res.ok) return;
+
+  const versions = await res.json();
+  list.innerHTML = versions.map(v => {
+    const date = new Date(v.updatedAt).toLocaleString(undefined, {
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+    const status = v.status.toLowerCase();
+    const href = `/admin/preview/${siteId}/${lang}/${slug}?versionId=${v.id}`;
+    return `
+      <li class="version-history__item">
+        <span class="status status--${status}">${status}</span>
+        <span class="version-history__version">v${v.versionNumber}</span>
+        <span class="version-history__date">${date}</span>
+        <a href="${href}">Open</a>
+      </li>`;
+  }).join('');
+}
+
 async function loadPost() {
   const res = await api(`/sites/${siteId}/posts/${postId}`);
   if (!res || !res.ok) return;
@@ -172,6 +200,7 @@ async function loadPost() {
     else document.getElementById(`body-${t.lang}`).value = latest.body || '';
     if (latest.slug) slugInput.value = latest.slug;
     updateDot(t.lang);
+    loadVersions(t.lang, t.slug);
   });
 
   if (post) {

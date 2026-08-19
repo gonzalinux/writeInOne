@@ -570,6 +570,58 @@ tr:last-child td {
     color: #555;
 }
 
+/* ── Version history (post form) ── */
+.version-history {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.version-history:empty::after {
+    content: 'No versions yet — save a draft to start one.';
+    display: block;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
+.version-history__item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.82rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.version-history__item:last-child {
+    border-bottom: none;
+}
+
+.version-history__version {
+    color: #888;
+}
+
+.version-history__date {
+    margin-left: auto;
+    color: #aaa;
+    font-size: 0.75rem;
+}
+
+.version-history__item a {
+    font-size: 0.78rem;
+    color: #1a4fc4;
+    text-decoration: none;
+}
+
+.version-history__item a:hover {
+    text-decoration: underline;
+}
+
 /* ── Schedule section (post form) ── */
 .schedule-row {
     display: flex;

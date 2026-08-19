@@ -6,7 +6,6 @@ const lang = data.lang;
 let status = data.status; // mutable: updated after publish/unpublish/schedule
 
 // ── Elements ──────────────────────────────────────────────
-const badge = document.getElementById('status-badge');
 const btnEditMode = document.getElementById('btn-edit-mode');
 const btnSplitMode = document.getElementById('btn-split-mode');
 const btnPreviewMode = document.getElementById('btn-preview-mode');
@@ -21,22 +20,51 @@ const editSection = document.getElementById('edit-section');
 const previewSection = document.getElementById('preview-section');
 const errorStrip = document.getElementById('preview-error');
 const unsavedBadge = document.getElementById('unsaved-badge');
-const versionSelect = document.getElementById('version-select');
+const versionDropdownBtn = document.getElementById('version-dropdown-btn');
+const versionDropdownMenu = document.getElementById('version-dropdown-menu');
 const btnPublishVersion = document.getElementById('btn-publish-version');
 
-// ── Version selector ──────────────────────────────────────
+// ── Version + status dropdown ──────────────────────────────
 function reloadWithVersion(versionId) {
   const url = new URL(location.href);
   url.searchParams.set('versionId', versionId);
   location.href = url.toString();
 }
 
-versionSelect.addEventListener('change', () => reloadWithVersion(versionSelect.value));
+function closeVersionDropdown() {
+  versionDropdownMenu.hidden = true;
+  versionDropdownBtn.setAttribute('aria-expanded', 'false');
+}
+
+versionDropdownBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  const willOpen = versionDropdownMenu.hidden;
+  versionDropdownMenu.hidden = !willOpen;
+  versionDropdownBtn.setAttribute('aria-expanded', String(willOpen));
+});
+
+versionDropdownMenu.querySelectorAll('.version-dropdown__item').forEach(item => {
+  const select = () => reloadWithVersion(item.dataset.versionId);
+  item.addEventListener('click', select);
+  item.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      select();
+    }
+  });
+});
+
+document.addEventListener('click', e => {
+  if (!versionDropdownMenu.hidden && !e.target.closest('.version-dropdown')) closeVersionDropdown();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeVersionDropdown();
+});
 
 if (btnPublishVersion) {
   btnPublishVersion.addEventListener('click', async () => {
     clearError();
-    const versionId = versionSelect.value;
+    const versionId = versionDropdownMenu.querySelector('.version-dropdown__item--active')?.dataset.versionId;
     const res = await api(`/sites/${siteId}/posts/${postId}/translations/${lang}/versions/${versionId}/publish`, {
       method: 'POST'
     });
@@ -50,11 +78,9 @@ if (btnPublishVersion) {
   });
 }
 
-// ── Status badge ──────────────────────────────────────────
+// ── Post-level publish/unpublish button label ──────────────
 function applyStatus(s) {
   status = s;
-  badge.textContent = s.toUpperCase();
-  badge.className = 'status status--' + s;
   btnPublish.textContent = s === 'published' ? 'Unpublish' : 'Publish';
 }
 
