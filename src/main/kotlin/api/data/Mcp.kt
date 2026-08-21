@@ -1,5 +1,6 @@
 package com.gonzalinux.api.data
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import tools.jackson.databind.JsonNode
 
 /**
@@ -14,6 +15,7 @@ data class JsonRpcRequest(
     val params: JsonNode? = null
 )
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class JsonRpcResponse(
     val jsonrpc: String = "2.0",
     val id: JsonNode?,

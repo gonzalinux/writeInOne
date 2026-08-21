@@ -19,12 +19,75 @@ https://writeinone.com/mcp
 ```
 
 with an `Authorization: Bearer <key>` header, generated from the **Service Accounts**
-page in the admin UI. The exact config shape depends on your client — for example:
+page in the admin UI. The exact config shape depends on your client:
+
+### Claude Code
+
+```bash
+claude mcp add --transport http writeinone https://writeinone.com/mcp \
+  --header "Authorization: Bearer wio_live_51H8x..."
+```
+
+This writes the server to local scope. Add `--scope project` to share it via `.mcp.json`
+instead, so the rest of the team gets it when they clone the repo (they'll still need
+their own key).
+
+### Claude Cowork (also claude.ai and Claude Desktop)
+
+These share one connector UI. Go to **Customize > Connectors > Add custom connector**,
+paste `https://writeinone.com/mcp` as the URL, then open **Request headers** and add:
+
+| Field | Value |
+|-------|-------|
+| Header name | `authorization` |
+| Header value | `Bearer wio_live_51H8x...` |
+| Required | yes |
+
+Request header authentication is currently in beta on claude.ai — if it isn't available
+on your account yet, ask your Anthropic contact for access.
+
+### Cursor
+
+Add to `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global):
 
 ```json
 {
   "mcpServers": {
     "writeinone": {
+      "url": "https://writeinone.com/mcp",
+      "headers": { "Authorization": "Bearer wio_live_51H8x..." }
+    }
+  }
+}
+```
+
+### Codex
+
+Add to `~/.codex/config.toml` (or `.codex/config.toml` for a trusted project), with the
+key in an environment variable rather than the file itself:
+
+```toml
+[mcp_servers.writeinone]
+url = "https://writeinone.com/mcp"
+bearer_token_env_var = "WRITEINONE_MCP_KEY"
+```
+
+or equivalently from the CLI:
+
+```bash
+codex mcp add writeinone --url https://writeinone.com/mcp \
+  --bearer-token-env-var WRITEINONE_MCP_KEY
+```
+
+### opencode
+
+Add to `opencode.json`:
+
+```json
+{
+  "mcp": {
+    "writeinone": {
+      "type": "remote",
       "url": "https://writeinone.com/mcp",
       "headers": { "Authorization": "Bearer wio_live_51H8x..." }
     }
