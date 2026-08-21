@@ -66,3 +66,15 @@ data class CreateDraftArgs(
     /** Present only to detect and reject the unsupported "edit existing post" case. */
     val postId: Long? = null
 )
+
+data class EditArgs(
+    val siteId: Long,
+    val postId: Long,
+    val translations: Map<String, TranslationInput>
+)
+
+data class ListVersionsArgs(val siteId: Long, val postId: Long, val lang: String)
+
+data class PublishArgs(val siteId: Long, val postId: Long, val lang: String, val versionId: Long)
+
+data class ScheduleArgs(val siteId: Long, val postId: Long, val scheduledAt: String)

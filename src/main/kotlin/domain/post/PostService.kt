@@ -242,21 +242,38 @@ class PostService(
                     .switchIfEmpty(Mono.error(PostVersionNotFoundException(versionId)))
             }
 
+    /**
+     * Publishing a version also brings the post itself live on its first publish — otherwise the
+     * translation would have `currentVersionId` set but stay invisible forever, since both blog
+     * queries require `posts.status = 'published'` too. Deliberately skips
+     * [PostRepository.publishInitialVersions]: only the translation named here goes live, so a
+     * still-drafted translation in another language isn't silently exposed alongside it.
+     */
     fun publishVersion(postId: Long, siteId: Long, userId: Long, lang: String, versionId: Long): Mono<PostTranslation> =
         siteRepo.findById(siteId, userId)
             .requirePublish()
             .switchIfEmpty(Mono.error(SiteNotFoundException(siteId)))
             .flatMap { postRepo.findById(postId, siteId) }
             .switchIfEmpty(Mono.error(PostNotFoundException(postId)))
-            .flatMap { post -> findTranslationOrError(post.id, lang) }
-            .flatMap { translation ->
-                postRepo.findVersionById(versionId, translation.id)
-                    .switchIfEmpty(Mono.error(PostVersionNotFoundException(versionId)))
-                    .flatMap { version ->
-                        postRepo.publishVersion(versionId, translation.id)
-                            .onErrorMap(DataIntegrityViolationException::class.java) {
-                                SlugAlreadyExistsException(version.slug)
+            .flatMap { post ->
+                findTranslationOrError(post.id, lang)
+                    .flatMap { translation ->
+                        postRepo.findVersionById(versionId, translation.id)
+                            .switchIfEmpty(Mono.error(PostVersionNotFoundException(versionId)))
+                            .flatMap { version ->
+                                postRepo.publishVersion(versionId, translation.id)
+                                    .onErrorMap(DataIntegrityViolationException::class.java) {
+                                        SlugAlreadyExistsException(version.slug)
+                                    }
                             }
+                    }
+                    .flatMap { publishedTranslation ->
+                        if (post.status == PostStatus.PUBLISHED) {
+                            Mono.just(publishedTranslation)
+                        } else {
+                            postRepo.update(post.id, siteId, null, PostStatus.PUBLISHED, OffsetDateTime.now(), null)
+                                .thenReturn(publishedTranslation)
+                        }
                     }
             }
             .doOnSuccess {

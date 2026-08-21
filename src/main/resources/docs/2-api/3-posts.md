@@ -93,13 +93,55 @@ PUT /sites/{siteId}/posts/{postId}
 - Every field is optional and `null` means "leave unchanged" — **except** `tags`: if you
   include it at all (even `[]`), it fully replaces the post's tag set. Omit `tags`
   entirely to leave tags untouched.
-- `translations` is a partial upsert per language: languages you include are
-  created-or-overwritten; languages you omit are left as they are. There's no way to
+- `translations` is keyed by language, same as create. A language with no existing
+  translation yet is created and becomes visible immediately, same as create. A language
+  that already has a translation is **not** overwritten — this call instead creates a new
+  **draft version** on top of it (see [Post versions](#post-versions) below) and leaves
+  `post_translations` (what `GET`/the public blog serve) untouched. There's no way to
   delete a single translation through this endpoint.
 - Same slug-collision rule as create (`409 SLUG_ALREADY_EXISTS`).
 
-Returns the post with its full, current set of translations and tags (not just the ones
-you sent).
+Returns the post with its full, current set of *live* translations and tags (not just
+the ones you sent) — for an existing translation, that's still the old content until the
+new draft version is published. Check `latestVersions` in
+[the response shape](#the-post-response-shape) to see the version your edit just
+created.
+
+## Post versions
+
+Every translation keeps a full history of versions — one whole content snapshot per row,
+never a diff. Creating a post, or adding a new language to one, makes version 1 and
+publishes it immediately. Editing an *existing* translation through `PUT` above adds
+another version in `draft` status without touching the live content — this is the
+review gate that keeps an editor (human or AI) from silently overwriting what's already
+published. Multiple drafts can coexist on the same translation; nothing is locked.
+
+```
+GET /sites/{siteId}/posts/{postId}/translations/{lang}/versions
+GET /sites/{siteId}/posts/{postId}/translations/{lang}/versions/{versionId}
+POST /sites/{siteId}/posts/{postId}/translations/{lang}/versions/{versionId}/publish
+```
+
+- The list endpoint returns every version for that translation, newest-first, `draft`
+  and `published` mixed together.
+- `publish` copies that version's `title`/`slug`/`body`/`excerpt` into the live
+  `post_translations` row and marks the version `published` — this is also how rollback
+  works: publish an older version again. It requires `editor` or `admin` on the site
+  (`writer` can create drafts but not publish them), and returns `409
+  SLUG_ALREADY_EXISTS` if the version's slug now collides with another translation's.
+- Only the 30 most recent **draft** versions per translation are kept; older drafts are
+  pruned automatically. Published versions are never pruned.
+
+```json
+{
+  "id": 9, "postTranslationId": 1, "versionNumber": 2, "status": "DRAFT",
+  "title": "Hello, world (updated)", "slug": "hello-world", "body": "...", "excerpt": null,
+  "authorId": 7, "createdAt": "2026-01-11T09:00:00Z", "publishedAt": null, "updatedAt": "2026-01-11T09:00:00Z"
+}
+```
+
+`status` is `DRAFT` or `PUBLISHED`. `publishedAt` is set once, the first time a version
+ever goes live; `updatedAt` moves on every later (re)publish of that same version.
 
 ## Delete a post
 
@@ -138,9 +180,12 @@ tags array).
     "createdAt": "2026-01-10T09:00:00Z", "updatedAt": "2026-01-10T09:00:00Z"
   },
   "translations": [
-    { "id": 1, "postId": 1, "siteId": 42, "lang": "en", "title": "Hello, world", "slug": "hello-world", "body": "# Hi\n\nFirst post.", "excerpt": "Intro", "createdAt": "...", "updatedAt": "..." }
+    { "id": 1, "postId": 1, "siteId": 42, "lang": "en", "title": "Hello, world", "slug": "hello-world", "body": "# Hi\n\nFirst post.", "excerpt": "Intro", "currentVersionId": 3, "createdAt": "...", "updatedAt": "..." }
   ],
-  "tags": [{ "id": 5, "siteId": 42, "name": "intro", "createdAt": "..." }]
+  "tags": [{ "id": 5, "siteId": 42, "name": "intro", "createdAt": "..." }],
+  "latestVersions": {
+    "en": { "id": 9, "postTranslationId": 1, "versionNumber": 2, "status": "DRAFT", "title": "...", "slug": "hello-world", "body": "...", "excerpt": null, "authorId": 7, "createdAt": "...", "publishedAt": null, "updatedAt": "..." }
+  }
 }
 ```
 
@@ -149,12 +194,22 @@ tags array).
 (`draft`, `scheduled`, `published`, `archived`). `ARCHIVED` currently has no endpoint
 that sets it.
 
+`latestVersions` is keyed by language, one entry per translation that has at least one
+version — see [Post versions](#post-versions). It's the most recent version whether or
+not it's published, so it's how you tell a translation has an unpublished draft sitting
+on top of it without a second call. `POST` (create) is the one exception: it always
+returns `{}` here, since a freshly created translation's live content and its version 1
+are identical. A translation's own `currentVersionId` points at whichever version is
+currently live — `null` until the translation has been published at least once.
+
 ## Errors
 
-| Status | Code                  | When                                                                         |
-|--------|-----------------------|------------------------------------------------------------------------------|
-| 404    | `SITE_NOT_FOUND`      | site doesn't exist or you don't have access to it                            |
-| 404    | `POST_NOT_FOUND`      | post doesn't exist under that site                                           |
+| Status | Code                     | When                                                                         |
+|--------|--------------------------|------------------------------------------------------------------------------|
+| 403    | `FORBIDDEN`              | caller lacks the role the action needs (e.g. `writer` calling version-publish) |
+| 404    | `SITE_NOT_FOUND`         | site doesn't exist or you don't have access to it                            |
+| 404    | `POST_NOT_FOUND`         | post doesn't exist under that site                                           |
+| 404    | `POST_VERSION_NOT_FOUND` | version doesn't exist for that translation                                  |
 | 409    | `SLUG_ALREADY_EXISTS` | a translation's slug collides with an existing one in the same site+language |
 
 See [Errors](/docs/api/errors) for the response envelope and the full list of codes.

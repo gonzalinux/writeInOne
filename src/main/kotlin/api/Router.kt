@@ -67,8 +67,8 @@ class Router(
 
         .path("/service-accounts") { serviceAccounts ->
             serviceAccounts
-                .POST("/", serviceAccountHandler::create)
-                .GET("/", serviceAccountHandler::list)
+                .POST("", serviceAccountHandler::create)
+                .GET("", serviceAccountHandler::list)
                 .DELETE("/{id}", serviceAccountHandler::revoke)
                 .POST("/{id}/rotate", serviceAccountHandler::rotate)
                 .GET("/{id}/sites", serviceAccountHandler::sites)
@@ -76,8 +76,8 @@ class Router(
 
         .path("/sites") { sites ->
             sites
-                .POST("/", siteHandler::create)
-                .GET("/", siteHandler::list)
+                .POST("", siteHandler::create)
+                .GET("", siteHandler::list)
                 // Must precede /{id}, which would otherwise swallow it.
                 .GET("/subdomain", siteHandler::subdomain)
                 .GET("/{id}", siteHandler::get)
@@ -92,8 +92,8 @@ class Router(
                 .POST("/{id}/invitations/service-account", invitationHandler::inviteServiceAccount)
                 .path("/{siteId}/posts") { posts ->
                     posts
-                        .POST("/", postHandler::create)
-                        .GET("/", postHandler::list)
+                        .POST("", postHandler::create)
+                        .GET("", postHandler::list)
                         .GET("/{postId}", postHandler::get)
                         .PUT("/{postId}", postHandler::update)
                         .DELETE("/{postId}", postHandler::delete)
@@ -106,7 +106,7 @@ class Router(
                 }
                 .path("/{siteId}/tags") { tags ->
                     tags
-                        .GET("/", tagHandler::list)
+                        .GET("", tagHandler::list)
                         .DELETE("/{tagId}", tagHandler::delete)
                 }
 

@@ -18,9 +18,14 @@ wording isn't guaranteed to stay stable between releases.
 |--------|-------------------------|-----------------------------------------------------------------------------------|
 | 400    | `VALIDATION_ERROR`      | `POST /sites` — request body fails field validation (e.g. blank `name`)           |
 | 400    | `BAD_REQUEST`           | invalid nav link URL, `customCss` too long, domain is reserved/is the home domain |
+| 400    | `INVALID_INVITATION`    | an invitation link's token is expired, revoked, or doesn't exist                  |
 | 401    | `UNAUTHORIZED`          | missing, invalid, or expired credentials on any authenticated endpoint            |
+| 403    | `FORBIDDEN`             | caller is a site member but their role doesn't allow this action                  |
 | 404    | `SITE_NOT_FOUND`        | site doesn't exist, or the caller doesn't have access to it                       |
 | 404    | `POST_NOT_FOUND`        | post doesn't exist under the given site                                           |
+| 404    | `POST_VERSION_NOT_FOUND`| the given version id doesn't exist for that post translation                      |
+| 404    | `INVITATION_NOT_FOUND`  | invitation doesn't exist under the given site                                     |
+| 404    | `SERVICE_ACCOUNT_NOT_FOUND` | service account doesn't exist, or isn't owned by the caller                   |
 | 404    | `NOT_FOUND`             | generic fallback for routes with no more specific not-found case                  |
 | 409    | `SITE_DOMAIN_TAKEN`     | custom domain is already claimed by another site                                  |
 | 409    | `SUBDOMAIN_NOT_ALLOWED` | subdomain label fails length/charset rules, or is reserved                        |

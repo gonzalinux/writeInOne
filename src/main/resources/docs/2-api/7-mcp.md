@@ -25,7 +25,7 @@ page in the admin UI. The exact config shape depends on your client:
 
 ```bash
 claude mcp add --transport http writeinone https://writeinone.com/mcp \
-  --header "Authorization: Bearer wio_live_51H8x..."
+  --header "Authorization: Bearer a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9"
 ```
 
 This writes the server to local scope. Add `--scope project` to share it via `.mcp.json`
@@ -40,7 +40,7 @@ paste `https://writeinone.com/mcp` as the URL, then open **Request headers** and
 | Field | Value |
 |-------|-------|
 | Header name | `authorization` |
-| Header value | `Bearer wio_live_51H8x...` |
+| Header value | `Bearer a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9` |
 | Required | yes |
 
 Request header authentication is currently in beta on claude.ai — if it isn't available
@@ -55,7 +55,7 @@ Add to `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global):
   "mcpServers": {
     "writeinone": {
       "url": "https://writeinone.com/mcp",
-      "headers": { "Authorization": "Bearer wio_live_51H8x..." }
+      "headers": { "Authorization": "Bearer a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9" }
     }
   }
 }
@@ -89,7 +89,7 @@ Add to `opencode.json`:
     "writeinone": {
       "type": "remote",
       "url": "https://writeinone.com/mcp",
-      "headers": { "Authorization": "Bearer wio_live_51H8x..." }
+      "headers": { "Authorization": "Bearer a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9" }
     }
   }
 }
@@ -110,16 +110,27 @@ supports it.
 | `get_post` | Fetch a single post's **live (published)** content by `siteId` + `lang` + `slug` |
 | `list_tags` | List tags for a site |
 | `create_draft` | Create a new draft post (`status: draft`) with one or more language translations |
+| `edit` | Edit an existing post's translation(s) — creates a new **draft version** per [post versioning](/docs/api/posts#post-versions) instead of touching live content |
+| `list_versions` | List the version history (draft and published) for one translation of a post |
+| `publish` | Publish a post — sets it live and publishes any translation that's never gone live before |
+| `publish_version` | Publish a specific draft version, making it the live content (also how rollback works) |
+| `schedule` | Schedule a post to publish automatically at a future time |
 
 Call `tools/list` on a connected client for the full JSON Schema of each tool's
 arguments.
 
-**`create_draft` only creates brand-new posts.** It can't add a translation to, or edit,
-an existing post, and there's no `propose_edit` or `list_versions` tool yet — that needs
-a versioning system that doesn't exist yet. Publishing and rollback are also
-intentionally **not** exposed as tools: only a human, from the admin UI, can take a
-draft live. This is deliberate — it's the approval step the whole feature is built
-around, so an agent's output is never one API call away from being public.
+**`create_draft` only creates brand-new posts** — it can't edit an existing one. Use
+`edit` for that: for a language the post already has a live translation in, it adds a new
+draft version on top without touching what's published; for a language the post doesn't
+have yet, that translation is created directly, same as `create_draft`, since there's
+nothing published yet to protect. `edit` never changes a post's cover image or tags.
+
+**Publishing is not gated by which tools exist — it's gated by role**, same as the REST
+API: `publish`, `publish_version`, and `schedule` all require `editor` or `admin` on the
+site (`PostService`'s existing `requirePublish()` check). Grant a service account the
+`writer` role if you want it to create and edit drafts but never take anything live —
+calling any of the three publish tools then fails with a normal `-32002` permission
+error, the same as it would over the REST API.
 
 ## Errors
 

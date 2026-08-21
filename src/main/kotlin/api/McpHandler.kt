@@ -3,15 +3,20 @@ package com.gonzalinux.api
 import com.gonzalinux.api.data.ContentBlock
 import com.gonzalinux.api.data.CreateDraftArgs
 import com.gonzalinux.api.data.CreatePostRequest
+import com.gonzalinux.api.data.EditArgs
 import com.gonzalinux.api.data.GetPostArgs
 import com.gonzalinux.api.data.JsonRpcError
 import com.gonzalinux.api.data.JsonRpcRequest
 import com.gonzalinux.api.data.JsonRpcResponse
 import com.gonzalinux.api.data.ListPostsArgs
 import com.gonzalinux.api.data.ListTagsArgs
+import com.gonzalinux.api.data.ListVersionsArgs
 import com.gonzalinux.api.data.McpToolDef
+import com.gonzalinux.api.data.PublishArgs
+import com.gonzalinux.api.data.ScheduleArgs
 import com.gonzalinux.api.data.ToolCallParams
 import com.gonzalinux.api.data.ToolCallResult
+import com.gonzalinux.api.data.UpdatePostRequest
 import com.gonzalinux.common.ApiException
 import com.gonzalinux.common.RequestContextHolder.getUserId
 import com.gonzalinux.domain.post.PostService
@@ -26,6 +31,8 @@ import org.springframework.web.reactive.function.server.bodyToMono
 import reactor.core.publisher.Mono
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.ObjectMapper
+import java.time.OffsetDateTime
+import java.time.format.DateTimeParseException
 
 private val logger = KotlinLogging.logger {}
 
@@ -39,9 +46,15 @@ private class McpProtocolException(val code: Int, message: String) : RuntimeExce
  * is ever issued and no SSE stream is opened, which the spec allows (session assignment is
  * `MAY`, not `MUST`).
  *
- * v1 exposes only tools that are safe under today's schema — `propose_edit`/`list_versions` need
- * the post-versioning system (Phase2.md #17), which doesn't exist yet, so they're deferred rather
- * than letting an AI-authored edit silently overwrite live published content.
+ * `edit`, `list_versions`, `publish` and `schedule` build on the post-versioning system
+ * (Phase2.md #17): editing a translation that has already gone live creates a new **draft** version
+ * rather than touching what's published, and `publish`/`schedule` are the only ways to move draft
+ * content live. `publish` wraps [PostService.publishVersion] — it publishes one named version and,
+ * on that translation's first-ever publish, also brings the post itself live (see that method's
+ * doc). There's no tool-level restriction on who may publish — `PostService` already enforces the
+ * site role (`writer` accounts get a normal 403/`-32002` from `requirePublish()`), so access is
+ * controlled by which role a service account is granted, same as every other write path in this
+ * app.
  */
 @Component
 class McpHandler(
@@ -84,6 +97,10 @@ class McpHandler(
             "get_post" -> getPost(requireArgs(args, GetPostArgs::class.java), userId)
             "list_tags" -> listTags(requireArgs(args, ListTagsArgs::class.java), userId)
             "create_draft" -> createDraft(requireArgs(args, CreateDraftArgs::class.java), userId)
+            "edit" -> edit(requireArgs(args, EditArgs::class.java), userId)
+            "list_versions" -> listVersions(requireArgs(args, ListVersionsArgs::class.java), userId)
+            "publish" -> publish(requireArgs(args, PublishArgs::class.java), userId)
+            "schedule" -> schedule(requireArgs(args, ScheduleArgs::class.java), userId)
             else -> Mono.error(McpProtocolException(-32601, "Unknown tool: ${call.name}"))
         }
     }
@@ -125,6 +142,26 @@ class McpHandler(
         }
         val request = CreatePostRequest(coverUrl = args.coverUrl, translations = args.translations, tags = args.tags)
         return postService.create(args.siteId, userId, request).map { toolResult(it) }
+    }
+
+    private fun edit(args: EditArgs, userId: Long): Mono<Any> {
+        val request = UpdatePostRequest(coverUrl = null, translations = args.translations, tags = null)
+        return postService.update(args.postId, args.siteId, userId, request).map { toolResult(it) }
+    }
+
+    private fun listVersions(args: ListVersionsArgs, userId: Long): Mono<Any> =
+        postService.listVersions(args.postId, args.siteId, userId, args.lang).collectList().map { toolResult(it) }
+
+    private fun publish(args: PublishArgs, userId: Long): Mono<Any> =
+        postService.publishVersion(args.postId, args.siteId, userId, args.lang, args.versionId).map { toolResult(it) }
+
+    private fun schedule(args: ScheduleArgs, userId: Long): Mono<Any> {
+        val scheduledAt = try {
+            OffsetDateTime.parse(args.scheduledAt)
+        } catch (e: DateTimeParseException) {
+            throw McpProtocolException(-32602, "Invalid scheduledAt — expected ISO-8601 with an offset: ${e.message}")
+        }
+        return postService.schedule(args.postId, args.siteId, userId, scheduledAt).map { toolResult(it) }
     }
 
     private fun toolResult(value: Any): ToolCallResult =
@@ -225,6 +262,89 @@ class McpHandler(
                     "tags" to mapOf("type" to "array", "items" to mapOf("type" to "string"))
                 ),
                 "required" to listOf("siteId", "translations")
+            )
+        ),
+        McpToolDef(
+            name = "edit",
+            description = "Edit an existing post's translation(s). For a language that already has a live " +
+                "(published) version, this creates a new draft version on top of it and never touches what's " +
+                "published — call publish to push it live. For a language the post doesn't have yet, the " +
+                "translation is created directly, same as create_draft, since there's nothing published yet " +
+                "to protect. Does not touch the post's cover image or tags.",
+            inputSchema = mapOf(
+                "type" to "object",
+                "properties" to mapOf(
+                    "siteId" to mapOf("type" to "integer"),
+                    "postId" to mapOf("type" to "integer"),
+                    "translations" to mapOf(
+                        "type" to "object",
+                        "description" to "Keyed by language code (e.g. \"en\", \"es\")",
+                        "additionalProperties" to mapOf(
+                            "type" to "object",
+                            "properties" to mapOf(
+                                "title" to mapOf("type" to "string"),
+                                "body" to mapOf("type" to "string"),
+                                "slug" to mapOf("type" to "string"),
+                                "excerpt" to mapOf("type" to "string")
+                            ),
+                            "required" to listOf("title", "body")
+                        )
+                    )
+                ),
+                "required" to listOf("siteId", "postId", "translations")
+            )
+        ),
+        McpToolDef(
+            name = "list_versions",
+            description = "List the version history (draft and published, newest first) for one " +
+                "translation of a post.",
+            inputSchema = mapOf(
+                "type" to "object",
+                "properties" to mapOf(
+                    "siteId" to mapOf("type" to "integer"),
+                    "postId" to mapOf("type" to "integer"),
+                    "lang" to mapOf("type" to "string", "enum" to listOf("en", "es"))
+                ),
+                "required" to listOf("siteId", "postId", "lang")
+            )
+        ),
+        McpToolDef(
+            name = "publish",
+            description = "Publish a specific draft version of a translation (from create_draft or edit), " +
+                "making it the live content. On that translation's first-ever publish, this also brings the " +
+                "whole post live — no separate post-level publish step needed. Also how rollback works " +
+                "(publish an older version again). Doesn't affect other translations on the same post that " +
+                "are still drafts. Requires editor or admin on the site; a writer-role service account gets a " +
+                "normal permission error.",
+            inputSchema = mapOf(
+                "type" to "object",
+                "properties" to mapOf(
+                    "siteId" to mapOf("type" to "integer"),
+                    "postId" to mapOf("type" to "integer"),
+                    "lang" to mapOf("type" to "string", "enum" to listOf("en", "es")),
+                    "versionId" to mapOf(
+                        "type" to "integer",
+                        "description" to "From create_draft/edit's latestVersions, or from list_versions"
+                    )
+                ),
+                "required" to listOf("siteId", "postId", "lang", "versionId")
+            )
+        ),
+        McpToolDef(
+            name = "schedule",
+            description = "Schedule a post to be published automatically at a future time. Same role " +
+                "requirement as publish.",
+            inputSchema = mapOf(
+                "type" to "object",
+                "properties" to mapOf(
+                    "siteId" to mapOf("type" to "integer"),
+                    "postId" to mapOf("type" to "integer"),
+                    "scheduledAt" to mapOf(
+                        "type" to "string",
+                        "description" to "ISO-8601 timestamp with a UTC offset, e.g. \"2026-03-01T09:00:00Z\""
+                    )
+                ),
+                "required" to listOf("siteId", "postId", "scheduledAt")
             )
         )
     )

@@ -1,0 +1,10 @@
+build/
+.gradle/
+postgres_data/
+.git/
+.idea/
+*.md
+docs/
+grafana/
+alloy/
+*.log
