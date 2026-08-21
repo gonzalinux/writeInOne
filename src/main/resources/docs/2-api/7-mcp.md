@@ -110,34 +110,59 @@ supports it.
 | `get_post` | Fetch a single post's **live (published)** content by `siteId` + `lang` + `slug` |
 | `list_tags` | List tags for a site |
 | `create_draft` | Create a new draft post (`status: draft`) with one or more language translations |
-| `edit` | Edit an existing post's translation(s) — creates a new **draft version** per [post versioning](/docs/api/posts#post-versions) instead of touching live content |
+| `edit` | Edit an existing post's cover image and/or translation(s) — a translation edit creates a new **draft version** per [post versioning](/docs/api/posts#post-versions) instead of touching live content |
 | `list_versions` | List the version history (draft and published) for one translation of a post |
-| `publish` | Publish a specific draft version, making it the live content — also brings the post itself live on that translation's first publish |
+| `publish` | Publish one or more draft versions (one call can cover several languages), making them live — also brings the post itself live on a translation's first publish |
+| `unpublish` | Take a published post down (`status` back to `draft`); its content and version history are untouched |
 | `schedule` | Schedule a post to publish automatically at a future time |
+| `update_site_config` | Update a site's CSS, favicon, and per-language nav/footer/title/description |
 
 Call `tools/list` on a connected client for the full JSON Schema of each tool's
 arguments.
 
 **`create_draft` only creates brand-new posts** — it can't edit an existing one. Use
-`edit` for that: for a language the post already has a live translation in, it adds a new
-draft version on top without touching what's published; for a language the post doesn't
-have yet, that translation is created directly, same as `create_draft`, since there's
-nothing published yet to protect. `edit` never changes a post's cover image or tags.
+`edit` for that: for a language the post already has a live translation in, editing it
+adds a new draft version on top without touching what's published; for a language the
+post doesn't have yet, that translation is created directly, same as `create_draft`,
+since there's nothing published yet to protect. `edit`'s `coverUrl` is the one exception
+to the draft/review model — like the REST API, it changes the live post immediately, no
+version or publish step involved. `edit` never changes tags.
 
-**The full agent workflow is `create_draft` → `edit` → `publish`.** `publish` takes a
-`versionId` (from `create_draft`/`edit`'s `latestVersions`, or from `list_versions`) and
-makes that one version live. There's no separate "publish the post" step: publishing a
-translation's very first version also flips the post itself to `published`, since
-nothing is visible until both are true. It never touches other translations on the same
-post that are still drafts — publishing "en" doesn't expose a still-drafted "es". The
-same tool is also how rollback works: publish an older version again.
+**The full agent workflow is `create_draft` → `edit` → `publish`.** `publish` takes
+either `lang` + `versionId` to publish one translation, or a `versions` map (e.g.
+`{"en": 12, "es": 13}`) to publish several in the same call — handy for a multi-language
+post whose translations should go live together. There's no separate "publish the post"
+step: publishing a translation's very first version also flips the post itself to
+`published`, since nothing is visible until both are true. It never touches a
+translation that isn't named in the call — publishing "en" doesn't expose a
+still-drafted "es" you didn't include. The same tool is also how rollback works: publish
+an older version again. `unpublish` is the reverse of the post-level half of that — it
+hides the post without discarding anything, so publishing again (post-level `publish`
+over REST, or `publish` here with the same `versionId`) brings back exactly what was
+live before.
 
 **Publishing is not gated by which tools exist — it's gated by role**, same as the REST
-API: `publish` and `schedule` both require `editor` or `admin` on the site
+API: `publish`, `unpublish`, and `schedule` all require `editor` or `admin` on the site
 (`PostService`'s existing `requirePublish()` check). Grant a service account the
-`writer` role if you want it to create and edit drafts but never take anything live —
-calling either tool then fails with a normal `-32002` permission error, the same as it
-would over the REST API.
+`writer` role if you want it to create and edit drafts but never take anything live or
+down — calling any of those three tools then fails with a normal `-32002` permission
+error, the same as it would over the REST API.
+
+**`update_site_config` requires `admin`** — one level above the publish tools — and every
+field is optional: only the ones you pass are changed, everything else on the site keeps
+its current value. Because `sites.config` is stored as one JSONB blob, this tool reads
+the site first and merges your patch into it before saving, so setting just `en.title`
+doesn't wipe out `es`, the favicon, or anything else.
+
+One thing this tool **deliberately can't touch**: the site's custom `headHtml`/`bodyHtml`
+snippets (raw, unescaped HTML injected into every page — theme scripts, analytics tags,
+that kind of thing). Those stay admin-UI-only, edited by a human directly. Unlike a
+human editing their own site by hand, an MCP agent may be processing untrusted external
+content as part of its normal job (summarizing an article into a draft, say), which makes
+it a more realistic target for a prompt injection trying to get a `<script>` tag written
+somewhere that runs on every page. Nothing else on this tool is meaningfully more
+dangerous than what it's already allowed to do to post content, so only those two fields
+are carved out.
 
 ## Errors
 
@@ -152,6 +177,7 @@ of the [API](/docs/api/errors) uses:
 |------|---------|
 | `-32001` | Not found — the site/post doesn't exist, or the key's owner has no access to it |
 | `-32002` | Forbidden — the key's owner has access but not the role the action needs |
+| `-32003` | Conflict — a translation's slug collides with an existing one in the same site+language |
 | `-32601` | Method or tool not found |
 | `-32602` | Invalid params — missing/malformed arguments, or an unsupported combination (e.g. passing `postId` to `create_draft`) |
 | `-32603` | Internal error — safe to retry, report if persistent |

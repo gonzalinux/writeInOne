@@ -57,7 +57,8 @@ class PostService(
                     .zipWith(saveTags)
                     .flatMap { (translations, tags) ->
                         Flux.merge(tags.map { tagRepo.assignToPost(post.id, it.id) }).then(
-                            Mono.just(PostWithTranslations(post, translations, tags))
+                            postRepo.findLatestVersionsByPostId(post.id).collectList()
+                                .map { latest -> PostWithTranslations(post, translations, tags, latest.toMap()) }
                         )
                     }
                     .doOnSuccess {
@@ -86,14 +87,14 @@ class PostService(
         page: Int,
         size: Int,
         status: String? = null,
-        tag: String? = null,
+        tags: List<String>? = null,
         search: String? = null
     ): Mono<Page<PostSummary>> =
         siteRepo.findById(siteId, userId)
             .switchIfEmpty(Mono.error(SiteNotFoundException(siteId)))
             .flatMap {
-                postRepo.countBySiteId(siteId, status, tag, search).zipWith(
-                    postRepo.findAllBySiteId(siteId, page, size, status, tag, search).collectList()
+                postRepo.countBySiteId(siteId, status, tags, search).zipWith(
+                    postRepo.findAllBySiteId(siteId, page, size, status, tags, search).collectList()
                 )
             }
             .flatMap { (total, posts) ->

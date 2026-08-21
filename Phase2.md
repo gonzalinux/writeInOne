@@ -211,7 +211,7 @@ Public documentation for writeinone.com, needed before opening registration.
 
 - Hosted as a static site or as a dedicated WriteInOne blog on the platform itself
 - Minimum pages: Getting started, Custom domains, CSS theming, API / MCP
-- CSS theming reference already exists at `src/main/resources/static/css/theme.md` — can be adapted
+- CSS theming reference already exists at `src/main/resources/docs/1-guides/4-theming.md` — can be adapted
 
 ### 15. API keys
 

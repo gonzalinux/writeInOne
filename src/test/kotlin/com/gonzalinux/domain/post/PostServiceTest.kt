@@ -79,9 +79,10 @@ class PostServiceTest {
         every {
             postRepo.createVersion(1L, "Test Post", "test-post", "Body", null, 1L)
         } returns Mono.just(version)
+        every { postRepo.findLatestVersionsByPostId(1L) } returns Flux.just("en" to version)
 
         StepVerifier.create(service.create(1L, 1L, request))
-            .expectNext(PostWithTranslations(post, listOf(translation), emptyList()))
+            .expectNext(PostWithTranslations(post, listOf(translation), emptyList(), mapOf("en" to version)))
             .verifyComplete()
     }
 
@@ -99,6 +100,7 @@ class PostServiceTest {
         every {
             postRepo.createVersion(1L, "Hello World!", "hello-world", "Body", null, 1L)
         } returns Mono.just(version)
+        every { postRepo.findLatestVersionsByPostId(1L) } returns Flux.just("en" to version)
 
         StepVerifier.create(service.create(1L, 1L, request))
             .expectNextCount(1)
@@ -124,9 +126,10 @@ class PostServiceTest {
         } returns Mono.just(version)
         every { tagRepo.findOrCreate(1L, "kotlin") } returns Mono.just(tag)
         every { tagRepo.assignToPost(1L, 1L) } returns Mono.empty()
+        every { postRepo.findLatestVersionsByPostId(1L) } returns Flux.just("en" to version)
 
         StepVerifier.create(service.create(1L, 1L, request))
-            .expectNext(PostWithTranslations(post, listOf(translation), listOf(tag)))
+            .expectNext(PostWithTranslations(post, listOf(translation), listOf(tag), mapOf("en" to version)))
             .verifyComplete()
     }
 

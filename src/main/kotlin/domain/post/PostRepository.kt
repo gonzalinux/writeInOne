@@ -35,7 +35,7 @@ class PostRepository(private val client: DatabaseClient) {
         page: Int,
         size: Int,
         status: String? = null,
-        tag: String? = null,
+        tags: List<String>? = null,
         search: String? = null
     ): Flux<Post> {
         val (sql, spec) = buildAdminQuery(
@@ -43,7 +43,7 @@ class PostRepository(private val client: DatabaseClient) {
             "ORDER BY p.created_at DESC LIMIT :limit OFFSET :offset",
             siteId,
             status,
-            tag,
+            tags,
             search
         )
         return spec(client.sql(sql))
@@ -51,8 +51,8 @@ class PostRepository(private val client: DatabaseClient) {
             .fetch().all().map { mapToPost(it) }
     }
 
-    fun countBySiteId(siteId: Long, status: String? = null, tag: String? = null, search: String? = null): Mono<Long> {
-        val (sql, spec) = buildAdminQuery("SELECT COUNT(DISTINCT p.id)", "", siteId, status, tag, search)
+    fun countBySiteId(siteId: Long, status: String? = null, tags: List<String>? = null, search: String? = null): Mono<Long> {
+        val (sql, spec) = buildAdminQuery("SELECT COUNT(DISTINCT p.id)", "", siteId, status, tags, search)
         return spec(client.sql(sql)).fetch().first().map { it["count"] as Long }
     }
 
@@ -61,16 +61,17 @@ class PostRepository(private val client: DatabaseClient) {
         tail: String,
         siteId: Long,
         status: String?,
-        tag: String?,
+        tags: List<String>?,
         search: String?
     ): Pair<String, (DatabaseClient.GenericExecuteSpec) -> DatabaseClient.GenericExecuteSpec> {
+        val hasTags = !tags.isNullOrEmpty()
         val tagJoin =
-            if (tag != null) "JOIN post_tags ptags ON ptags.post_id = p.id JOIN tags t ON t.id = ptags.tag_id" else ""
+            if (hasTags) "JOIN post_tags ptags ON ptags.post_id = p.id JOIN tags t ON t.id = ptags.tag_id" else ""
         val conditions = mutableListOf("p.site_id = :siteId")
 
         if (status != null) conditions.add("p.status = :status")
 
-        if (tag != null) conditions.add("t.name = :tag")
+        if (hasTags) conditions.add("t.name = ANY(:tags)")
 
         if (search != null) conditions.add("EXISTS (SELECT 1 FROM post_translations pts WHERE pts.post_id = p.id AND pts.title ILIKE :search)")
 
@@ -79,7 +80,7 @@ class PostRepository(private val client: DatabaseClient) {
             { spec ->
                 var s = spec.bind("siteId", siteId)
                 if (status != null) s = s.bind("status", status)
-                if (tag != null) s = s.bind("tag", tag)
+                if (hasTags) s = s.bind("tags", tags!!.toTypedArray())
                 if (search != null) s = s.bind("search", "%$search%")
                 s
             }
@@ -312,8 +313,10 @@ class PostRepository(private val client: DatabaseClient) {
         page: Int,
         size: Int,
         tag: String? = null,
-        search: String? = null
+        search: String? = null,
+        sort: String? = null
     ): Flux<Pair<Post, PostTranslation>> {
+        val direction = if (sort == "asc") "ASC" else "DESC"
         val (sql, bind) = buildBlogQuery(
             """
                 SELECT p.id, p.site_id, p.status, p.cover_url, p.view_count,
@@ -323,7 +326,7 @@ class PostRepository(private val client: DatabaseClient) {
                       pt.body AS pt_body, pt.excerpt AS pt_excerpt, pt.current_version_id AS pt_current_version_id,
                       pt.created_at AS pt_created_at, pt.updated_at AS pt_updated_at
                       """,
-            "ORDER BY p.published_at DESC LIMIT :limit OFFSET :offset", siteId, lang, tag, search
+            "ORDER BY p.published_at $direction LIMIT :limit OFFSET :offset", siteId, lang, tag, search
         )
         return bind(client.sql(sql))
             .bind("limit", size).bind("offset", page * size)

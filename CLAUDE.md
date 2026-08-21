@@ -124,7 +124,8 @@ Public blog uses **Thymeleaf** fragments (`templates/fragments/layout.html`) wit
 `/css/blog.css`).
 
 The blog stylesheet loads first, then the site's custom `stylesUrl` after it — so user-provided CSS can override any
-class. All overridable selectors are documented in `src/main/resources/static/css/THEME.md`.
+class. All overridable selectors are documented in `src/main/resources/docs/1-guides/4-theming.md` (served at
+`/docs/guides/theming`, and fetchable by an MCP client via `get_doc` with slug `guides/theming`).
 
 Admin pages share `/css/admin.css`. Never use inline `<style>` blocks in templates.
 

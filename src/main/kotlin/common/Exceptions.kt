@@ -94,3 +94,9 @@ class ServiceAccountNotFoundException(id: Long) : ApiException(
     details = "Service account with id $id not found"
 )
 
+class DocNotFoundException(slug: String) : ApiException(
+    status = HttpStatus.NOT_FOUND,
+    error = "DOC_NOT_FOUND",
+    details = "No doc page with slug '$slug' — call list_docs for the available slugs"
+)
+

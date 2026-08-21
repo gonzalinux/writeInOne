@@ -1,6 +1,7 @@
 package com.gonzalinux.api.data
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.gonzalinux.domain.site.NavLink
 import tools.jackson.databind.JsonNode
 
 /**
@@ -70,11 +71,44 @@ data class CreateDraftArgs(
 data class EditArgs(
     val siteId: Long,
     val postId: Long,
-    val translations: Map<String, TranslationInput>
+    val translations: Map<String, TranslationInput> = emptyMap(),
+    val coverUrl: String? = null
 )
 
 data class ListVersionsArgs(val siteId: Long, val postId: Long, val lang: String)
 
-data class PublishArgs(val siteId: Long, val postId: Long, val lang: String, val versionId: Long)
+/**
+ * Either the single-translation form (lang + versionId) or the batch form (versions, keyed by
+ * lang) must be supplied — [com.gonzalinux.api.McpHandler.publish] validates that.
+ */
+data class PublishArgs(
+    val siteId: Long,
+    val postId: Long,
+    val lang: String? = null,
+    val versionId: Long? = null,
+    val versions: Map<String, Long>? = null
+)
+
+data class UnpublishArgs(val siteId: Long, val postId: Long)
 
 data class ScheduleArgs(val siteId: Long, val postId: Long, val scheduledAt: String)
+
+/** All fields optional and mean "leave unchanged" — deliberately omits headHtml/bodyHtml. */
+data class LangConfigPatch(
+    val footer: String? = null,
+    val nav: List<NavLink>? = null,
+    val title: String? = null,
+    val description: String? = null
+)
+
+data class UpdateSiteConfigArgs(
+    val siteId: Long,
+    val description: String? = null,
+    val stylesUrl: String? = null,
+    val customCss: String? = null,
+    val faviconUrl: String? = null,
+    val en: LangConfigPatch? = null,
+    val es: LangConfigPatch? = null
+)
+
+data class GetDocArgs(val slug: String)

@@ -15,8 +15,9 @@ class TagHandler(private val service: TagService) {
 
     fun list(request: ServerRequest): Mono<ServerResponse> {
         val siteId = request.pathVariableLong("siteId")
+        val search = request.queryParam("search").orElse(null)?.takeIf { it.isNotBlank() }
         return Mono.deferContextual { ctx ->
-            ServerResponse.ok().body<Tag>(service.list(siteId, ctx.getUserId()!!))
+            ServerResponse.ok().body<Tag>(service.list(siteId, ctx.getUserId()!!, search))
         }
     }
 

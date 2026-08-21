@@ -9,24 +9,43 @@ import java.time.OffsetDateTime
 @Repository
 class TagRepository(private val client: DatabaseClient) {
 
+    /**
+     * The unique constraint on (site_id, name) is case-sensitive, so an exact ON CONFLICT upsert
+     * alone would let "mcp-test" and "MCP-Test" pile up as separate tags. Checking case-insensitively
+     * first and reusing whatever casing already exists in the DB keeps a site's tag list from
+     * fragmenting just because a caller typed a name slightly differently.
+     */
     fun findOrCreate(siteId: Long, name: String): Mono<Tag> =
-        client.sql(
-            """
-            INSERT INTO tags (site_id, name) VALUES (:siteId, :name)
-            ON CONFLICT (site_id, name) DO UPDATE SET name = EXCLUDED.name
-            RETURNING *
-        """
-        )
+        client.sql("SELECT * FROM tags WHERE site_id = :siteId AND LOWER(name) = LOWER(:name)")
             .bind("siteId", siteId)
             .bind("name", name)
             .fetch().first()
             .map { mapToTag(it) }
+            .switchIfEmpty(
+                client.sql(
+                    """
+                    INSERT INTO tags (site_id, name) VALUES (:siteId, :name)
+                    ON CONFLICT (site_id, name) DO UPDATE SET name = EXCLUDED.name
+                    RETURNING *
+                """
+                )
+                    .bind("siteId", siteId)
+                    .bind("name", name)
+                    .fetch().first()
+                    .map { mapToTag(it) }
+            )
 
-    fun findBySiteId(siteId: Long): Flux<Tag> =
-        client.sql("SELECT * FROM tags WHERE site_id = :siteId ORDER BY name")
-            .bind("siteId", siteId)
-            .fetch().all()
-            .map { mapToTag(it) }
+    fun findBySiteId(siteId: Long, search: String? = null, limit: Int? = null): Flux<Tag> {
+        val conditions = mutableListOf("site_id = :siteId")
+        if (search != null) conditions.add("name ILIKE :search")
+        val limitClause = if (limit != null) "LIMIT :limit" else ""
+        val sql = "SELECT * FROM tags WHERE ${conditions.joinToString(" AND ")} ORDER BY name $limitClause"
+
+        var spec = client.sql(sql).bind("siteId", siteId)
+        if (search != null) spec = spec.bind("search", "%$search%")
+        if (limit != null) spec = spec.bind("limit", limit)
+        return spec.fetch().all().map { mapToTag(it) }
+    }
 
     fun findByPostId(postId: Long): Flux<Tag> =
         client.sql(

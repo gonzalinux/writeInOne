@@ -40,10 +40,10 @@ class PostHandler(private val service: PostService) {
         val page = Utils.queryToInt(request.queryParam("page").getOrNull(), default = 0, min = 0)
         val size = Utils.queryToInt(request.queryParam("size").getOrNull(), default = 10, min = 1)
         val status = request.queryParam("status").orElse(null)?.takeIf { it.isNotBlank() }
-        val tag = request.queryParam("tag").orElse(null)?.takeIf { it.isNotBlank() }
+        val tags = request.queryParams()["tag"]?.filter { it.isNotBlank() }?.takeIf { it.isNotEmpty() }
         val search = request.queryParam("search").orElse(null)?.takeIf { it.isNotBlank() }
         return Mono.deferContextual { ctx ->
-            service.list(siteId, ctx.getUserId()!!, page, size, status, tag, search)
+            service.list(siteId, ctx.getUserId()!!, page, size, status, tags, search)
                 .flatMap { ServerResponse.ok().bodyValue(it) }
         }
     }

@@ -37,7 +37,7 @@ class TagServiceTest {
     @Test
     fun `list returns tags for site when site exists`() {
         every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
-        every { tagRepo.findBySiteId(1L) } returns Flux.just(tag)
+        every { tagRepo.findBySiteId(1L, null, 20) } returns Flux.just(tag)
 
         StepVerifier.create(service.list(1L, 1L))
             .expectNext(tag)
