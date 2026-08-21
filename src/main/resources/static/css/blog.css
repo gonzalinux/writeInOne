@@ -201,12 +201,14 @@ footer {
 .search-bar {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.5rem;
     margin-bottom: 2rem;
 }
 
 .search-bar__input {
     flex: 1;
+    min-width: 120px;
     padding: 0.4rem 0.75rem;
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -246,6 +248,81 @@ footer {
 
 .search-bar__clear:hover {
     color: var(--fg);
+}
+
+.search-bar__sort {
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--muted-2);
+    font-family: inherit;
+    font-size: 0.85rem;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.search-bar__sort:hover {
+    border-color: var(--muted-2);
+    color: var(--fg);
+}
+
+/* ── Tag search combobox ── */
+.tag-select {
+    position: relative;
+    flex: 1;
+    min-width: 120px;
+}
+
+.tag-select__control {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+}
+
+.tag-select__control input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: none;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--fg);
+    padding: 0;
+}
+
+.tag-select__menu {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    left: 0;
+    right: 0;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 10;
+}
+
+.tag-select__item {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.tag-select__item:hover {
+    background: var(--border);
+}
+
+.tag-select__empty {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+    color: var(--muted);
 }
 
 .filter-label {

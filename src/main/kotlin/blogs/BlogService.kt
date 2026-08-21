@@ -39,10 +39,11 @@ class BlogService(
         page: Int,
         size: Int,
         tag: String? = null,
-        search: String? = null
+        search: String? = null,
+        sort: String? = null
     ): Mono<Page<BlogPostSummary>> =
         postRepo.countPublishedBySiteAndLang(siteId, lang, tag, search).zipWith(
-            postRepo.findPublishedBySiteAndLang(siteId, lang, page, size, tag, search)
+            postRepo.findPublishedBySiteAndLang(siteId, lang, page, size, tag, search, sort)
                 .concatMap { (post, translation) ->
                     tagRepo.findByPostId(post.id).collectList()
                         .map { tags -> BlogPostSummary(post, translation, tags) }
@@ -55,6 +56,8 @@ class BlogService(
 
     fun listAllForSitemap(siteId: Long): Flux<SitemapEntry> =
         postRepo.findAllPublishedForSitemap(siteId)
+
+    fun searchTags(siteId: Long, search: String?) = tagRepo.findBySiteId(siteId, search, limit = 20)
 
     fun getBySlug(siteId: Long, lang: String, slug: String, user: Long?): Mono<BlogPostDetail> =
         postRepo.findPublishedBySlug(siteId, lang, slug, user)

@@ -36,11 +36,12 @@ class BlogsHandler(private val blogService: BlogService, private val verifyClien
         val page = Utils.queryToInt(request.queryParam("page").getOrNull(), default = 0, min = 0)
         val tag = request.queryParam("tag").orElse(null)?.takeIf { it.isNotBlank() }
         val search = request.queryParam("search").orElse(null)?.takeIf { it.isNotBlank() }
+        val sort = request.queryParam("sort").orElse(null)?.takeIf { it == "asc" }
         val size = Utils.queryToInt(request.queryParam("size").getOrNull(), default = 10, min = 1)
         return Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!
             val prefix = ctx.getPrefix().ifEmpty { "" }
-            blogService.listPublished(site.id, lang, page, size, tag, search)
+            blogService.listPublished(site.id, lang, page, size, tag, search, sort)
                 .flatMap { result ->
                     ServerResponse.ok().contentType(MediaType.TEXT_HTML)
                         .render(
@@ -54,6 +55,7 @@ class BlogsHandler(private val blogService: BlogService, private val verifyClien
                                 "totalPages" to result.totalPages,
                                 "activeTag" to tag,
                                 "search" to search,
+                                "activeSort" to sort,
                             )
                         )
                 }
@@ -141,10 +143,19 @@ class BlogsHandler(private val blogService: BlogService, private val verifyClien
         val size = Utils.queryToInt(request.queryParam("size").getOrNull(), default = 10, min = 1, max = 100)
         val tag = request.queryParam("tag").getOrNull().takeIf { !it.isNullOrEmpty() }
         val search = request.queryParam("search").getOrNull().takeIf { !it.isNullOrEmpty() }
+        val sort = request.queryParam("sort").getOrNull().takeIf { it == "asc" }
         return Mono.deferContextual { ctx ->
             val site = ctx.getSite()!!
-            blogService.listPublished(site.id, lang, page, size, tag, search)
+            blogService.listPublished(site.id, lang, page, size, tag, search, sort)
 
+        }.flatMap { ServerResponse.ok().bodyValue(it) }
+    }
+
+    fun tagSearch(request: ServerRequest): Mono<ServerResponse> {
+        val search = request.queryParam("search").getOrNull().takeIf { !it.isNullOrEmpty() }
+        return Mono.deferContextual { ctx ->
+            val site = ctx.getSite()!!
+            blogService.searchTags(site.id, search).collectList()
         }.flatMap { ServerResponse.ok().bodyValue(it) }
     }
 

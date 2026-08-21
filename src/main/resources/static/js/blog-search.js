@@ -1,10 +1,17 @@
 const form = document.getElementById('search-form');
 const input = document.getElementById('search-input');
 const container = document.getElementById('post-list-container');
+const tagInput = document.getElementById('tag-input');
+const tagSelect = document.getElementById('tagSelect');
+const tagSelectMenu = document.getElementById('tagSelectMenu');
+const sortInput = document.getElementById('sort-input');
+const sortToggle = document.getElementById('sort-toggle');
 
 const lang = form.dataset.lang;
 const prefix = window.SITE_PREFIX || '';
-const activeTag = new URLSearchParams(window.location.search).get('tag');
+
+let activeTag = tagInput.value.trim() || null;
+let activeSort = sortInput.value || null;
 
 // Hide the submit button — search is now live
 form.querySelector('.search-bar__btn').hidden = true;
@@ -17,20 +24,96 @@ input.addEventListener('input', () => {
   debounceTimer = setTimeout(() => doSearch(input.value.trim()), 300);
 });
 
+// ── Tag search combobox ─────────────────────────────────────────────────
+
+async function searchTags(query) {
+  const params = new URLSearchParams();
+  if (query) params.set('search', query);
+  try {
+    const res = await fetch(prefix + '/' + lang + '/tags?' + params);
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+function renderTagMenu(tags) {
+  tagSelectMenu.innerHTML = tags.length
+    ? tags.map(tag => `<div class="tag-select__item" data-tag-name="${esc(tag.name)}">${esc(tag.name)}</div>`).join('')
+    : '<div class="tag-select__empty">No matching tags</div>';
+  tagSelectMenu.hidden = false;
+
+  tagSelectMenu.querySelectorAll('[data-tag-name]').forEach(item => {
+    item.addEventListener('click', () => {
+      activeTag = item.dataset.tagName;
+      tagInput.value = activeTag;
+      tagSelectMenu.hidden = true;
+      doSearch(input.value.trim());
+    });
+  });
+}
+
+let tagSearchDebounce = null;
+tagInput.addEventListener('input', () => {
+  if (tagInput.value.trim() === '' && activeTag !== null) {
+    activeTag = null;
+    doSearch(input.value.trim());
+  }
+  clearTimeout(tagSearchDebounce);
+  tagSearchDebounce = setTimeout(async () => {
+    renderTagMenu(await searchTags(tagInput.value.trim()));
+  }, 250);
+});
+
+tagInput.addEventListener('focus', async () => {
+  renderTagMenu(await searchTags(tagInput.value.trim()));
+});
+
+document.addEventListener('click', e => {
+  if (!tagSelect.contains(e.target)) tagSelectMenu.hidden = true;
+});
+
+// ── Sort toggle ──────────────────────────────────────────────────────────
+
+sortToggle.addEventListener('click', e => {
+  e.preventDefault();
+  activeSort = activeSort === 'asc' ? null : 'asc';
+  sortInput.value = activeSort || '';
+  doSearch(input.value.trim());
+});
+
+function updateSortToggleHref(query) {
+  const nextSort = activeSort === 'asc' ? 'desc' : 'asc';
+  const params = new URLSearchParams({sort: nextSort});
+  if (activeTag) params.set('tag', activeTag);
+  if (query) params.set('search', query);
+  sortToggle.href = prefix + '/' + lang + '?' + params;
+  sortToggle.querySelector('span').textContent = activeSort === 'asc' ? '↑ Oldest first' : '↓ Newest first';
+}
+
+// ── Search / fetch / render ─────────────────────────────────────────────
+
 function doSearch(query) {
   const params = new URLSearchParams();
   if (query) params.set('search', query);
   if (activeTag) params.set('tag', activeTag);
+  if (activeSort) params.set('sort', activeSort);
 
   const url = new URL(window.location.href);
+  ['search', 'tag', 'sort'].forEach(key => url.searchParams.delete(key));
   if (query) url.searchParams.set('search', query);
-  else url.searchParams.delete('search');
+  if (activeTag) url.searchParams.set('tag', activeTag);
+  if (activeSort) url.searchParams.set('sort', activeSort);
   history.replaceState(null, '', url);
 
+  updateSortToggleHref(query);
+
   const clearLink = document.getElementById('search-clear');
+  const hasFilters = query || activeTag || activeSort;
   if (clearLink) {
-    clearLink.hidden = !query && !activeTag;
-  } else if (query || activeTag) {
+    clearLink.hidden = !hasFilters;
+  } else if (hasFilters) {
     const a = document.createElement('a');
     a.id = 'search-clear';
     a.className = 'search-bar__clear';
@@ -97,11 +180,12 @@ function render(page, query) {
   if (page.totalPages > 1) {
     const qPart = query ? '&search=' + encodeURIComponent(query) : '';
     const tPart = activeTag ? '&tag=' + encodeURIComponent(activeTag) : '';
+    const sPart = activeSort ? '&sort=' + encodeURIComponent(activeSort) : '';
     const prev = page.page > 0
-      ? `<a class="pagination__btn" href="${prefix}/${lang}?page=${page.page - 1}${qPart}${tPart}">← Newer</a>`
+      ? `<a class="pagination__btn" href="${prefix}/${lang}?page=${page.page - 1}${qPart}${tPart}${sPart}">← Newer</a>`
       : '';
     const next = page.page + 1 < page.totalPages
-      ? `<a class="pagination__btn" href="${prefix}/${lang}?page=${page.page + 1}${qPart}${tPart}">Older →</a>`
+      ? `<a class="pagination__btn" href="${prefix}/${lang}?page=${page.page + 1}${qPart}${tPart}${sPart}">Older →</a>`
       : '';
     pagination = `<nav class="pagination">${prev}<span class="pagination__info">${page.page + 1} / ${page.totalPages}</span>${next}</nav>`;
   }
