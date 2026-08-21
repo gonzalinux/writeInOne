@@ -116,6 +116,37 @@ The index page that shows all published posts.
 | `.post-card__tags`          | Flex row that wraps the tag pills on a card                              |
 | `.empty-state`              | Message shown when no published posts exist yet                          |
 
+### Search & filter bar
+
+The title search box, tag search box, and sort toggle shown above the post list.
+Title search and tag search are live (debounced, no page reload) when JavaScript is
+available, and fall back to a normal form submit otherwise.
+
+| Selector                       | What it styles                                                                  |
+|---------------------------------|----------------------------------------------------------------------------------|
+| `.search-bar`                   | Flex row that holds the search input, tag box, sort toggle, and buttons          |
+| `.search-bar__input`            | The "Search posts…" text input                                                  |
+| `.search-bar__btn`              | The "Search" submit button (hidden once JS enhances the form with live search)   |
+| `.search-bar__sort`             | The "Newest first" / "Oldest first" sort-order toggle link                       |
+| `.search-bar__clear`            | The "✕ Clear" link shown once a search, tag, or sort filter is active            |
+| `.filter-label`                 | The "Filtering by tag: …" line shown above the list when a tag is active         |
+| `.tag-select`                   | Wrapper around the tag search box and its dropdown                               |
+| `.tag-select__control`          | The bordered box containing the tag input (matches `.search-bar__input`)         |
+| `.tag-select__control input`    | The tag text input itself, inside `.tag-select__control`                        |
+| `.tag-select__menu`             | The dropdown list of matching tags shown while typing                            |
+| `.tag-select__item`             | A single selectable tag suggestion in the dropdown                               |
+| `.tag-select__item:hover`       | Hover state for a tag suggestion                                                 |
+| `.tag-select__empty`            | Message shown in the dropdown when no tags match the search                      |
+
+### Pagination
+
+| Selector                 | What it styles                                            |
+|----------------------------|---------------------------------------------------------------|
+| `.pagination`               | Wrapper around the "Newer" / "Older" links and page count     |
+| `.pagination__btn`          | Each "← Newer" / "Older →" link                                |
+| `.pagination__btn:hover`    | Pagination link hover state                                   |
+| `.pagination__info`         | The "1 / 3" page-count text                                    |
+
 ## Post detail page
 
 The full post view.
