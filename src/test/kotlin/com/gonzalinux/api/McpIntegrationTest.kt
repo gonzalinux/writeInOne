@@ -77,7 +77,7 @@ class McpIntegrationTest {
     }
 
     @Test
-    fun `tools list returns the ten v1 tools`() {
+    fun `tools list returns the nine v1 tools`() {
         webTestClient.post().uri("/mcp")
             .header("Authorization", "Bearer $serviceAccountToken")
             .contentType(MediaType.APPLICATION_JSON)
@@ -85,14 +85,14 @@ class McpIntegrationTest {
             .exchange()
             .expectStatus().isOk
             .expectBody()
-            .jsonPath("$.result.tools.length()").isEqualTo(10)
+            .jsonPath("$.result.tools.length()").isEqualTo(9)
             .jsonPath("$.result.tools[?(@.name == 'create_draft')]").exists()
             .jsonPath("$.result.tools[?(@.name == 'edit')]").exists()
             .jsonPath("$.result.tools[?(@.name == 'list_versions')]").exists()
             .jsonPath("$.result.tools[?(@.name == 'publish')]").exists()
-            .jsonPath("$.result.tools[?(@.name == 'publish_version')]").exists()
             .jsonPath("$.result.tools[?(@.name == 'schedule')]").exists()
             .jsonPath("$.result.tools[?(@.name == 'propose_edit')]").doesNotExist()
+            .jsonPath("$.result.tools[?(@.name == 'publish_version')]").doesNotExist()
     }
 
     @Test
@@ -270,14 +270,18 @@ class McpIntegrationTest {
     @Test
     fun `tools call publish is forbidden for a writer-role service account`() {
         val postId = createDraftViaMcp(serviceAccountToken, "Writer Cannot Publish", "writer-cannot-publish")
+        val versionId = getLatestVersionId(serviceAccountToken, postId, "en")
 
         webTestClient.post().uri("/mcp")
             .header("Authorization", "Bearer $serviceAccountToken")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(
                 mapOf(
-                    "jsonrpc" to "2.0", "id" to 2, "method" to "tools/call",
-                    "params" to mapOf("name" to "publish", "arguments" to mapOf("siteId" to siteId, "postId" to postId))
+                    "jsonrpc" to "2.0", "id" to 3, "method" to "tools/call",
+                    "params" to mapOf(
+                        "name" to "publish",
+                        "arguments" to mapOf("siteId" to siteId, "postId" to postId, "lang" to "en", "versionId" to versionId)
+                    )
                 )
             )
             .exchange()
@@ -287,25 +291,26 @@ class McpIntegrationTest {
     }
 
     @Test
-    fun `tools call publish takes an editor-role account's draft live`() {
+    fun `tools call publish brings a brand-new post live, and a later edit is republished the same way`() {
         val editorToken = createServiceAccountGrantedOnSite("mcp-editor-${System.currentTimeMillis()}", siteId, "editor")
-        val postId = createDraftViaMcp(editorToken, "Editor Publishes", "editor-publishes")
+        val postId = createDraftViaMcp(editorToken, "Before Edit", "publish-post")
+        val v1Id = getLatestVersionId(editorToken, postId, "en")
 
+        // Publishing the very first version brings the whole post live, not just the translation.
         webTestClient.post().uri("/mcp")
             .header("Authorization", "Bearer $editorToken")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(
                 mapOf(
                     "jsonrpc" to "2.0", "id" to 2, "method" to "tools/call",
-                    "params" to mapOf("name" to "publish", "arguments" to mapOf("siteId" to siteId, "postId" to postId))
+                    "params" to mapOf(
+                        "name" to "publish",
+                        "arguments" to mapOf("siteId" to siteId, "postId" to postId, "lang" to "en", "versionId" to v1Id)
+                    )
                 )
             )
             .exchange()
             .expectStatus().isOk
-            .expectBody()
-            .jsonPath("$.result.content[0].text").value<String> { text ->
-                assert(text.contains("\"status\":\"PUBLISHED\"")) { "expected published status in $text" }
-            }
 
         webTestClient.post().uri("/mcp")
             .header("Authorization", "Bearer $editorToken")
@@ -315,7 +320,7 @@ class McpIntegrationTest {
                     "jsonrpc" to "2.0", "id" to 3, "method" to "tools/call",
                     "params" to mapOf(
                         "name" to "get_post",
-                        "arguments" to mapOf("siteId" to siteId, "lang" to "en", "slug" to "editor-publishes")
+                        "arguments" to mapOf("siteId" to siteId, "lang" to "en", "slug" to "publish-post")
                     )
                 )
             )
@@ -323,33 +328,16 @@ class McpIntegrationTest {
             .expectStatus().isOk
             .expectBody()
             .jsonPath("$.result.content[0].text").value<String> { text ->
-                assert(text.contains("Editor Publishes")) { "expected the post live in $text" }
+                assert(text.contains("Before Edit")) { "expected the post live in $text" }
             }
-    }
 
-    @Test
-    fun `tools call publish_version pushes a pending edit live`() {
-        val editorToken = createServiceAccountGrantedOnSite("mcp-editor-${System.currentTimeMillis()}", siteId, "editor")
-        val postId = createDraftViaMcp(editorToken, "Before Edit", "publish-version-post")
-
+        // A further edit creates a new draft version that doesn't touch the now-live content...
         webTestClient.post().uri("/mcp")
             .header("Authorization", "Bearer $editorToken")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(
                 mapOf(
-                    "jsonrpc" to "2.0", "id" to 2, "method" to "tools/call",
-                    "params" to mapOf("name" to "publish", "arguments" to mapOf("siteId" to siteId, "postId" to postId))
-                )
-            )
-            .exchange()
-            .expectStatus().isOk
-
-        val editResult = webTestClient.post().uri("/mcp")
-            .header("Authorization", "Bearer $editorToken")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(
-                mapOf(
-                    "jsonrpc" to "2.0", "id" to 3, "method" to "tools/call",
+                    "jsonrpc" to "2.0", "id" to 4, "method" to "tools/call",
                     "params" to mapOf(
                         "name" to "edit",
                         "arguments" to mapOf(
@@ -359,7 +347,7 @@ class McpIntegrationTest {
                                 "en" to mapOf(
                                     "title" to "After Edit",
                                     "body" to "New body",
-                                    "slug" to "publish-version-post"
+                                    "slug" to "publish-post"
                                 )
                             )
                         )
@@ -368,31 +356,11 @@ class McpIntegrationTest {
             )
             .exchange()
             .expectStatus().isOk
-            .expectBody(Map::class.java)
-            .returnResult()
-            .responseBody!!
 
-        @Suppress("UNCHECKED_CAST")
-        val editText = ((editResult["result"] as Map<String, Any>)["content"] as List<Map<String, Any>>)[0]["text"] as String
-        val versionId = Regex("\"latestVersions\":\\{\"en\":\\{\"id\":(\\d+)").find(editText)
-            ?.groupValues?.get(1)?.toLong()
-            ?: error("could not find latest en version id in $editText")
+        val v2Id = getLatestVersionId(editorToken, postId, "en")
+        assert(v2Id != v1Id) { "expected a second version, got $v2Id again" }
 
-        webTestClient.post().uri("/mcp")
-            .header("Authorization", "Bearer $editorToken")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(
-                mapOf(
-                    "jsonrpc" to "2.0", "id" to 4, "method" to "tools/call",
-                    "params" to mapOf(
-                        "name" to "publish_version",
-                        "arguments" to mapOf("siteId" to siteId, "postId" to postId, "lang" to "en", "versionId" to versionId)
-                    )
-                )
-            )
-            .exchange()
-            .expectStatus().isOk
-
+        // ...until publish pushes it live too, this time without changing the post's status again.
         webTestClient.post().uri("/mcp")
             .header("Authorization", "Bearer $editorToken")
             .contentType(MediaType.APPLICATION_JSON)
@@ -400,8 +368,23 @@ class McpIntegrationTest {
                 mapOf(
                     "jsonrpc" to "2.0", "id" to 5, "method" to "tools/call",
                     "params" to mapOf(
+                        "name" to "publish",
+                        "arguments" to mapOf("siteId" to siteId, "postId" to postId, "lang" to "en", "versionId" to v2Id)
+                    )
+                )
+            )
+            .exchange()
+            .expectStatus().isOk
+
+        webTestClient.post().uri("/mcp")
+            .header("Authorization", "Bearer $editorToken")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(
+                mapOf(
+                    "jsonrpc" to "2.0", "id" to 6, "method" to "tools/call",
+                    "params" to mapOf(
                         "name" to "get_post",
-                        "arguments" to mapOf("siteId" to siteId, "lang" to "en", "slug" to "publish-version-post")
+                        "arguments" to mapOf("siteId" to siteId, "lang" to "en", "slug" to "publish-post")
                     )
                 )
             )
@@ -409,7 +392,7 @@ class McpIntegrationTest {
             .expectStatus().isOk
             .expectBody()
             .jsonPath("$.result.content[0].text").value<String> { text ->
-                assert(text.contains("After Edit")) { "expected the published edit live in $text" }
+                assert(text.contains("After Edit")) { "expected the republished edit live in $text" }
             }
     }
 
@@ -592,5 +575,30 @@ class McpIntegrationTest {
 
         @Suppress("UNCHECKED_CAST")
         return extractPostId(result["result"] as Map<String, Any>)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun getLatestVersionId(token: String, postId: Long, lang: String): Long {
+        val result = webTestClient.post().uri("/mcp")
+            .header("Authorization", "Bearer $token")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(
+                mapOf(
+                    "jsonrpc" to "2.0", "id" to 1, "method" to "tools/call",
+                    "params" to mapOf(
+                        "name" to "list_versions",
+                        "arguments" to mapOf("siteId" to siteId, "postId" to postId, "lang" to lang)
+                    )
+                )
+            )
+            .exchange()
+            .expectStatus().isOk
+            .expectBody(Map::class.java)
+            .returnResult()
+            .responseBody!!
+
+        val text = ((result["result"] as Map<String, Any>)["content"] as List<Map<String, Any>>)[0]["text"] as String
+        return Regex("\"id\":(\\d+)").find(text)?.groupValues?.get(1)?.toLong()
+            ?: error("could not find a version id in $text")
     }
 }

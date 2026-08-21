@@ -410,10 +410,29 @@ class PostServiceTest {
         every { postRepo.findTranslationsByPostId(1L) } returns Flux.just(translation)
         every { postRepo.findVersionById(1L, 1L) } returns Mono.just(version)
         every { postRepo.publishVersion(1L, 1L) } returns Mono.just(published)
+        every { postRepo.update(1L, 1L, null, PostStatus.PUBLISHED, any(), null) } returns
+            Mono.just(post.copy(status = PostStatus.PUBLISHED, publishedAt = now))
 
         StepVerifier.create(service.publishVersion(1L, 1L, 1L, "en", 1L))
             .expectNext(published)
             .verifyComplete()
+    }
+
+    @Test
+    fun `publishVersion does not re-publish the post when it's already live`() {
+        val publishedPost = post.copy(status = PostStatus.PUBLISHED, publishedAt = now)
+        val published = translation.copy(currentVersionId = 1L)
+        every { siteRepo.findById(1L, 1L) } returns Mono.just(site)
+        every { postRepo.findById(1L, 1L) } returns Mono.just(publishedPost)
+        every { postRepo.findTranslationsByPostId(1L) } returns Flux.just(translation)
+        every { postRepo.findVersionById(1L, 1L) } returns Mono.just(version)
+        every { postRepo.publishVersion(1L, 1L) } returns Mono.just(published)
+
+        StepVerifier.create(service.publishVersion(1L, 1L, 1L, "en", 1L))
+            .expectNext(published)
+            .verifyComplete()
+
+        verify(exactly = 0) { postRepo.update(any(), any(), any(), any(), any(), any()) }
     }
 
     @Test

@@ -129,6 +129,14 @@ POST /sites/{siteId}/posts/{postId}/translations/{lang}/versions/{versionId}/pub
   works: publish an older version again. It requires `editor` or `admin` on the site
   (`writer` can create drafts but not publish them), and returns `409
   SLUG_ALREADY_EXISTS` if the version's slug now collides with another translation's.
+- On that translation's first-ever publish, this endpoint also sets the **post's**
+  `status` to `published` (stamping `publishedAt`) if it wasn't already — otherwise the
+  translation would have a live version but stay invisible, since both blog queries
+  require `posts.status = 'published'` too. It only ever does this for the post the
+  published translation belongs to, and never publishes a *different* translation on the
+  same post that's still a draft (e.g. publishing `en` never exposes a still-drafted
+  `es`). Post-level `publish` below remains the one-click way to launch every
+  never-published translation on a post at once.
 - Only the 30 most recent **draft** versions per translation are kept; older drafts are
   pruned automatically. Published versions are never pruned.
 

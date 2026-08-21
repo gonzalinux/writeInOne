@@ -112,8 +112,7 @@ supports it.
 | `create_draft` | Create a new draft post (`status: draft`) with one or more language translations |
 | `edit` | Edit an existing post's translation(s) — creates a new **draft version** per [post versioning](/docs/api/posts#post-versions) instead of touching live content |
 | `list_versions` | List the version history (draft and published) for one translation of a post |
-| `publish` | Publish a post — sets it live and publishes any translation that's never gone live before |
-| `publish_version` | Publish a specific draft version, making it the live content (also how rollback works) |
+| `publish` | Publish a specific draft version, making it the live content — also brings the post itself live on that translation's first publish |
 | `schedule` | Schedule a post to publish automatically at a future time |
 
 Call `tools/list` on a connected client for the full JSON Schema of each tool's
@@ -125,12 +124,20 @@ draft version on top without touching what's published; for a language the post 
 have yet, that translation is created directly, same as `create_draft`, since there's
 nothing published yet to protect. `edit` never changes a post's cover image or tags.
 
+**The full agent workflow is `create_draft` → `edit` → `publish`.** `publish` takes a
+`versionId` (from `create_draft`/`edit`'s `latestVersions`, or from `list_versions`) and
+makes that one version live. There's no separate "publish the post" step: publishing a
+translation's very first version also flips the post itself to `published`, since
+nothing is visible until both are true. It never touches other translations on the same
+post that are still drafts — publishing "en" doesn't expose a still-drafted "es". The
+same tool is also how rollback works: publish an older version again.
+
 **Publishing is not gated by which tools exist — it's gated by role**, same as the REST
-API: `publish`, `publish_version`, and `schedule` all require `editor` or `admin` on the
-site (`PostService`'s existing `requirePublish()` check). Grant a service account the
+API: `publish` and `schedule` both require `editor` or `admin` on the site
+(`PostService`'s existing `requirePublish()` check). Grant a service account the
 `writer` role if you want it to create and edit drafts but never take anything live —
-calling any of the three publish tools then fails with a normal `-32002` permission
-error, the same as it would over the REST API.
+calling either tool then fails with a normal `-32002` permission error, the same as it
+would over the REST API.
 
 ## Errors
 
