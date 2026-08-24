@@ -9,6 +9,7 @@ import com.gonzalinux.common.SiteContextHolder.getSite
 import com.gonzalinux.domain.site.LangConfig
 import com.gonzalinux.domain.site.SiteConfig
 import com.gonzalinux.domain.site.VerifyClient
+import com.gonzalinux.docs.DocsService
 import com.gonzalinux.utils.Utils
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
@@ -19,7 +20,11 @@ import reactor.core.publisher.Mono
 import kotlin.jvm.optionals.getOrNull
 
 @Component
-class BlogsHandler(private val blogService: BlogService, private val verifyClient: VerifyClient) {
+class BlogsHandler(
+    private val blogService: BlogService,
+    private val verifyClient: VerifyClient,
+    private val docsService: DocsService
+) {
 
     fun index(request: ServerRequest): Mono<ServerResponse> =
         Mono.deferContextual { ctx ->
@@ -194,9 +199,13 @@ class BlogsHandler(private val blogService: BlogService, private val verifyClien
         }
 
     fun mainSitemap(request: ServerRequest): Mono<ServerResponse> {
+        val docUrls = docsService.allSlugs().joinToString("\n") { slug ->
+            "    <url><loc>https://writeinone.com/docs/$slug</loc></url>"
+        }
         val xml = """<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url><loc>https://writeinone.com/</loc></url>
+$docUrls
 </urlset>"""
         return ServerResponse.ok()
             .contentType(MediaType.valueOf("application/xml;charset=UTF-8"))

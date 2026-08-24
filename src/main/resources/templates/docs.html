@@ -4,6 +4,28 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title th:text="${page.title + ' — WriteInOne Docs'}">Docs</title>
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png"/>
+  <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png"/>
+
+  <!-- Canonical -->
+  <link rel="canonical" th:href="'https://writeinone.com/docs/' + ${page.slug}"/>
+
+  <!-- Primary meta -->
+  <meta th:if="${page.description != null}" name="description" th:content="${page.description}"/>
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article"/>
+  <meta property="og:site_name" content="WriteInOne Docs"/>
+  <meta property="og:title" th:content="${page.title}"/>
+  <meta property="og:description" th:if="${page.description != null}" th:content="${page.description}"/>
+  <meta property="og:url" th:content="'https://writeinone.com/docs/' + ${page.slug}"/>
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary"/>
+  <meta name="twitter:title" th:content="${page.title}"/>
+  <meta name="twitter:description" th:if="${page.description != null}" th:content="${page.description}"/>
+
   <!-- Expose available themes to JS before it runs -->
   <script>window.SITE_THEMES = ['LIGHT', 'DARK'];</script>
   <!-- Theme script — sync (no defer) so html.dark class is set before first paint -->

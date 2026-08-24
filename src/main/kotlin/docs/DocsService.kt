@@ -11,6 +11,7 @@ data class DocPage(
     val groupLabel: String,
     val order: Int,
     val title: String,
+    val description: String?,
     val renderedHtml: String,
     val rawMarkdown: String
 )
@@ -48,6 +49,7 @@ class DocsService(
                     groupLabel = humanize(group),
                     order = order,
                     title = title,
+                    description = extractDescription(raw),
                     renderedHtml = mdRenderer.render(mdParser.parse(raw)),
                     rawMarkdown = raw
                 ) to groupOrder
@@ -64,6 +66,36 @@ class DocsService(
     fun find(slug: String): DocPage? = pagesBySlug[slug.trim('/')]
 
     fun firstSlug(): String? = groups.firstOrNull()?.pages?.firstOrNull()?.slug
+
+    fun allSlugs(): List<String> = groups.flatMap { it.pages }.map { it.slug }
+
+    /**
+     * First paragraph after the title heading, used as the page's meta description.
+     * Stops at the next heading, code fence, or blank line following collected text.
+     */
+    private fun extractDescription(raw: String): String? {
+        val lines = raw.lineSequence().iterator()
+        var pastTitle = false
+        val paragraph = StringBuilder()
+        while (lines.hasNext()) {
+            val line = lines.next()
+            if (!pastTitle) {
+                if (line.startsWith("# ")) pastTitle = true
+                continue
+            }
+            val trimmed = line.trim()
+            if (trimmed.isEmpty() || trimmed.startsWith("#") || trimmed.startsWith("```")) {
+                if (paragraph.isNotEmpty()) break else continue
+            }
+            if (paragraph.isNotEmpty()) paragraph.append(' ')
+            paragraph.append(trimmed)
+        }
+        if (paragraph.isEmpty()) return null
+        val plain = paragraph.toString()
+            .replace(Regex("\\[([^]]+)]\\([^)]+\\)"), "$1")
+            .replace(Regex("[`*_]"), "")
+        return if (plain.length > 160) plain.take(157).trimEnd() + "…" else plain
+    }
 
     /**
      * Strips an optional leading "N-" ordering prefix (e.g. "1-quickstart" -> 1 to "quickstart").
