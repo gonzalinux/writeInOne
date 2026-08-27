@@ -197,6 +197,12 @@ footer {
     text-align: center;
 }
 
+.site-branding {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    opacity: 0.75;
+}
+
 /* ── Search bar ── */
 .search-bar {
     display: flex;

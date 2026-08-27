@@ -10,6 +10,7 @@ const descInput = document.getElementById('description');
 const stylesInput = document.getElementById('stylesUrl');
 const defaultThemeSelect = document.getElementById('defaultTheme');
 const enableSwitcherCb = document.getElementById('enableSwitcher');
+const showBrandingCb = document.getElementById('showBranding');
 const faviconInput = document.getElementById('faviconUrl');
 const domainInput = document.getElementById('domain');
 const prefixInput = document.getElementById('prefix');
@@ -190,6 +191,7 @@ async function loadSite() {
   defaultThemeSelect.value = themes[0].toLowerCase();
   enableSwitcherCb.checked = themes.length > 1;
   faviconInput.value = site.config?.faviconUrl || '';
+  showBrandingCb.checked = site.config?.showBranding ?? true;
 
   const suffix = '.' + subdomainConfig.baseDomain;
   const managed = Boolean(subdomainConfig.baseDomain) && (site.domain || '').endsWith(suffix);
@@ -502,6 +504,7 @@ form.addEventListener('submit', async e => {
       faviconUrl: faviconInput.value.trim() || null,
       headHtml: headEditor.getValue().trim() || null,
       bodyHtml: bodyEditor.getValue().trim() || null,
+      showBranding: showBrandingCb.checked,
       en: {
         title: enTitle.value.trim() || null,
         description: enDescription.value.trim() || null,

@@ -84,6 +84,9 @@
          th:text="${langConfig.footer}">Footer text</p>
       <p th:if="${langConfig == null or langConfig.footer.isEmpty()}"
          th:text="'© ' + ${site.name}">© Site</p>
+      <p th:if="${site.config.showBranding}" class="site-branding">
+        Blog created with <a href="https://writeinone.com" target="_blank" rel="noopener">WriteInOne</a>
+      </p>
     </div>
   </footer>
 </th:block>
