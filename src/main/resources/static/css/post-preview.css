@@ -25,30 +25,38 @@ body.has-preview-bar {
     padding: 0 1rem;
     z-index: 1000;
     gap: 0.75rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .preview-bar__left {
     display: flex;
     align-items: center;
     gap: 0.6rem;
+    flex-shrink: 0;
 }
 
 .preview-bar__right {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-shrink: 0;
 }
 
 .preview-bar__label {
     font-size: 0.8rem;
     color: #999;
     font-family: Georgia, 'Times New Roman', serif;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .unsaved-badge {
     font-size: 0.75rem;
     color: #f59e0b;
     font-family: Georgia, 'Times New Roman', serif;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 /* ── Status badge ── */
@@ -80,6 +88,7 @@ body.has-preview-bar {
 /* ── Merged version + status dropdown ── */
 .version-dropdown {
     position: relative;
+    flex-shrink: 0;
 }
 
 .version-dropdown__trigger {
@@ -169,6 +178,8 @@ body.has-preview-bar {
     align-items: center;
     font-family: Georgia, 'Times New Roman', serif;
     transition: background 0.15s, color 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .preview-bar__btn:hover {
@@ -220,6 +231,7 @@ body.has-preview-bar {
     padding: 0.6rem 1rem;
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.75rem;
     z-index: 999;
 }

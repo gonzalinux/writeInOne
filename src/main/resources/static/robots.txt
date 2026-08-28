@@ -3,3 +3,5 @@ Allow: /
 Disallow: /admin/
 Disallow: /auth/
 Disallow: /sites/
+
+Sitemap: https://writeinone.com/sitemap.xml

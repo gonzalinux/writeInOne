@@ -427,6 +427,20 @@ textarea {
     align-items: center;
 }
 
+/* Below mobile widths, four buttons squeeze into one row and wrap their own text
+   instead of the row wrapping — lay them out as a clean 2-column grid instead. */
+@media (max-width: 480px) {
+    .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    .actions .btn {
+        text-align: center;
+    }
+}
+
 /* ── Auth card (login / register) ── */
 .card {
     background: #fff;
@@ -450,8 +464,8 @@ textarea {
 
 /* ── Dashboard site cards ── */
 .site-list {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1rem;
 }
 
@@ -459,23 +473,26 @@ textarea {
     background: #fff;
     border: 1px solid #e5e5e5;
     border-radius: 6px;
-    padding: 1.25rem 1.5rem;
+    padding: 1.1rem 1.25rem;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
+    flex-direction: column;
+    gap: 0.6rem;
 }
 
 .site-card__name {
     font-size: 1.1rem;
     font-weight: bold;
-    margin-bottom: 0.2rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
 }
 
 .site-card__domain {
     font-size: 0.875rem;
     color: #888;
     text-decoration: none;
+    word-break: break-all;
 }
 
 .site-card__domain:hover {
@@ -484,9 +501,11 @@ textarea {
 }
 
 .site-card__actions {
+    margin-top: auto;
+    padding-top: 0.5rem;
     display: flex;
-    gap: 0.75rem;
-    flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 0.4rem;
 }
 
 /* ── Post list table ── */
@@ -977,6 +996,8 @@ tr:last-child td {
     gap: 0.25rem;
     border-bottom: 2px solid #e5e5e5;
     margin-bottom: 1.75rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .form-tab {
@@ -990,6 +1011,8 @@ tr:last-child td {
     color: #888;
     cursor: pointer;
     font-family: inherit;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .form-tab:hover {
