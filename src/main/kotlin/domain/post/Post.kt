@@ -69,6 +69,7 @@ data class PostSummary(
 )
 
 data class SitemapEntry(
+    val postId: Long,
     val lang: String,
     val slug: String,
     val lastMod: OffsetDateTime

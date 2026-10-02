@@ -3,6 +3,8 @@ package com.gonzalinux.api
 import com.gonzalinux.blogs.BlogService
 import com.gonzalinux.blogs.buildRss
 import com.gonzalinux.blogs.buildSitemap
+import com.gonzalinux.blogs.postJsonLd
+import com.gonzalinux.blogs.siteJsonLd
 import com.gonzalinux.common.RequestContextHolder.getUserId
 import com.gonzalinux.common.SiteContextHolder.getPrefix
 import com.gonzalinux.common.SiteContextHolder.getSite
@@ -61,6 +63,11 @@ class BlogsHandler(
                                 "activeTag" to tag,
                                 "search" to search,
                                 "activeSort" to sort,
+                                "jsonLd" to siteJsonLd(
+                                    site, "https://${site.domain}$prefix", lang,
+                                    site.config.forLang(lang).title ?: site.name,
+                                    site.config.forLang(lang).description ?: site.description
+                                ),
                             )
                         )
                 }
@@ -88,7 +95,9 @@ class BlogsHandler(
             val prefix = ctx.getPrefix().ifEmpty { "" }
             blogService.getBySlug(site.id, lang, slug, user)
                 .flatMap { detail ->
-                    val langSlugs = detail.allTranslations.associate { it.lang to it.slug }
+                    val langSlugs = detail.allTranslations
+                        .filter { it.currentVersionId != null || it.lang == lang }
+                        .associate { it.lang to it.slug }
                     ServerResponse.ok().contentType(MediaType.TEXT_HTML)
                         .render(
                             if (user == null) "post" else "post_preview",
@@ -102,7 +111,11 @@ class BlogsHandler(
                                 "tags" to detail.tags,
                                 "renderedBody" to detail.renderedBody,
                                 "codeLanguages" to detail.codeLanguages,
-                                "langSlugs" to langSlugs
+                                "langSlugs" to langSlugs,
+                                "jsonLd" to postJsonLd(
+                                    site, "https://${site.domain}$prefix", lang,
+                                    detail.post, detail.translation, detail.tags
+                                )
                             )
                         )
                 }

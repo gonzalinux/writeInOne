@@ -7,6 +7,10 @@
   <!-- Canonical — always strip tag/search/page query params -->
   <link rel="canonical" th:href="'https://' + ${site.domain} + ${prefix} + '/' + ${lang}"/>
 
+  <th:block th:replace="~{fragments/layout :: alternates(null)}"/>
+  <meta name="robots" th:content="${activeTag != null or search != null or currentPage > 0} ? 'noindex,follow' : 'index,follow,max-image-preview:large'"/>
+  <script type="application/ld+json" th:utext="${jsonLd}"></script>
+
   <!-- Primary meta -->
   <meta th:if="${effectiveDesc != null}" name="description" th:content="${effectiveDesc}"/>
 

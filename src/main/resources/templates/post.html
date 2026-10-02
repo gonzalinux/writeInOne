@@ -7,6 +7,9 @@
   <link rel="canonical"
         th:href="'https://' + ${site.domain} + ${prefix} + '/' + ${lang} + '/articles/' + ${translation.slug}"/>
 
+  <th:block th:replace="~{fragments/layout :: alternates(${langSlugs})}"/>
+  <meta name="robots" content="index,follow,max-image-preview:large"/>
+
   <!-- Primary meta -->
   <meta th:if="${translation.excerpt != null}" name="description" th:content="${translation.excerpt}"/>
 
@@ -19,12 +22,16 @@
   <meta property="og:url"
         th:content="'https://' + ${site.domain} + ${prefix} + '/' + ${lang} + '/articles/' + ${translation.slug}"/>
   <meta property="article:published_time" th:if="${post.publishedAt != null}" th:content="${post.publishedAt}"/>
+  <meta property="article:modified_time" th:content="${translation.updatedAt}"/>
+  <meta property="article:tag" th:each="t : ${tags}" th:content="${t.name}"/>
 
   <!-- Twitter / X -->
   <meta name="twitter:card" th:content="${post.coverUrl != null ? 'summary_large_image' : 'summary'}"/>
   <meta name="twitter:title" th:content="${translation.title}"/>
   <meta name="twitter:description" th:if="${translation.excerpt != null}" th:content="${translation.excerpt}"/>
   <meta name="twitter:image" th:if="${post.coverUrl != null}" th:content="${post.coverUrl}"/>
+
+  <script type="application/ld+json" th:utext="${jsonLd}"></script>
 
   <!-- href is updated by theme.js on DOMContentLoaded to match the active theme -->
   <link id="hljs-theme" rel="stylesheet"

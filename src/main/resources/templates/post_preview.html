@@ -3,6 +3,8 @@
 <head>
   <th:block th:replace="~{fragments/layout :: head(${selectedVersion.title + ' — ' + (langConfig?.title ?: site.name)})}"/>
 
+  <meta name="robots" content="noindex,nofollow"/>
+
   <!-- Primary meta -->
   <meta th:if="${selectedVersion.excerpt != null}" name="description" th:content="${selectedVersion.excerpt}"/>
 

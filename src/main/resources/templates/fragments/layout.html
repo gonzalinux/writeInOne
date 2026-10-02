@@ -30,6 +30,23 @@
   <th:block th:if="${site.config.headHtml != null}" th:utext="${site.config.headHtml}"></th:block>
 </th:block>
 
+<!-- LOCALE + HREFLANG fragment — slugs: lang -> post slug on post pages, null on the index page -->
+<th:block th:fragment="alternates(slugs)"
+          th:with="base='https://' + ${site.domain} + ${prefix}, defaultLang=${site.languages[0].value}">
+  <meta property="og:locale" th:content="${lang == 'es' ? 'es_ES' : 'en_US'}"/>
+  <th:block th:if="${#lists.size(site.languages) > 1}">
+    <th:block th:each="l : ${site.languages}" th:if="${l.value != lang and (slugs == null or slugs[l.value] != null)}">
+      <meta property="og:locale:alternate" th:content="${l.value == 'es' ? 'es_ES' : 'en_US'}"/>
+    </th:block>
+    <th:block th:each="l : ${site.languages}" th:if="${slugs == null or slugs[l.value] != null}">
+      <link rel="alternate" th:hreflang="${l.value}"
+            th:href="${slugs == null ? base + '/' + l.value : base + '/' + l.value + '/articles/' + slugs[l.value]}"/>
+    </th:block>
+    <link rel="alternate" hreflang="x-default" th:if="${slugs == null or slugs.get(defaultLang) != null}"
+          th:href="${slugs == null ? base + '/' + defaultLang : base + '/' + defaultLang + '/articles/' + slugs.get(defaultLang)}"/>
+  </th:block>
+</th:block>
+
 <!-- HEADER/NAV fragment -->
 <th:block th:fragment="nav">
   <header>

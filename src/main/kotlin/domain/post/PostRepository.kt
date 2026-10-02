@@ -116,15 +116,17 @@ class PostRepository(private val client: DatabaseClient) {
             .fetch().first()
             .map { mapToPost(it) }
 
-    fun publishScheduled(): Mono<Int> =
+    /** Flips every due scheduled post to published and returns their ids. */
+    fun publishScheduled(): Flux<Long> =
         client.sql(
             """
             UPDATE posts SET status = 'published', published_at = now(), scheduled_at = null, updated_at = now()
             WHERE status = 'scheduled' AND scheduled_at <= now()
+            RETURNING id
         """
         )
-            .fetch().rowsUpdated()
-            .map { it.toInt() }
+            .fetch().all()
+            .map { it["id"] as Long }
 
     fun delete(id: Long, siteId: Long): Mono<Void> =
         client.sql("DELETE FROM posts WHERE id = :id AND site_id = :siteId")
@@ -409,7 +411,7 @@ class PostRepository(private val client: DatabaseClient) {
     fun findAllPublishedForSitemap(siteId: Long): Flux<SitemapEntry> =
         client.sql(
             """
-            SELECT pt.lang, pt.slug, GREATEST(p.updated_at, pt.updated_at) AS last_mod
+            SELECT p.id AS post_id, pt.lang, pt.slug, GREATEST(p.updated_at, pt.updated_at) AS last_mod
             FROM posts p
             JOIN post_translations pt ON pt.post_id = p.id AND pt.site_id = :siteId
             WHERE p.site_id = :siteId AND p.status = 'published' AND pt.current_version_id IS NOT NULL
@@ -420,6 +422,7 @@ class PostRepository(private val client: DatabaseClient) {
             .fetch().all()
             .map {
                 SitemapEntry(
+                    postId = it["post_id"] as Long,
                     lang = it["lang"] as String,
                     slug = it["slug"] as String,
                     lastMod = it["last_mod"] as OffsetDateTime
