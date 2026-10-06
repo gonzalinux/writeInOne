@@ -23,7 +23,7 @@ async function loadDashboard() {
   }
 
   sites.forEach(site => {
-    const prefix = site.prefix ? `/${escHtml(site.prefix)}` : '';
+    const prefix = escHtml(site.prefix || "");
     const siteUrl = `https://${escHtml(site.domain)}${prefix}`;
     const verified = site.status === 'VERIFIED';
     const expired = !verified && site.verifyDate && (Date.now() - new Date(site.verifyDate).getTime() > 2 * 24 * 60 * 60 * 1000);
