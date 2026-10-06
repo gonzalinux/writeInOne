@@ -15,7 +15,7 @@ async function loadSite() {
   const res = await api(`/sites/${siteId}`);
   if (!res?.ok) return;
   const site = await res.json();
-  const prefix = site.prefix ? `/${site.prefix}` : '';
+  const prefix = site.prefix || '';
   siteUrl = `https://${site.domain}${prefix}`;
 }
 

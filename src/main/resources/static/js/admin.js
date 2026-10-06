@@ -33,8 +33,8 @@ function roleBadge(role) {
 // ── Verification modal ─────────────────────────────────────────────────────
 
 function showVerificationModal({status, domain, prefix, siteId, verifyDate}) {
-  const verifyUrl = `https://${domain}${prefix ? '/' + prefix : ''}/_verify`;
-  const siteUrl = `https://${domain}${prefix ? '/' + prefix : ''}`;
+  const verifyUrl = `https://${domain}${prefix}/_verify`;
+  const siteUrl = `https://${domain}${prefix}`;
   const expired = status !== 'VERIFIED' && verifyDate &&
     (Date.now() - new Date(verifyDate).getTime() > 2 * 24 * 60 * 60 * 1000);
 
