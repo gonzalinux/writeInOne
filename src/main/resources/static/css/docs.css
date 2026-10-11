@@ -169,8 +169,18 @@ body {
 .docs-btn--icon {
     padding: 0.35rem 0.6rem;
     margin-right: auto;
-    font-size: 1rem;
+    display: flex;
+    align-items: center;
     line-height: 1;
+}
+
+.docs-btn--icon .icon-sun,
+html.dark .docs-btn--icon .icon-moon {
+    display: none;
+}
+
+html.dark .docs-btn--icon .icon-sun {
+    display: block;
 }
 
 .docs-raw {

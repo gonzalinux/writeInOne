@@ -116,7 +116,7 @@
         <a class="rss-btn" href="#" data-selector=".rss-btn" title="RSS feed">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="6.18" cy="17.82" r="2.18"/><path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"/></svg>
         </a>
-        <button class="theme-btn" onclick="document.documentElement.classList.toggle('dark')" title="Toggle dark mode" data-selector=".theme-btn">&#9680;</button>
+        <button class="theme-btn" onclick="document.documentElement.classList.toggle('dark')" title="Toggle dark mode" data-selector=".theme-btn"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg></button>
       </div>
     </nav>
   </div>
@@ -204,7 +204,7 @@
         <a class="rss-btn" href="#" data-selector=".rss-btn" title="RSS feed">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="6.18" cy="17.82" r="2.18"/><path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"/></svg>
         </a>
-        <button class="theme-btn" onclick="document.documentElement.classList.toggle('dark')" title="Toggle dark mode" data-selector=".theme-btn">&#9680;</button>
+        <button class="theme-btn" onclick="document.documentElement.classList.toggle('dark')" title="Toggle dark mode" data-selector=".theme-btn"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg></button>
       </div>
     </nav>
   </div>
@@ -324,7 +324,7 @@
         <a class="rss-btn" href="#" data-selector=".rss-btn" title="RSS feed">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="6.18" cy="17.82" r="2.18"/><path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"/></svg>
         </a>
-        <button class="theme-btn" onclick="document.documentElement.classList.toggle('dark')" title="Toggle dark mode" data-selector=".theme-btn">&#9680;</button>
+        <button class="theme-btn" onclick="document.documentElement.classList.toggle('dark')" title="Toggle dark mode" data-selector=".theme-btn"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg></button>
       </div>
     </nav>
   </div>

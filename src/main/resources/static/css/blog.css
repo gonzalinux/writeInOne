@@ -123,6 +123,8 @@ nav {
 
 /* ── Theme toggle button ── */
 .theme-btn {
+    display: flex;
+    align-items: center;
     background: none;
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -138,6 +140,15 @@ nav {
 .theme-btn:hover {
     border-color: var(--muted-2);
     color: var(--fg);
+}
+
+.theme-btn .icon-sun,
+html.dark .theme-btn .icon-moon {
+    display: none;
+}
+
+html.dark .theme-btn .icon-sun {
+    display: block;
 }
 
 /* ── Language switcher ── */

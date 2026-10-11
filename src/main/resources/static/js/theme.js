@@ -26,7 +26,6 @@
     var btn = document.getElementById('themeBtn');
     if (!btn) return;
     var isDark = document.documentElement.classList.contains('dark');
-    btn.textContent = isDark ? '\u2600' : '\u263D';
     btn.setAttribute('aria-label', isDark ? 'Switch to light' : 'Switch to dark');
   }
 
