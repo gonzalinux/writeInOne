@@ -18,8 +18,12 @@ data class BlogPostDetail(
     val tags: List<Tag>,
     val renderedBody: String,
     val codeLanguages: List<String>,
-    val allTranslations: List<PostTranslation>
+    val allTranslations: List<PostTranslation>,
+    val toc: List<TocEntry>,
+    val readingMinutes: Int
 )
+
+data class TocEntry(val id: String, val text: String, val level: Int)
 
 data class PreviewContext(
     val site: Site,

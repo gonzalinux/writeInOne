@@ -17,6 +17,8 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.util.function.component1
 import reactor.kotlin.core.util.function.component2
+import java.text.Normalizer
+import kotlin.math.ceil
 
 
 @Service
@@ -29,6 +31,10 @@ class BlogService(
     private val mdParser: Parser,
     private val mdRenderer: HtmlRenderer
 ) {
+    private companion object {
+        const val WORDS_PER_MINUTE = 200.0
+    }
+
     private val safelist = Safelist.relaxed()
         .addAttributes("code", "class")
         .addAttributes("pre", "class")
@@ -73,7 +79,9 @@ class BlogService(
                             tags,
                             rendered,
                             extractCodeLanguages(rendered),
-                            allTranslations
+                            allTranslations,
+                            extractToc(rendered),
+                            readingMinutes(rendered)
                         )
                     }
             }
@@ -112,8 +120,39 @@ class BlogService(
                     }
             }
 
-    private fun renderMarkdown(markdown: String): String =
-        Jsoup.clean(mdRenderer.render(mdParser.parse(markdown)), safelist)
+    /** Sanitises the Markdown output, then gives headings anchor ids and makes images lazy-load. */
+    private fun renderMarkdown(markdown: String): String {
+        val doc = Jsoup.parseBodyFragment(Jsoup.clean(mdRenderer.render(mdParser.parse(markdown)), safelist))
+        doc.outputSettings().prettyPrint(false)
+        val body = doc.body()
+        val used = mutableSetOf<String>()
+        body.select("h2, h3").forEach { h ->
+            val base = slugify(h.text()).ifEmpty { "section" }
+            var id = base
+            var n = 2
+            while (!used.add(id)) id = "$base-${n++}"
+            h.attr("id", id)
+        }
+        body.select("img").forEach { it.attr("loading", "lazy").attr("decoding", "async") }
+        return body.html()
+    }
+
+    private fun extractToc(html: String): List<TocEntry> =
+        Jsoup.parseBodyFragment(html).select("h2[id], h3[id]")
+            .map { TocEntry(it.id(), it.text(), it.tagName().substring(1).toInt()) }
+            .let { if (it.size >= 3) it else emptyList() }
+
+    private fun readingMinutes(html: String): Int {
+        val words = Jsoup.parseBodyFragment(html).text().split(Regex("\\s+")).count { it.isNotBlank() }
+        return maxOf(1, ceil(words / WORDS_PER_MINUTE).toInt())
+    }
+
+    private fun slugify(text: String): String =
+        Normalizer.normalize(text, Normalizer.Form.NFD)
+            .replace(Regex("\\p{M}+"), "")
+            .lowercase()
+            .replace(Regex("[^a-z0-9]+"), "-")
+            .trim('-')
 
     private fun extractCodeLanguages(html: String): List<String> =
         Jsoup.parse(html).select("code[class]")

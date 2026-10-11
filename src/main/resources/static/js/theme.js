@@ -13,7 +13,13 @@
 
   function getTheme() {
     if (!supportsToggle) return defaultTheme;
-    return localStorage.getItem('theme') || defaultTheme;
+    return localStorage.getItem('theme') || systemTheme() || defaultTheme;
+  }
+
+  // Follow the OS preference until the reader picks a theme explicitly
+  function systemTheme() {
+    if (!window.matchMedia) return null;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? DARK : LIGHT;
   }
 
   function applyTheme(theme) {
@@ -36,6 +42,14 @@
     applyTheme(getTheme()); // also updates hljs link, which exists now
     updateBtn();
   });
+
+  if (supportsToggle && window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
+      if (localStorage.getItem('theme')) return;
+      applyTheme(getTheme());
+      updateBtn();
+    });
+  }
 
   window.toggleTheme = function () {
     var next = document.documentElement.classList.contains('dark') ? LIGHT : DARK;

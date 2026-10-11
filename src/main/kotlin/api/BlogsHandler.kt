@@ -111,6 +111,8 @@ class BlogsHandler(
                                 "tags" to detail.tags,
                                 "renderedBody" to detail.renderedBody,
                                 "codeLanguages" to detail.codeLanguages,
+                                "toc" to detail.toc,
+                                "readingMinutes" to detail.readingMinutes,
                                 "langSlugs" to langSlugs,
                                 "jsonLd" to postJsonLd(
                                     site, "https://${site.domain}$prefix", lang,

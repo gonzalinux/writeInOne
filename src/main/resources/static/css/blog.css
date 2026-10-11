@@ -636,6 +636,49 @@ footer {
     padding: 0;
 }
 
+/* ── Table of contents (collapsible) ── */
+.toc {
+    margin-top: 2rem;
+    padding: 0.75rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.95rem;
+}
+
+.toc summary {
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.toc ol {
+    list-style: none;
+    margin-top: 0.5rem;
+    padding: 0;
+}
+
+.toc li {
+    padding: 0.15rem 0;
+}
+
+.toc .toc__sub {
+    padding-left: 1.25rem;
+}
+
+.toc a {
+    text-decoration: none;
+    color: var(--muted-2);
+}
+
+.toc a:hover {
+    color: var(--fg);
+}
+
+.post-body h2,
+.post-body h3 {
+    scroll-margin-top: 1rem;
+}
+
 .post-body img {
     max-width: 100%;
     border-radius: 4px;

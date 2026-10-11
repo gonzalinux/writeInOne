@@ -27,7 +27,7 @@ Changing a variable propagates to every element that uses it.
     --muted:   #888;  /* timestamps, back link, footer text, subtle labels */
     --muted-2: #555;  /* nav links, excerpt, secondary metadata */
     --muted-3: #444;  /* post card excerpt */
-    --surface: #f6f6f6; /* table header cell background */
+    --surface: #f6f6f6; /* table header cell and table-of-contents background */
 
     /* Tag pills */
     --tag-bg: #f0f0f0;
@@ -156,12 +156,28 @@ The full post view.
 | `.post-header`             | Wrapper for all post header content (back link, meta, title, cover) |
 | `.post-header__back`       | The "← All posts" back link                                         |
 | `.post-header__back:hover` | Back link hover state                                               |
-| `.post-header__meta`       | Row containing the publication date                                 |
+| `.post-header__meta`       | Row containing the publication date and reading time                |
+| `.post-header__reading-time` | The "N min read" label next to the date                           |
 | `.post-header__title`      | The large post title (`<h1>`)                                       |
 | `.post-header__excerpt`    | The italic excerpt / subtitle below the title                       |
 | `.post-header__tags`       | Flex row of tag pills shown in the post header                      |
 | `.post-header__cover`      | The full-width cover image below the post header                    |
 | `.post-body`               | Wrapper `<div>` around the rendered Markdown content                |
+
+### Table of contents
+
+Posts with three or more `##` / `###` headings get a collapsible "Contents" block
+between the header and the body. It is closed by default and each entry links to its
+heading.
+
+| Selector        | What it styles                                                    |
+|-----------------|-------------------------------------------------------------------|
+| `.toc`          | The `<details>` box — background, border, padding                 |
+| `.toc summary`  | The clickable "Contents" / "Contenido" label                      |
+| `.toc ol`       | The list of entries                                               |
+| `.toc li`       | A single entry                                                    |
+| `.toc .toc__sub`| An entry for a `###` heading (indented under its `##`)            |
+| `.toc a`        | Entry links (`.toc a:hover` for the hover state)                  |
 
 ### Post body — Markdown elements
 
@@ -204,7 +220,10 @@ These selectors style the rendered content of a post's `body`. All are scoped in
 
 When a site has **Enable theme switcher** checked on the **Appearance** tab, the blog
 adds `class="dark"` to the `<html>` element whenever dark mode is active — via the
-toggle button or `prefers-color-scheme`. Target `html.dark` in your stylesheet to apply
+toggle button or `prefers-color-scheme`. A visitor's first visit follows their operating
+system's setting (and keeps following it live) until they press the toggle; after that
+their choice is remembered. Without the theme switcher, the blog stays in the site's
+single configured theme. Target `html.dark` in your stylesheet to apply
 dark-mode overrides.
 
 ### Example: light defaults with dark overrides

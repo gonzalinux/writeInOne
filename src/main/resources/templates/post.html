@@ -50,6 +50,8 @@
         <time th:datetime="${post.publishedAt}"
               th:text="${#temporals.format(post.publishedAt, 'MMM d, yyyy')}">Jan 1, 2025
         </time>
+        <span class="post-header__reading-time"
+              th:text="${readingMinutes} + (${lang == 'es'} ? ' min de lectura' : ' min read')">3 min read</span>
       </div>
 
       <h1 class="post-header__title" th:text="${translation.title}">Post Title</h1>
@@ -70,6 +72,15 @@
            th:src="${post.coverUrl}"
            th:alt="${translation.title}"/>
     </header>
+
+    <details class="toc" th:if="${!toc.isEmpty()}">
+      <summary th:text="${lang == 'es'} ? 'Contenido' : 'Contents'">Contents</summary>
+      <ol>
+        <li th:each="entry : ${toc}" th:classappend="${entry.level == 3} ? 'toc__sub'">
+          <a th:href="'#' + ${entry.id}" th:text="${entry.text}">Heading</a>
+        </li>
+      </ol>
+    </details>
 
     <!-- th:utext renders the pre-rendered HTML from flexmark -->
     <div class="post-body" th:utext="${renderedBody}">Post content</div>

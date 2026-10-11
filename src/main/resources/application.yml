@@ -106,7 +106,3 @@ management:
   endpoint:
     prometheus:
       enabled: true
-  metrics:
-    distribution:
-      percentiles-histogram:
-        http_request_duration_milliseconds: true

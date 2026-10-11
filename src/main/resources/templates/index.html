@@ -67,7 +67,7 @@
       <li class="post-card" th:each="item : ${posts}">
         <img class="post-card__cover"
              th:if="${not #strings.isEmpty(item.post.coverUrl)}"
-             th:src="${item.post.coverUrl}"
+             th:src="${item.post.coverUrl}" loading="lazy" decoding="async"
              th:alt="${item.translation.title}"/>
 
         <div class="post-card__meta">
