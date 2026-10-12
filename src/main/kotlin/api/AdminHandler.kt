@@ -54,6 +54,7 @@ class AdminHandler(
                                 "site" to preview.site,
                                 "lang" to lang,
                                 "prefix" to "",
+                                "inlineCss" to true,
                                 "langConfig" to preview.site.config.forLang(lang),
                                 "post" to preview.detail.post,
                                 "translation" to preview.detail.translation,

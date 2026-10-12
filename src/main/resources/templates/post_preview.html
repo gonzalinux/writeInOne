@@ -28,6 +28,9 @@
   <link id="hljs-theme" rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github.min.css"/>
 
+  <!-- Preview runs on the admin host, where /css/custom.css cannot resolve the site, so inline it -->
+  <style th:if="${not #strings.isEmpty(site.customCss)}" th:utext="${site.customCss}"></style>
+
   <link rel="stylesheet" th:href="${prefix} + '/css/post-preview.css'"/>
 </head>
 <body class="has-preview-bar">
