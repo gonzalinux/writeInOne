@@ -81,6 +81,7 @@ data class PostViewStat(
     val siteId: Long,
     val siteName: String,
     val domain: String,
+    val prefix: String,
     val title: String,
     val lang: String,
     val slug: String

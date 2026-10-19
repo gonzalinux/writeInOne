@@ -68,7 +68,7 @@
       <tbody>
       <tr th:each="p : ${topPosts}">
         <td>
-          <a th:href="'https://' + ${p.domain} + '/' + ${p.lang} + '/articles/' + ${p.slug}"
+          <a th:href="'https://' + ${p.domain} + ${p.prefix} + '/' + ${p.lang} + '/articles/' + ${p.slug}"
              target="_blank" rel="noopener" th:text="${p.title}">Post title</a>
         </td>
         <td th:text="${p.siteName}">Site</td>

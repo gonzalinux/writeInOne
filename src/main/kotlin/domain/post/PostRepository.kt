@@ -438,7 +438,7 @@ class PostRepository(private val client: DatabaseClient) {
         client.sql(
             """
             SELECT p.id, p.view_count, p.site_id,
-                   s.name AS site_name, s.domain,
+                   s.name AS site_name, s.domain, s.prefix,
                    pt.title, pt.lang, pt.slug
             FROM posts p
             JOIN sites s ON s.id = p.site_id
@@ -460,6 +460,7 @@ class PostRepository(private val client: DatabaseClient) {
                     siteId = it["site_id"] as Long,
                     siteName = it["site_name"] as String,
                     domain = it["domain"] as String,
+                    prefix = it["prefix"] as? String ?: "",
                     title = it["title"] as? String ?: "(untitled)",
                     lang = it["lang"] as? String ?: "",
                     slug = it["slug"] as? String ?: ""
