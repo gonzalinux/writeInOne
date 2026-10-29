@@ -84,6 +84,31 @@
 
     <!-- th:utext renders the pre-rendered HTML from flexmark -->
     <div class="post-body" th:utext="${renderedBody}">Post content</div>
+
+    <!-- Plain share links: no third-party scripts, so nothing loads until the reader clicks -->
+    <footer class="share" th:if="${site.config.showShareButtons}"
+            th:with="postUrl=${'https://' + site.domain + prefix + '/' + lang + '/articles/' + translation.slug},
+                     encUrl=${#uris.escapeQueryParam(postUrl)},
+                     encText=${#uris.escapeQueryParam(translation.title)}">
+      <span class="share__label" th:text="${lang == 'es'} ? 'Compartir' : 'Share'">Share</span>
+      <a class="share__link share__link--x" target="_blank" rel="noopener noreferrer"
+         th:href="'https://x.com/intent/post?url=' + ${encUrl} + '&text=' + ${encText}">X</a>
+      <a class="share__link share__link--bluesky" target="_blank" rel="noopener noreferrer"
+         th:href="'https://bsky.app/intent/compose?text=' + ${encText} + '%20' + ${encUrl}">Bluesky</a>
+      <a class="share__link share__link--linkedin" target="_blank" rel="noopener noreferrer"
+         th:href="'https://www.linkedin.com/sharing/share-offsite/?url=' + ${encUrl}">LinkedIn</a>
+      <a class="share__link share__link--facebook" target="_blank" rel="noopener noreferrer"
+         th:href="'https://www.facebook.com/sharer/sharer.php?u=' + ${encUrl}">Facebook</a>
+      <button type="button" class="share__link share__link--copy" th:data-url="${postUrl}"
+              th:data-done="${lang == 'es'} ? '¡Copiado!' : 'Copied!'"
+              th:text="${lang == 'es'} ? 'Copiar enlace' : 'Copy link'">Copy link
+      </button>
+      <!-- Shown by script only where the Web Share API exists (mostly mobile) -->
+      <button type="button" class="share__link share__link--native" hidden th:data-url="${postUrl}"
+              th:data-title="${translation.title}"
+              th:text="${lang == 'es'} ? 'Más…' : 'More…'">More…
+      </button>
+    </footer>
   </article>
 </main>
 
@@ -102,6 +127,28 @@
     keepalive: true
   }).catch(() => {
   });
+
+  const copyBtn = document.querySelector('.share__link--copy');
+  copyBtn?.addEventListener('click', () => {
+    navigator.clipboard.writeText(copyBtn.dataset.url).then(() => {
+      const label = copyBtn.textContent;
+      copyBtn.textContent = copyBtn.dataset.done;
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.textContent = label;
+        copyBtn.classList.remove('copied');
+      }, 2000);
+    });
+  });
+
+  const nativeBtn = document.querySelector('.share__link--native');
+  if (nativeBtn && navigator.share) {
+    nativeBtn.hidden = false;
+    nativeBtn.addEventListener('click', () => {
+      navigator.share({title: nativeBtn.dataset.title, url: nativeBtn.dataset.url}).catch(() => {
+      });
+    });
+  }
 </script>
 <script type="module">
   import hljs from 'https://esm.sh/highlight.js@11.11.1/lib/core';

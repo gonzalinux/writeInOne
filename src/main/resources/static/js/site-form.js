@@ -11,6 +11,7 @@ const stylesInput = document.getElementById('stylesUrl');
 const defaultThemeSelect = document.getElementById('defaultTheme');
 const enableSwitcherCb = document.getElementById('enableSwitcher');
 const showBrandingCb = document.getElementById('showBranding');
+const showShareButtonsCb = document.getElementById('showShareButtons');
 const faviconInput = document.getElementById('faviconUrl');
 const domainInput = document.getElementById('domain');
 const prefixInput = document.getElementById('prefix');
@@ -192,6 +193,7 @@ async function loadSite() {
   enableSwitcherCb.checked = themes.length > 1;
   faviconInput.value = site.config?.faviconUrl || '';
   showBrandingCb.checked = site.config?.showBranding ?? true;
+  showShareButtonsCb.checked = site.config?.showShareButtons ?? true;
 
   const suffix = '.' + subdomainConfig.baseDomain;
   const managed = Boolean(subdomainConfig.baseDomain) && (site.domain || '').endsWith(suffix);
@@ -505,6 +507,7 @@ form.addEventListener('submit', async e => {
       headHtml: headEditor.getValue().trim() || null,
       bodyHtml: bodyEditor.getValue().trim() || null,
       showBranding: showBrandingCb.checked,
+      showShareButtons: showShareButtonsCb.checked,
       en: {
         title: enTitle.value.trim() || null,
         description: enDescription.value.trim() || null,

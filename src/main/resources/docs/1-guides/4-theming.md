@@ -179,6 +179,22 @@ heading.
 | `.toc .toc__sub`| An entry for a `###` heading (indented under its `##`)            |
 | `.toc a`        | Entry links (`.toc a:hover` for the hover state)                  |
 
+### Share buttons
+
+A row of share links at the end of every post. Site admins can turn it off in the site
+settings ("Show share buttons"). Each network has its own modifier class, so you can hide
+one with e.g. `.share__link--facebook { display: none; }`.
+
+| Selector                  | What it styles                                                       |
+|---------------------------|----------------------------------------------------------------------|
+| `.share`                  | The `<footer>` row wrapping the label and buttons                    |
+| `.share__label`           | The "Share" / "Compartir" label                                      |
+| `.share__link`            | Every share button (links and the copy button)                       |
+| `.share__link:hover`      | Share button hover state                                             |
+| `.share__link--x` `.share__link--bluesky` `.share__link--linkedin` `.share__link--facebook` | The individual network links |
+| `.share__link--copy`      | The "Copy link" button (gets `.copied` for 2s after a click)         |
+| `.share__link--native`    | "More…" — opens the device share sheet; only shown where supported   |
+
 ### Post body — Markdown elements
 
 These selectors style the rendered content of a post's `body`. All are scoped inside

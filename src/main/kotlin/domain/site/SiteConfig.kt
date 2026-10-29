@@ -5,6 +5,7 @@ data class SiteConfig(
     val headHtml: String? = null,
     val bodyHtml: String? = null,
     val showBranding: Boolean = true,
+    val showShareButtons: Boolean = true,
     val en: LangConfig = LangConfig(),
     val es: LangConfig = LangConfig()
 )
