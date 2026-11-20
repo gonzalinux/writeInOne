@@ -106,3 +106,10 @@ management:
   endpoint:
     prometheus:
       enabled: true
+    health:
+      # Also serve health on the main app port (8080) at /health, for load balancers and
+      # container healthchecks that can't reach the management port. Same checks as :8081/health.
+      group:
+        app:
+          include: "*"
+          additional-path: "server:/health"
