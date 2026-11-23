@@ -234,7 +234,7 @@ class UserServiceTest {
     // --- resetPassword ---
 
     @Test
-    fun `resetPassword updates password with valid code`() {
+    fun `resetPassword updates password with valid code and revokes sessions`() {
         val stored = StoredEmailToken(verifiedUser.id, "hashed-otp", now.plusMinutes(5))
         every { tokenService.hashToken("123456") } returns "hashed-otp"
         every { repo.findVerifiedByEmail("test@test.com") } returns Mono.just(verifiedUser)
@@ -242,12 +242,14 @@ class UserServiceTest {
         every { encoder.encode("newpassword") } returns "new-hashed"
         every { repo.updatePassword(verifiedUser.id, "new-hashed") } returns Mono.empty()
         every { repo.deletePasswordResetToken("hashed-otp") } returns Mono.empty()
+        every { repo.deleteRefreshTokensByUserId(verifiedUser.id) } returns Mono.empty()
 
         StepVerifier.create(service.resetPassword("test@test.com", "123456", "newpassword"))
             .verifyComplete()
 
         verify { repo.updatePassword(verifiedUser.id, "new-hashed") }
         verify { repo.deletePasswordResetToken("hashed-otp") }
+        verify { repo.deleteRefreshTokensByUserId(verifiedUser.id) }
     }
 
     @Test

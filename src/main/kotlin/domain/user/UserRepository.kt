@@ -80,6 +80,11 @@ class UserRepository(private val client: DatabaseClient) {
             .bind("userId", userId)
             .then()
 
+    fun deleteRefreshTokensByUserId(userId: Long): Mono<Void> =
+        client.sql("DELETE FROM refresh_tokens WHERE user_id = :userId")
+            .bind("userId", userId)
+            .then()
+
     fun updatePassword(userId: Long, passwordHash: String): Mono<Void> =
         client.sql("UPDATE users SET password = :passwordHash WHERE id = :userId")
             .bind("userId", userId)

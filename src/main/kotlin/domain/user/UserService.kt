@@ -137,6 +137,7 @@ class UserService(
                     .flatMap { stored ->
                         repo.updatePassword(stored.userId, encoder.encode(newPassword))
                             .then(repo.deletePasswordResetToken(tokenHash))
+                            .then(repo.deleteRefreshTokensByUserId(stored.userId))
                             .doOnSuccess { logger.info { "Password reset [userId=${stored.userId}]" } }
                     }
             }
