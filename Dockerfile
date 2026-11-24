@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM amazoncorretto:25-alpine AS builder
+FROM amazoncorretto:25.0.5-alpine AS builder
 WORKDIR /app
 ENV GRADLE_USER_HOME=/root/.gradle
 
@@ -20,7 +20,7 @@ COPY src/ src/
 RUN --mount=type=cache,target=/root/.gradle,sharing=locked \
     ./gradlew bootJar --no-daemon --build-cache
 
-FROM amazoncorretto:25-alpine
+FROM amazoncorretto:25.0.5-alpine
 WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar app.jar
 RUN mkdir -p /app/logs
